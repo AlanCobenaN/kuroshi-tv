@@ -37,6 +37,8 @@ async function bootstrap() {
     origin: [
       process.env.FRONTEND_URL ?? 'http://localhost:3000',
       'http://localhost:3000',
+      'https://kuroshi.lat',
+      'https://www.kuroshi.lat',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
