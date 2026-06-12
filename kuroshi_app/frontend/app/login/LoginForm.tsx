@@ -86,7 +86,7 @@ export function LoginForm({ mode }: Props) {
 
   const handleOAuth = async (provider: 'google' | 'discord') => {
     setOauthLoading(provider)
-    await signIn(provider, { callbackUrl: '/' })
+    window.location.href = `/backend/auth/${provider}`
   }
 
   return (

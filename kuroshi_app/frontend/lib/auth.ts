@@ -8,13 +8,10 @@
 // ============================================================
 
 import { NextAuthOptions } from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
-import DiscordProvider from 'next-auth/providers/discord'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { authApi } from './api'
 import { User } from '@/types'
 
-// Extender tipos de NextAuth para incluir nuestros campos
 declare module 'next-auth' {
   interface Session {
     accessToken: string
@@ -54,24 +51,9 @@ declare module 'next-auth/jwt' {
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    // ── Google OAuth ─────────────────────────────────────────
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: { prompt: 'consent', access_type: 'offline', response_type: 'code' },
-      },
-    }),
-
-    // ── Discord OAuth (prioritario para el público otaku) ────
-    DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-      authorization: { params: { scope: 'identify email' } },
-    }),
-
     // ── Credenciales (email + contraseña) ────────────────────
     CredentialsProvider({
+      id: 'credentials',
       name: 'Email',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -105,27 +87,42 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+
+    // ── JWT de Kuroshi (para OAuth vía backend) ─────────────
+    CredentialsProvider({
+      id: 'kuroshi',
+      name: 'Kuroshi Token',
+      credentials: {
+        token: { label: 'Token', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token) return null
+        try {
+          const res = await fetch(`${process.env.INTERNAL_API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${credentials.token}` },
+          })
+          if (!res.ok) return null
+          const user = await res.json()
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.username,
+            username: user.username,
+            role: user.role,
+            avatar_url: user.avatarUrl,
+            image: user.avatarUrl,
+            accessToken: credentials.token,
+            email_verified: user.emailVerified ?? true,
+          }
+        } catch {
+          return null
+        }
+      },
+    }),
   ],
 
   callbacks: {
-    // ── Conectar OAuth con el backend de NestJS ──────────────
-    async signIn({ user, account }) {
-      // Para OAuth (Google/Discord), el backend valida el token
-      // y crea/actualiza el usuario. El access_token del backend
-      // llega como campo extra tras el callback de NestJS.
-      // En producción, el flujo OAuth redirige a NestJS primero.
-      if (account?.provider === 'google' || account?.provider === 'discord') {
-        // El token del proveedor se enviará al endpoint de NestJS
-        // GET /auth/google o GET /auth/discord que maneja el callback
-        // y devuelve el JWT de Kuroshi. Esto se gestiona vía redirect.
-        return true
-      }
-      return true
-    },
-
-    // ── JWT: guardar el access_token de NestJS ───────────────
     async jwt({ token, user, account, trigger, session: sessionData }) {
-      // Primera vez que se crea el token (tras login)
       if (user) {
         token.accessToken = (user as any).accessToken ?? token.accessToken
         token.username = (user as any).username ?? user.name ?? ''
@@ -137,7 +134,6 @@ export const authOptions: NextAuthOptions = {
         token.picture = avatarUrl ?? null
       }
 
-      // Actualizar token cuando el usuario modifica su perfil
       if (trigger === 'update') {
         const updatedAvatar = sessionData?.avatar_url ?? sessionData?.image
         if (updatedAvatar) {
@@ -146,20 +142,13 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Guardar proveedor de autenticación
       if (account?.provider) {
         token.provider = account.provider
-      }
-
-      // Para OAuth, el backend devuelve el token en el account
-      if (account?.access_token && account.provider !== 'credentials') {
-        token.accessToken = account.access_token
       }
 
       return token
     },
 
-    // ── Session: exponer lo necesario al cliente ──────────────
     async session({ session, token }) {
       session.accessToken = token.accessToken
       session.provider = token.provider
@@ -184,7 +173,7 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 días — mismo que JWT_EXPIRES_IN del backend
+    maxAge: 7 * 24 * 60 * 60,
   },
 
   secret: process.env.NEXTAUTH_SECRET,
