@@ -1,5 +1,4 @@
 'use client'
-// components/layout/Header.tsx
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -28,10 +27,11 @@ export function Header() {
   const [query, setQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  const mobileSearchBtnRef = useRef<HTMLButtonElement>(null)
 
-  // Cerrar menú al hacer click fuera
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -42,6 +42,26 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Auto-focus search input when mobile search opens
+  useEffect(() => {
+    if (mobileSearchOpen && searchRef.current) {
+      searchRef.current.focus()
+    }
+  }, [mobileSearchOpen])
+
+  // Close mobile search on Escape
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && mobileSearchOpen) {
+        setMobileSearchOpen(false)
+        setQuery('')
+        searchRef.current?.blur()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mobileSearchOpen])
+
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
@@ -49,15 +69,24 @@ export function Header() {
       if (trimmed.length < 2) return
       router.push(`/buscar?q=${encodeURIComponent(trimmed)}`)
       setQuery('')
+      setMobileSearchOpen(false)
       searchRef.current?.blur()
     },
     [query, router]
   )
 
+  const openMobileSearch = () => {
+    setMobileSearchOpen(true)
+  }
+
   return (
     <header className="kuroshi-header">
-      {/* Logo */}
-      <Link href="/" className="kuroshi-logo" aria-label="Kuroshi.lat — inicio">
+      {/* Logo — hidden on mobile when search is open */}
+      <Link
+        href="/"
+        className={`kuroshi-logo ${mobileSearchOpen ? 'logo-hidden-mobile' : ''}`}
+        aria-label="Kuroshi.lat — inicio"
+      >
         <span className="logo-kuro">kuro</span>
         <span className="logo-shi">shi</span>
         <span className="logo-tv">.lat</span>
@@ -66,7 +95,7 @@ export function Header() {
       {/* Buscador central */}
       <form
         onSubmit={handleSearch}
-        className={`kuroshi-search-form ${isSearchFocused ? 'focused' : ''}`}
+        className={`kuroshi-search-form ${isSearchFocused ? 'focused' : ''} ${mobileSearchOpen ? 'mobile-open' : ''}`}
         role="search"
       >
         <svg
@@ -90,19 +119,57 @@ export function Header() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setIsSearchFocused(true)}
-          onBlur={() => setIsSearchFocused(false)}
+          onBlur={(e) => {
+            setIsSearchFocused(false)
+            // On mobile, close search if empty and focus leaves
+            if (window.innerWidth < 640 && !query.trim()) {
+              // Delay to allow click on search icon to register
+              setTimeout(() => {
+                if (!e.currentTarget.value) setMobileSearchOpen(false)
+              }, 150)
+            }
+          }}
           placeholder="Buscar anime, comunidades..."
           className="search-input"
           minLength={2}
           aria-label="Buscar en Kuroshi.lat"
         />
         {query.length >= 2 && (
-          <kbd className="search-hint">Enter ↵</kbd>
+          <kbd className="search-hint search-hint-desktop">Enter ↵</kbd>
         )}
+        {/* Close button on mobile */}
+        <button
+          type="button"
+          className="mobile-search-close"
+          onClick={() => {
+            setMobileSearchOpen(false)
+            setQuery('')
+            searchRef.current?.blur()
+          }}
+          aria-label="Cerrar búsqueda"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
       </form>
 
       {/* Acciones de la derecha */}
-      <div className="header-actions">
+      <div className={`header-actions ${mobileSearchOpen ? 'actions-hidden-mobile' : ''}`}>
+        {/* Mobile search trigger */}
+        <button
+          ref={mobileSearchBtnRef}
+          className="icon-btn mobile-search-trigger"
+          onClick={openMobileSearch}
+          aria-label="Buscar"
+          title="Buscar"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+        </button>
+
         {session ? (
           <>
             {/* Buscar usuarios */}
@@ -248,7 +315,6 @@ export function Header() {
           -webkit-backdrop-filter: blur(16px);
         }
 
-        /* Logo */
         .kuroshi-logo {
           flex-shrink: 0;
           font-family: var(--font-display);
@@ -256,12 +322,12 @@ export function Header() {
           font-weight: 800;
           letter-spacing: -0.03em;
           line-height: 1;
+          transition: opacity 0.25s ease, transform 0.25s ease;
         }
         .logo-kuro { color: var(--text-primary); }
         .logo-shi  { color: var(--accent); }
         .logo-tv   { color: var(--text-muted); font-size: 1rem; font-weight: 400; }
 
-        /* Buscador */
         .kuroshi-search-form {
           flex: 1;
           max-width: 520px;
@@ -291,8 +357,8 @@ export function Header() {
           color: var(--text-primary);
           font-family: var(--font-body);
           font-size: 0.875rem;
-          /* Quitar estilos nativos de search */
           -webkit-appearance: none;
+          min-width: 0;
         }
         .search-input::placeholder { color: var(--text-muted); }
         .search-input::-webkit-search-cancel-button { display: none; }
@@ -307,13 +373,13 @@ export function Header() {
           font-family: monospace;
         }
 
-        /* Acciones */
         .header-actions {
           display: flex;
           align-items: center;
           gap: 0.5rem;
           margin-left: auto;
           flex-shrink: 0;
+          transition: opacity 0.25s ease, transform 0.25s ease;
         }
 
         .icon-btn {
@@ -325,6 +391,9 @@ export function Header() {
           border-radius: var(--radius-md);
           color: var(--text-secondary);
           transition: color var(--transition-fast), background var(--transition-fast);
+          background: transparent;
+          border: none;
+          cursor: pointer;
         }
         .icon-btn:hover {
           color: var(--text-primary);
@@ -352,14 +421,12 @@ export function Header() {
           pointer-events: none;
         }
 
-        /* Botones de auth */
         .btn-sm {
           padding: 0.4rem 0.875rem;
           font-size: 0.8125rem;
           height: 34px;
         }
 
-        /* Avatar */
         .avatar-btn {
           display: flex;
           align-items: center;
@@ -394,7 +461,6 @@ export function Header() {
           flex-shrink: 0;
         }
 
-        /* Dropdown */
         .user-menu-wrapper { position: relative; }
         .user-dropdown {
           position: absolute;
@@ -481,17 +547,69 @@ export function Header() {
         .dropdown-item-danger { color: var(--accent); }
         .dropdown-item-danger:hover { background: var(--accent-glow); }
 
+        /* ── Mobile search ───────────────────────────────── */
+        .mobile-search-trigger { display: none; }
+        .mobile-search-close { display: none; }
+
         @media (max-width: 640px) {
-          .kuroshi-header { gap: 0.75rem; padding: 0 1rem; }
-          .kuroshi-search-form { max-width: none; }
+          .kuroshi-header { gap: 0.5rem; padding: 0 0.75rem; }
+
+          /* Logo hidden when search is open */
+          .logo-hidden-mobile {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            width: 0;
+            overflow: hidden;
+          }
+
+          /* Search form: compact when closed, full-width when open */
+          .kuroshi-search-form {
+            max-width: 180px;
+            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color var(--transition-fast),
+                        background var(--transition-fast);
+          }
+          .kuroshi-search-form.mobile-open {
+            max-width: 100%;
+            flex: 1;
+          }
+
+          .search-hint-desktop { display: none; }
+
+          .mobile-search-trigger { display: flex; }
+          .mobile-search-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: color var(--transition-fast);
+          }
+          .mobile-search-close:hover { color: var(--text-primary); }
+
           .header-actions { gap: 0.25rem; }
+
+          /* Hide actions (login/register/avatar) when search is open on mobile */
+          .actions-hidden-mobile {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            width: 0;
+            overflow: hidden;
+            margin: 0;
+          }
         }
       `}</style>
     </header>
   )
 }
-
-/* ─── Iconos inline ─────────────────────────────────────────── */
 
 function UserSearchIcon() {
   return (

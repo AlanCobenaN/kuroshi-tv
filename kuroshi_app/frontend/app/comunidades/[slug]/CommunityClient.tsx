@@ -194,6 +194,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
 
         .comm-banner {
           position: relative;
+          z-index: 0;
           height: 180px;
           margin-top: calc(var(--total-nav) * -1);
           padding-top: var(--total-nav);
@@ -201,7 +202,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         }
         .comm-banner-img { object-fit: cover; object-position: center; filter: brightness(0.45); }
         .comm-banner-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-overlay)); }
-        .comm-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-base) 0%, transparent 100%); }
+        .comm-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-base) 0%, rgba(10,10,15,0.6) 40%, transparent 100%); }
 
         .comm-header {
           display: flex;
@@ -408,8 +409,24 @@ function CommunityMembersTab({ communitySlug, accessToken }: { communitySlug: st
     return () => { cancelled = true }
   }, [communitySlug, accessToken])
 
-  const online = members.filter(m => m.is_online)
-  const offline = members.filter(m => !m.is_online)
+  const creadores = members.filter(m => m.community_role === 'creador')
+  const moderadores = members.filter(m => m.community_role === 'moderador')
+  const miembros = members.filter(m => m.community_role === 'miembro')
+
+  function renderGroup(members: CommunityMemberInfo[], title: string) {
+    const online = members.filter(m => m.is_online)
+    const offline = members.filter(m => !m.is_online)
+    if (members.length === 0) return null
+    return (
+      <div className="members-section">
+        <h3 className="members-section-title">{title} — {members.length}</h3>
+        <div className="members-list">
+          {online.map(m => <MemberRowWithRole key={m.id} member={m} online />)}
+          {offline.map(m => <MemberRowWithRole key={m.id} member={m} online={false} />)}
+        </div>
+      </div>
+    )
+  }
 
   if (loading) return <div className="members-loading">Cargando miembros...</div>
 
@@ -424,28 +441,15 @@ function CommunityMembersTab({ communitySlug, accessToken }: { communitySlug: st
         <p className="members-empty">No se pudieron cargar los miembros.</p>
       ) : (
         <>
-          {online.length > 0 && (
-            <div className="members-section">
-              <h3 className="members-section-title">En línea — {online.length}</h3>
-              <div className="members-list">
-                {online.map(m => <MemberRowWithRole key={m.id} member={m} online />)}
-              </div>
-            </div>
-          )}
-          {offline.length > 0 && (
-            <div className="members-section">
-              <h3 className="members-section-title">Desconectados — {offline.length}</h3>
-              <div className="members-list">
-                {offline.map(m => <MemberRowWithRole key={m.id} member={m} online={false} />)}
-              </div>
-            </div>
-          )}
+          {renderGroup(creadores, 'Creador')}
+          {renderGroup(moderadores, 'Moderadores')}
+          {renderGroup(miembros, 'Miembros')}
         </>
       )}
 
       <style>{`
         .members-loading { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.875rem; }
-        .members-page { display: flex; flex-direction: column; gap: 1rem; }
+        .members-page { display: flex; flex-direction: column; gap: 1.5rem; }
         .members-header { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
         .members-title { font-family: var(--font-display); font-size: 1.125rem; font-weight: 700; color: var(--text-primary); margin: 0; }
         .members-count { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; color: var(--text-muted); background: var(--bg-overlay); padding: 0.125rem 0.5rem; border-radius: var(--radius-full); }
