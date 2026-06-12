@@ -468,9 +468,16 @@ function PostCard({
           )}
         </div>
         <div className="post-meta">
-          <Link href={`/u/${post.user.username}`} className="post-username">
-            {post.user.username}
-          </Link>
+          <div className="post-meta-row">
+            <Link href={`/u/${post.user.username}`} className="post-username">
+              {post.user.username}
+            </Link>
+            {post.user.community_role && (
+              <span className={`post-role-badge post-role-badge--${post.user.community_role}`}>
+                {post.user.community_role === 'creador' ? 'Creador' : post.user.community_role === 'moderador' ? 'Mod' : ''}
+              </span>
+            )}
+          </div>
           <span className="post-time">{timeAgo(post.created_at)}</span>
         </div>
         {post.is_pinned && (
@@ -587,9 +594,13 @@ function PostCard({
           flex-shrink: 0;
         }
         .post-meta { display: flex; flex-direction: column; gap: 0.1rem; }
+        .post-meta-row { display: flex; align-items: center; gap: 0.375rem; }
         .post-username { font-family: var(--font-display); font-size: 0.875rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
         .post-username:hover { color: var(--accent); }
         .post-time { font-size: 0.75rem; color: var(--text-muted); }
+        .post-role-badge { font-family: var(--font-display); font-size: 0.5625rem; font-weight: 700; padding: 0.0625rem 0.375rem; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.03em; }
+        .post-role-badge--creador { background: rgba(250, 204, 21, 0.12); color: #eab308; border: 1px solid rgba(250, 204, 21, 0.25); }
+        .post-role-badge--moderador { background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.25); }
         .post-pinned {
           margin-left: auto;
           display: flex;

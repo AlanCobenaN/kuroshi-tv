@@ -1,9 +1,9 @@
 'use client'
-// app/comunidades/[slug]/CommunityClient.tsx
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Community } from '@/types'
+import { CommunitiesWithAds } from '@/components/ads/CommunitiesWithAds'
+import { Community, CommunityMemberInfo } from '@/types'
 import { communitiesApi } from '@/lib/api'
 import { CommunityFeed } from './CommunityFeed'
 import { CommunityChatPanel } from './CommunityChatPanel'
@@ -85,7 +85,6 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
             </div>
           </div>
 
-          {/* Acción principal */}
           <div className="comm-header-right">
             {isLoggedIn ? (
               <button
@@ -104,7 +103,6 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
           </div>
         </div>
 
-        {/* Barra de progreso hacia oficial — solo para no oficiales */}
         {community.type === 'no_oficial' && community.members_threshold > 0 && (
           <div className="comm-progress-bar" aria-label={`Progreso hacia comunidad oficial: ${progressPct.toFixed(0)}%`}>
             <div className="comm-progress-info">
@@ -146,42 +144,54 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         </div>
       </div>
 
-      {/* Contenido del tab */}
-      <div className="comm-content container">
-        {activeTab === 'feed' && (
-          <div className="comm-feed-layout">
-            <div className="comm-feed-main">
-              <CommunityFeed
-                community={community}
-                isMember={isMember}
-                isLoggedIn={isLoggedIn}
+      {/* Contenido del tab con anuncios laterales */}
+      <CommunitiesWithAds>
+        <div className="comm-content">
+          {activeTab === 'feed' && (
+            <div className="comm-feed-layout">
+              <div className="comm-feed-main">
+                <CommunityFeed
+                  community={community}
+                  isMember={isMember}
+                  isLoggedIn={isLoggedIn}
+                  accessToken={accessToken}
+                />
+              </div>
+              <aside className="comm-feed-sidebar">
+                <CommunitySidebar
+                  community={community}
+                  memberCount={memberCount}
+                  isLoggedIn={isLoggedIn}
+                  userMembership={community.user_membership}
+                />
+              </aside>
+            </div>
+          )}
+
+          {activeTab === 'chat' && isMember && (
+            <div className="comm-chat-wrapper">
+              <CommunityChatPanel
+                communityId={community.id}
+                communitySlug={community.slug}
                 accessToken={accessToken}
+                username={username}
               />
             </div>
-            <aside className="comm-feed-sidebar">
-              <CommunitySidebar community={community} memberCount={memberCount} />
-            </aside>
-          </div>
-        )}
+          )}
 
-        {activeTab === 'chat' && isMember && (
-          <div className="comm-chat-wrapper">
-            <CommunityChatPanel
-              communityId={community.id}
-              communitySlug={community.slug}
-              accessToken={accessToken}
-              username={username}
-            />
-          </div>
-        )}
+          {activeTab === 'miembros' && isMember && (
+            <div className="comm-members-section">
+              <CommunityMembersTab communitySlug={community.slug} accessToken={accessToken} />
+            </div>
+          )}
 
-        {activeTab === 'sobre' && <CommunityAbout community={community} memberCount={memberCount} progressPct={progressPct} />}
-      </div>
+          {activeTab === 'sobre' && <CommunityAbout community={community} memberCount={memberCount} progressPct={progressPct} />}
+        </div>
+      </CommunitiesWithAds>
 
       <style>{`
         .comm-page { min-height: 100dvh; padding-bottom: 4rem; }
 
-        /* Banner */
         .comm-banner {
           position: relative;
           height: 180px;
@@ -193,7 +203,6 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         .comm-banner-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-overlay)); }
         .comm-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-base) 0%, transparent 100%); }
 
-        /* Header */
         .comm-header {
           display: flex;
           align-items: flex-end;
@@ -245,7 +254,6 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         .comm-join-btn--leave:hover { color: var(--accent); border-color: var(--accent); }
         .comm-join-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        /* Barra de progreso */
         .comm-progress-bar { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
         .comm-progress-info { display: flex; justify-content: space-between; align-items: center; }
         .comm-progress-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
@@ -253,7 +261,6 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         .comm-progress-track { height: 6px; background: var(--bg-overlay); border-radius: var(--radius-full); overflow: hidden; }
         .comm-progress-fill { height: 100%; background: linear-gradient(to right, var(--amber), var(--accent)); border-radius: var(--radius-full); transition: width 0.8s ease; }
 
-        /* Tabs */
         .comm-tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; margin-bottom: 1.5rem; }
         .comm-tabs::-webkit-scrollbar { display: none; }
         .comm-tab { position: relative; padding: 0.75rem 1.25rem; font-family: var(--font-display); font-size: 0.875rem; font-weight: 600; color: var(--text-muted); background: transparent; border: none; cursor: pointer; white-space: nowrap; transition: color var(--transition-fast); }
@@ -261,10 +268,12 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         .comm-tab--active { color: var(--text-primary); }
         .comm-tab--active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: var(--radius-full); }
 
-        /* Layout del feed */
+        .comm-content { }
+
         .comm-feed-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start; }
         .comm-feed-sidebar { position: sticky; top: calc(var(--total-nav) + 1rem); }
         .comm-chat-wrapper { max-width: 800px; height: 600px; margin: 0 auto; }
+        .comm-members-section { max-width: 680px; }
 
         @media (max-width: 900px) {
           .comm-feed-layout { grid-template-columns: 1fr; }
@@ -275,7 +284,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
   )
 }
 
-function CommunitySidebar({ community, memberCount }: { community: Community; memberCount: number }) {
+function CommunitySidebar({ community, memberCount, isLoggedIn, userMembership }: { community: Community; memberCount: number; isLoggedIn: boolean; userMembership?: { role: string } | null }) {
   return (
     <div className="sidebar-card">
       {community.description && <p className="sidebar-desc">{community.description}</p>}
@@ -289,6 +298,14 @@ function CommunitySidebar({ community, memberCount }: { community: Community; me
           <span className="sidebar-stat-label">Fundada</span>
         </div>
       </div>
+      {isLoggedIn && userMembership && (
+        <div className="sidebar-role">
+          <span className="sidebar-label">Tu rango</span>
+          <span className={`sidebar-role-badge sidebar-role-badge--${userMembership.role}`}>
+            {userMembership.role === 'creador' ? 'Creador' : userMembership.role === 'moderador' ? 'Moderador' : 'Miembro'}
+          </span>
+        </div>
+      )}
       {community.creator && (
         <div className="sidebar-creator">
           <span className="sidebar-label">Creada por</span>
@@ -305,6 +322,11 @@ function CommunitySidebar({ community, memberCount }: { community: Community; me
         .sidebar-stat { display: flex; flex-direction: column; gap: 0.2rem; }
         .sidebar-stat-val { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: var(--text-primary); }
         .sidebar-stat-label { font-family: var(--font-display); font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .sidebar-role { display: flex; flex-direction: column; gap: 0.375rem; }
+        .sidebar-role-badge { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); display: inline-flex; align-items: center; gap: 0.375rem; width: fit-content; }
+        .sidebar-role-badge--creador { background: rgba(250, 204, 21, 0.12); color: #eab308; border: 1px solid rgba(250, 204, 21, 0.25); }
+        .sidebar-role-badge--moderador { background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.25); }
+        .sidebar-role-badge--miembro { background: var(--bg-overlay); color: var(--text-secondary); border: 1px solid var(--border-hover); }
         .sidebar-creator { display: flex; flex-direction: column; gap: 0.25rem; }
         .sidebar-label { font-family: var(--font-display); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
         .sidebar-creator-link { font-family: var(--font-display); font-size: 0.875rem; font-weight: 700; color: var(--accent); text-decoration: none; }
@@ -368,5 +390,111 @@ function CommunityAbout({ community, memberCount, progressPct }: { community: Co
         .about-progress-fill { height: 100%; background: linear-gradient(to right, var(--amber), var(--accent)); border-radius: var(--radius-full); transition: width 0.8s ease; }
       `}</style>
     </div>
+  )
+}
+
+function CommunityMembersTab({ communitySlug, accessToken }: { communitySlug: string; accessToken?: string }) {
+  const [members, setMembers] = useState<CommunityMemberInfo[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!accessToken) { setLoading(false); return }
+    let cancelled = false
+    communitiesApi.getCommunityMembers(communitySlug, accessToken).then(data => {
+      if (!cancelled) setMembers(data as CommunityMemberInfo[])
+    }).catch(() => {}).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [communitySlug, accessToken])
+
+  const online = members.filter(m => m.is_online)
+  const offline = members.filter(m => !m.is_online)
+
+  if (loading) return <div className="members-loading">Cargando miembros...</div>
+
+  return (
+    <div className="members-page">
+      <div className="members-header">
+        <h2 className="members-title">Miembros</h2>
+        <span className="members-count">{members.length}</span>
+      </div>
+
+      {members.length === 0 ? (
+        <p className="members-empty">No se pudieron cargar los miembros.</p>
+      ) : (
+        <>
+          {online.length > 0 && (
+            <div className="members-section">
+              <h3 className="members-section-title">En línea — {online.length}</h3>
+              <div className="members-list">
+                {online.map(m => <MemberRowWithRole key={m.id} member={m} online />)}
+              </div>
+            </div>
+          )}
+          {offline.length > 0 && (
+            <div className="members-section">
+              <h3 className="members-section-title">Desconectados — {offline.length}</h3>
+              <div className="members-list">
+                {offline.map(m => <MemberRowWithRole key={m.id} member={m} online={false} />)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      <style>{`
+        .members-loading { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.875rem; }
+        .members-page { display: flex; flex-direction: column; gap: 1rem; }
+        .members-header { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+        .members-title { font-family: var(--font-display); font-size: 1.125rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+        .members-count { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; color: var(--text-muted); background: var(--bg-overlay); padding: 0.125rem 0.5rem; border-radius: var(--radius-full); }
+        .members-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.875rem; margin: 0; }
+        .members-section { display: flex; flex-direction: column; gap: 0.5rem; }
+        .members-section-title { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0; }
+        .members-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+        .members-list > * { background: var(--bg-surface); }
+        .mr-wrap { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; transition: background var(--transition-fast); text-decoration: none; }
+        .mr-wrap:hover { background: var(--bg-overlay); }
+        .mr-avatar-wrap { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
+        .mr-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .mr-avatar-fallback { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 0.875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .mr-dot { position: absolute; bottom: -1px; right: -1px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--bg-surface); }
+        .mr-dot--online { background: #22c55e; }
+        .mr-dot--offline { background: var(--text-muted); }
+        .mr-info { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; flex: 1; }
+        .mr-name-row { display: flex; align-items: center; gap: 0.5rem; }
+        .mr-name { font-size: 0.875rem; color: var(--text-primary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mr-joined { font-size: 0.6875rem; color: var(--text-muted); }
+        .mr-role-badge { font-family: var(--font-display); font-size: 0.625rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: var(--radius-full); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
+        .mr-role-badge--creador { background: rgba(250, 204, 21, 0.12); color: #eab308; border: 1px solid rgba(250, 204, 21, 0.25); }
+        .mr-role-badge--moderador { background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.25); }
+        .mr-role-badge--miembro { background: var(--bg-overlay); color: var(--text-muted); border: 1px solid var(--border-hover); }
+      `}</style>
+    </div>
+  )
+}
+
+function MemberRowWithRole({ member, online }: { member: CommunityMemberInfo; online: boolean }) {
+  return (
+    <Link href={`/u/${member.username}`} className="mr-wrap">
+      <div className="mr-avatar-wrap">
+        {member.avatar_url ? (
+          <Image src={member.avatar_url} alt="" width={36} height={36} className="mr-avatar" />
+        ) : (
+          <div className="mr-avatar-fallback">{member.username[0].toUpperCase()}</div>
+        )}
+        <div className={`mr-dot ${online ? 'mr-dot--online' : 'mr-dot--offline'}`} />
+      </div>
+      <div className="mr-info">
+        <div className="mr-name-row">
+          <span className="mr-name">{member.username}</span>
+          <span className={`mr-role-badge mr-role-badge--${member.community_role}`}>
+            {member.community_role === 'creador' ? 'Creador' : member.community_role === 'moderador' ? 'Mod' : 'Miembro'}
+          </span>
+        </div>
+        <span className="mr-joined">Se unió {new Date(member.joined_at).toLocaleDateString('es-LA', { month: 'long', year: 'numeric' })}</span>
+      </div>
+    </Link>
   )
 }
