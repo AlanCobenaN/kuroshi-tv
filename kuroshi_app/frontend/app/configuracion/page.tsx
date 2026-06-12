@@ -16,11 +16,18 @@ export default async function SettingsPage() {
   if (!session) redirect('/login')
 
   let emailVerified = session.user.email_verified
+  let linkedMethods: string[] = []
 
   try {
     const me = await authApi.me(session.accessToken) as any
-    if (me && typeof me.email_verified === 'boolean') {
-      emailVerified = me.email_verified
+    if (me) {
+      if (typeof me.email_verified === 'boolean') emailVerified = me.email_verified
+
+      const methods: string[] = []
+      if (me.oauthGoogleId) methods.push('google')
+      if (me.oauthDiscordId) methods.push('discord')
+      if (me.passwordHash) methods.push('email')
+      linkedMethods = methods
     }
   } catch {}
 
@@ -34,6 +41,7 @@ export default async function SettingsPage() {
           provider={session.provider}
           avatarUrl={session.user.avatar_url ?? ''}
           emailVerified={emailVerified}
+          linkedMethods={linkedMethods}
         />
       </div>
       <Footer />

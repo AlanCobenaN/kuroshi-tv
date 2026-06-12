@@ -151,6 +151,9 @@ export class AuthService {
       select: includes,
     });
 
+    let linked = false;
+    let created = false;
+
     if (!user) {
       const userByEmail = await this.prisma.user.findUnique({
         where: { email },
@@ -163,6 +166,7 @@ export class AuthService {
           data: { [oauthField]: oauthId, emailVerified: true },
           select: includes,
         });
+        linked = true;
       } else {
         const username = await this.generateUniqueUsername(displayName);
         user = await this.prisma.user.create({
@@ -174,6 +178,7 @@ export class AuthService {
           },
           select: includes,
         });
+        created = true;
       }
     }
 
@@ -187,7 +192,7 @@ export class AuthService {
     });
 
     const token = this.generateToken(user.id, user.username, user.role);
-    return { access_token: token, user };
+    return { access_token: token, user, linked, created };
   }
 
   private async sendVerificationEmail(userId: string, email: string, username: string) {
@@ -377,6 +382,9 @@ export class AuthService {
         visibility: true,
         createdAt: true,
         lastActiveAt: true,
+        oauthGoogleId: true,
+        oauthDiscordId: true,
+        passwordHash: true,
         favoriteAnime: {
           select: { id: true, slug: true, titleEs: true, coverUrl: true },
         },

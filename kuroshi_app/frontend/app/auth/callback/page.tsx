@@ -9,6 +9,8 @@ export default function AuthCallbackPage() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const error = searchParams.get('error')
+  const linked = searchParams.get('linked')
+  const created = searchParams.get('created')
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
 
   useEffect(() => {
@@ -20,12 +22,18 @@ export default function AuthCallbackPage() {
     signIn('kuroshi', { token, redirect: false }).then(result => {
       if (result?.ok) {
         setStatus('success')
-        setTimeout(() => router.push('/'), 500)
+        setTimeout(() => {
+          const params = new URLSearchParams()
+          if (linked) params.set('linked', linked)
+          if (created) params.set('created', '1')
+          const qs = params.toString()
+          router.push(qs ? `/?${qs}` : '/')
+        }, 1500)
       } else {
         setStatus('error')
       }
     })
-  }, [token, router])
+  }, [token, router, linked, created])
 
   if (error === 'email_exists') {
     return (
@@ -45,6 +53,8 @@ export default function AuthCallbackPage() {
     )
   }
 
+  const linkedLabel = linked === 'google' ? 'Google' : linked === 'discord' ? 'Discord' : null
+
   return (
     <div className="callback-container">
       <div className="callback-card">
@@ -57,7 +67,13 @@ export default function AuthCallbackPage() {
         {status === 'success' && (
           <>
             <div className="callback-check" />
-            <p>Inicio de sesión exitoso. Redirigiendo...</p>
+            {created ? (
+              <p>Cuenta creada exitosamente. Bienvenido.</p>
+            ) : linked ? (
+              <p>Se vinculó {linkedLabel} a tu cuenta existente.</p>
+            ) : (
+              <p>Inicio de sesión exitoso. Redirigiendo...</p>
+            )}
           </>
         )}
         {status === 'error' && (

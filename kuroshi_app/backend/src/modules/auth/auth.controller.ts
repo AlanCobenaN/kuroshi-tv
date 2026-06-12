@@ -53,7 +53,10 @@ export class AuthController {
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     const result = await this.authService.handleGoogleOAuth(req.user as any);
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-    return res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
+    let url = `${frontendUrl}/auth/callback?token=${result.access_token}`;
+    if (result.linked) url += '&linked=google';
+    if (result.created) url += '&created=1';
+    return res.redirect(url);
   }
 
   @Public()
@@ -68,7 +71,10 @@ export class AuthController {
   async discordCallback(@Req() req: Request, @Res() res: Response) {
     const result = await this.authService.handleDiscordOAuth(req.user as any);
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-    return res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
+    let url = `${frontendUrl}/auth/callback?token=${result.access_token}`;
+    if (result.linked) url += '&linked=discord';
+    if (result.created) url += '&created=1';
+    return res.redirect(url);
   }
 
   @Post('ping')
