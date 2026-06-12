@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="600" viewBox="0 0 160 600">
+  <defs>
+    <linearGradient id="bgV3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#0d0d14"/>
+    </linearGradient>
+    <linearGradient id="redV3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e63946"/>
+      <stop offset="100%" style="stop-color:#c42d3a"/>
+    </linearGradient>
+    <linearGradient id="glowV3" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#e63946;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#e63946;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="160" height="600" fill="url(#bgV3)"/>
+  <rect x="0" y="400" width="160" height="200" fill="url(#glowV3)"/>
+
+  <!-- Línea izquierda -->
+  <rect x="0" y="0" width="3" height="600" fill="url(#redV3)" opacity="0.4"/>
+
+  <!-- Logo -->
+  <text x="80" y="52" font-family="'Helvetica Neue', Arial, sans-serif" font-size="19" font-weight="900" fill="#f0eff4" text-anchor="middle">kuro<tspan fill="#e63946">shi</tspan></text>
+  <text x="80" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#4e4d5c" text-anchor="middle">.lat</text>
+
+  <rect x="20" y="82" width="120" height="1" fill="#18181f"/>
+
+  <!-- Eyebrow -->
+  <text x="80" y="106" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="2" fill="#9190a0" text-anchor="middle">INVITA AMIGOS</text>
+
+  <!-- Headline -->
+  <text x="80" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="25" font-weight="900" fill="#f0eff4" text-anchor="middle" letter-spacing="-0.8">¿Ves anime</text>
+  <text x="80" y="182" font-family="'Helvetica Neue', Arial, sans-serif" font-size="25" font-weight="900" fill="#f0eff4" text-anchor="middle" letter-spacing="-0.8">solo?</text>
+  <text x="80" y="222" font-family="'Helvetica Neue', Arial, sans-serif" font-size="25" font-weight="900" fill="#e63946" text-anchor="middle" letter-spacing="-0.8">No más.</text>
+
+  <rect x="20" y="238" width="120" height="1" fill="#18181f"/>
+
+  <!-- Descripción -->
+  <text x="80" y="264" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#9190a0" text-anchor="middle">Comenta al mismo</text>
+  <text x="80" y="282" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#9190a0" text-anchor="middle">minuto del video</text>
+  <text x="80" y="300" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#9190a0" text-anchor="middle">con tus amigos.</text>
+
+  <rect x="20" y="316" width="120" height="1" fill="#18181f"/>
+
+  <!-- Burbujas de chat decorativas -->
+  <rect x="16" y="330" width="110" height="26" rx="13" fill="#18181f"/>
+  <text x="71" y="348" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#9190a0" text-anchor="middle">@juan: ¡¡NOOO!!</text>
+
+  <rect x="24" y="364" width="120" height="26" rx="13" fill="#1f1f28"/>
+  <text x="84" y="382" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#9190a0" text-anchor="middle">@ana: lo sabía 😭</text>
+
+  <rect x="16" y="398" width="96" height="22" rx="11" fill="#e63946" opacity="0.12"/>
+  <text x="64" y="414" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" fill="#e63946" text-anchor="middle">min 22 · 47 likes</text>
+
+  <!-- Avatares -->
+  <circle cx="44" cy="456" r="18" fill="#18181f" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="44" y="461" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#9190a0" text-anchor="middle">J</text>
+  <circle cx="80" cy="456" r="18" fill="#1f1f28" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="80" y="461" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#9190a0" text-anchor="middle">A</text>
+  <circle cx="116" cy="456" r="18" fill="#e63946" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="116" y="461" font-family="'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">+</text>
+
+  <text x="80" y="492" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#4e4d5c" text-anchor="middle">tú y tus amigos</text>
+
+  <rect x="20" y="506" width="120" height="1" fill="#18181f"/>
+
+  <!-- CTA -->
+  <rect x="16" y="522" width="128" height="40" rx="7" fill="url(#redV3)"/>
+  <text x="80" y="538" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">Invitar amigos</text>
+  <text x="80" y="554" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.6)" text-anchor="middle">kuroshi.lat</text>
+
+  <rect x="20" y="572" width="120" height="1" fill="#18181f"/>
+  <text x="80" y="590" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" fill="#2a2a35" text-anchor="middle">kuroshi.lat — gratis siempre</text>
+
+  <rect width="160" height="600" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.05"/>
+</svg>

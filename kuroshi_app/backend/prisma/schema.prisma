@@ -1,0 +1,600 @@
+// ================================================================
+// KUROSHI.LAT — SCHEMA DE PRISMA
+// Modelo de datos completo: 18 tablas
+// PostgreSQL vía Supabase self-hosted
+// ================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================================================
+// ENUMERACIONES
+// ================================================================
+
+enum Role {
+  owner
+  moderador
+  usuario
+}
+
+enum ProfileVisibility {
+  publico
+  solo_amigos
+  privado
+}
+
+enum WatchlistStatus {
+  viendo
+  completado
+  pendiente
+  abandonado
+}
+
+enum FriendshipStatus {
+  pendiente
+  aceptada
+  rechazada
+  bloqueada
+}
+
+enum NotificationType {
+  nuevo_ep
+  like_post
+  like_comment
+  amistad_recibida
+  amistad_aceptada
+  logro_desbloqueado
+  comunidad_promovida
+  retoma_anime
+  respuesta_post
+  respuesta_comment
+}
+
+enum AnimeStatus {
+  en_emision
+  finalizado
+  proximamente
+}
+
+enum SeasonType {
+  regular
+  ova
+  especial
+}
+
+enum CommunityType {
+  oficial
+  no_oficial
+}
+
+enum CommunityMemberRole {
+  creador
+  moderador
+  miembro
+}
+
+enum JoinRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ReportStatus {
+  pendiente
+  revisado
+  desestimado
+}
+
+enum ReportContentType {
+  post
+  comment
+  episode_comment
+  usuario
+}
+
+// ================================================================
+// GRUPO 1 — USUARIOS
+// ================================================================
+
+model User {
+  id               String            @id @default(uuid()) @db.Uuid
+  username         String            @unique @db.VarChar(30)
+  email            String            @unique @db.VarChar(255)
+  passwordHash     String?           @map("password_hash")        // null si usa OAuth
+  role             Role              @default(usuario)
+  visibility       ProfileVisibility @default(publico)
+  bio              String?           @db.VarChar(150)
+  avatarUrl        String?           @map("avatar_url")
+  oauthGoogleId    String?           @unique @map("oauth_google_id")
+  oauthDiscordId   String?           @unique @map("oauth_discord_id")
+  emailVerified    Boolean           @default(false) @map("email_verified")
+  isActive         Boolean           @default(true) @map("is_active")
+  isSilenced       Boolean           @default(false) @map("is_silenced")
+  silencedUntil    DateTime?         @map("silenced_until")
+  isBanned         Boolean           @default(false) @map("is_banned")
+  bannedUntil      DateTime?         @map("banned_until")         // null = baneo permanente
+  usernameChangedAt DateTime?        @map("username_changed_at")  // para validar el límite de 30 días
+  lastActiveAt     DateTime?         @map("last_active_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  // Anime favorito (define el banner automático del perfil)
+  favoriteAnimeId  String?           @map("favorite_anime_id") @db.Uuid
+  favoriteAnime    Anime?            @relation("UserFavoriteAnime", fields: [favoriteAnimeId], references: [id])
+
+  // Relaciones
+  watchlist           UserWatchlist[]
+  progress            UserProgress[]
+  friendRequestsSent  Friendship[]       @relation("FriendRequester")
+  friendRequestsRecv  Friendship[]       @relation("FriendAddressee")
+  notifications       Notification[]
+  episodeComments     EpisodeComment[]
+  animeRatings        AnimeRating[]
+  communityMemberships CommunityMember[]
+  posts               Post[]
+  postComments        PostComment[]
+  communityChats      CommunityChat[]
+  userAchievements    UserAchievement[]
+  reportsSubmitted    Report[]           @relation("ReportSubmitter")
+  reportsReviewed     Report[]           @relation("ReportReviewer")
+  communitiesCreated  Community[]           @relation("CommunityCreator")
+  communityBans       CommunityBan[]         @relation("UserBannedIn")
+  bansIssued          CommunityBan[]         @relation("CommunityBansIssued")
+  communityJoinRequests CommunityJoinRequest[]
+  joinRequestsReviewed CommunityJoinRequest[] @relation("JoinRequestReviewer")
+  verificationTokens   VerificationToken[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("verification_tokens")
+}
+
+model UserWatchlist {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @map("user_id") @db.Uuid
+  animeId        String          @map("anime_id") @db.Uuid
+  status         WatchlistStatus @default(pendiente)
+  manualOverride Boolean         @default(false) @map("manual_override") // true = no cambiar automáticamente
+  personalRating Int?            @map("personal_rating")                 // 1-5 estrellas del usuario
+  lastWatchedAt  DateTime?       @map("last_watched_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId])
+  @@map("user_watchlist")
+}
+
+model UserProgress {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  episodeId   String   @map("episode_id") @db.Uuid
+  lastMinute  Int      @default(0) @map("last_minute")  // minuto exacto donde pausó
+  completed   Boolean  @default(false)
+  watchedAt   DateTime @default(now()) @map("watched_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@map("user_progress")
+}
+
+model Friendship {
+  id          String           @id @default(uuid()) @db.Uuid
+  requesterId String           @map("requester_id") @db.Uuid  // quien envió la solicitud
+  addresseeId String           @map("addressee_id") @db.Uuid  // quien la recibe
+  status      FriendshipStatus @default(pendiente)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  requester User @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@map("friendships")
+}
+
+model Notification {
+  id           String           @id @default(uuid()) @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  type         NotificationType
+  title        String           @db.VarChar(100)
+  body         String           @db.VarChar(300)
+  isRead       Boolean          @default(false) @map("is_read")
+  metadata     Json?                                        // payload variable por tipo
+  stackedCount Int              @default(1) @map("stacked_count")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ================================================================
+// GRUPO 2 — ANIME Y VIDEO
+// ================================================================
+
+model Anime {
+  id              String      @id @default(uuid()) @db.Uuid
+  slug            String      @unique @db.VarChar(200)         // kuroshi.lat/anime/[slug]
+  titleEs         String      @map("title_es") @db.VarChar(200)
+  titleJp         String?     @map("title_jp") @db.VarChar(200)
+  synopsis        String?     @db.Text
+  status          AnimeStatus @default(proximamente)
+  year            Int?
+  season          String?     @db.VarChar(20)                  // invierno/primavera/verano/otoño
+  studio          String?     @db.VarChar(100)
+  totalEpisodes   Int?        @map("total_episodes")
+  coverUrl        String?     @map("cover_url")
+  bannerUrl       String?     @map("banner_url")
+  malId           Int?        @unique @map("mal_id")            // ID en MyAnimeList
+  malRating       Float?      @map("mal_rating")               // rating importado de MAL
+  anilistId       Int?        @unique @map("anilist_id")
+  isVisible       Boolean     @default(true) @map("is_visible") // ocultar sin eliminar
+  totalViews      BigInt      @default(0) @map("total_views")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relaciones
+  genres          AnimeGenre[]
+  seasons         AnimeSeason[]
+  watchlistItems  UserWatchlist[]
+  ratings         AnimeRating[]
+  favoritedBy     User[]          @relation("UserFavoriteAnime")
+
+  @@index([slug])
+  @@index([status])
+  @@map("animes")
+}
+
+model Genre {
+  id     String       @id @default(uuid()) @db.Uuid
+  name   String       @unique @db.VarChar(50)
+  animes AnimeGenre[]
+
+  @@map("genres")
+}
+
+model AnimeGenre {
+  animeId String @map("anime_id") @db.Uuid
+  genreId String @map("genre_id") @db.Uuid
+
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([animeId, genreId])
+  @@map("anime_genres")
+}
+
+model AnimeSeason {
+  id       String     @id @default(uuid()) @db.Uuid
+  animeId  String     @map("anime_id") @db.Uuid
+  number   Int                                      // 1, 2, 3...
+  title    String?    @db.VarChar(200)
+  type     SeasonType @default(regular)
+
+  anime    Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  episodes Episode[]
+
+  @@unique([animeId, number, type])
+  @@map("anime_seasons")
+}
+
+model Episode {
+  id               String   @id @default(uuid()) @db.Uuid
+  seasonId         String   @map("season_id") @db.Uuid
+  number           Int                               // número del episodio dentro de la temporada
+  title            String?  @db.VarChar(200)
+  synopsis         String?  @db.Text
+  thumbnailUrl     String?  @map("thumbnail_url")
+  airDate          DateTime? @map("air_date")
+  views            BigInt   @default(0)
+  durationMinutes  Int?     @map("duration_minutes")
+
+  // Configuración de anuncios por episodio
+  // Los valores aquí sobreescriben la configuración global de la app
+  adPrerollEnabled Boolean  @default(true) @map("ad_preroll_enabled")
+  adPrerollMinute  Int      @default(0) @map("ad_preroll_minute")      // minuto de aparición (0 = al inicio)
+  adPrerollMaxSec  Int      @default(15) @map("ad_preroll_max_sec")    // duración máxima en segundos
+  adEndingEnabled  Boolean  @default(true) @map("ad_ending_enabled")
+  adEndingMinute   Int?     @map("ad_ending_minute")                   // minuto exacto del ending
+  adEndingMaxSec   Int      @default(30) @map("ad_ending_max_sec")
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  season        AnimeSeason      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  videoServers  VideoServer[]
+  comments      EpisodeComment[]
+  userProgress  UserProgress[]
+
+  @@unique([seasonId, number])
+  @@map("episodes")
+}
+
+model VideoServer {
+  id          String @id @default(uuid()) @db.Uuid
+  episodeId   String @map("episode_id") @db.Uuid
+  serverName  String @map("server_name") @db.VarChar(50)  // "Servidor 1", "Streamtape", etc.
+  embedUrl    String @map("embed_url") @db.Text
+  sortOrder   Int    @default(0) @map("sort_order")        // orden en que se muestran al usuario
+
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@map("video_servers")
+}
+
+model EpisodeComment {
+  id          String   @id @default(uuid()) @db.Uuid
+  episodeId   String   @map("episode_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  content     String   @db.VarChar(200)                    // límite 200 caracteres del documento
+  videoMinute Int      @map("video_minute")                // minuto del video donde se escribió
+  likesCount  Int      @default(0) @map("likes_count")
+  hasSpoiler  Boolean  @default(false) @map("has_spoiler")
+  isDeleted   Boolean  @default(false) @map("is_deleted")  // borrado lógico para moderación
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Un usuario solo puede comentar una vez por minuto de episodio
+  @@unique([episodeId, userId, videoMinute])
+  @@index([episodeId, videoMinute])
+  @@map("episode_comments")
+}
+
+model AnimeRating {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  animeId   String   @map("anime_id") @db.Uuid
+  stars     Int                                   // 1-5
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId])
+  @@map("anime_ratings")
+}
+
+// ================================================================
+// GRUPO 3 — COMUNIDADES
+// ================================================================
+
+model Community {
+  id               String        @id @default(uuid()) @db.Uuid
+  slug             String        @unique @db.VarChar(100)
+  name             String        @db.VarChar(100)
+  description      String?       @db.Text
+  rules            String?       @db.Text
+  bannerUrl        String?       @map("banner_url")
+  avatarUrl        String?       @map("avatar_url")
+  type             CommunityType  @default(no_oficial)
+  isPrivate        Boolean        @default(false) @map("is_private")
+  membersCount     Int            @default(0) @map("members_count")
+  membersThreshold Int            @default(1000) @map("members_threshold")
+  isActive         Boolean        @default(true) @map("is_active")
+  createdById      String         @map("created_by") @db.Uuid
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  creator      User                   @relation("CommunityCreator", fields: [createdById], references: [id])
+  members      CommunityMember[]
+  posts        Post[]
+  chat         CommunityChat[]
+  bans         CommunityBan[]
+  joinRequests CommunityJoinRequest[]
+
+  @@index([type])
+  @@map("communities")
+}
+
+model CommunityMember {
+  id            String              @id @default(uuid()) @db.Uuid
+  communityId   String              @map("community_id") @db.Uuid
+  userId        String              @map("user_id") @db.Uuid
+  role          CommunityMemberRole @default(miembro)
+  isSilenced    Boolean             @default(false) @map("is_silenced")
+  silencedUntil DateTime?           @map("silenced_until")
+  joinedAt      DateTime            @default(now()) @map("joined_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@map("community_members")
+}
+
+model Post {
+  id              String   @id @default(uuid()) @db.Uuid
+  communityId     String   @map("community_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  content         String   @db.Text
+  imageUrl        String?  @map("image_url")               // URL de Imgur
+  linkedEpisodeId String?  @map("linked_episode_id") @db.Uuid
+  likesCount      Int      @default(0) @map("likes_count")
+  isPinned        Boolean  @default(false) @map("is_pinned")
+  isDeleted       Boolean  @default(false) @map("is_deleted")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  community Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  PostComment[]
+
+  @@index([communityId, createdAt])
+  @@map("posts")
+}
+
+model PostComment {
+  id          String   @id @default(uuid()) @db.Uuid
+  postId      String   @map("post_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid           // FK self-referencial para respuestas anidadas
+  content     String   @db.Text
+  likesCount  Int      @default(0) @map("likes_count")
+  hasSpoiler  Boolean  @default(false) @map("has_spoiler")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  post     Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   PostComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  PostComment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@map("post_comments")
+}
+
+model CommunityChat {
+  id          String   @id @default(uuid()) @db.Uuid
+  communityId String   @map("community_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  content     String   @db.VarChar(500)
+  replyToId   String?  @map("reply_to_id") @db.Uuid         // responder a mensaje específico
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  community Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replyTo   CommunityChat? @relation("ChatReplies", fields: [replyToId], references: [id])
+  replies   CommunityChat[] @relation("ChatReplies")
+
+  @@index([communityId, createdAt])
+  @@map("community_chat")
+}
+
+model CommunityBan {
+  id          String    @id @default(uuid()) @db.Uuid
+  communityId String    @map("community_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  reason      String?   @db.VarChar(300)
+  bannedById  String    @map("banned_by") @db.Uuid
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation("UserBannedIn", fields: [userId], references: [id], onDelete: Cascade)
+  bannedBy  User      @relation("CommunityBansIssued", fields: [bannedById], references: [id])
+
+  @@unique([communityId, userId])
+  @@map("community_bans")
+}
+
+model CommunityJoinRequest {
+  id           String             @id @default(uuid()) @db.Uuid
+  communityId  String             @map("community_id") @db.Uuid
+  userId       String             @map("user_id") @db.Uuid
+  status       JoinRequestStatus  @default(pending)
+  createdAt    DateTime           @default(now()) @map("created_at")
+  reviewedAt   DateTime?          @map("reviewed_at")
+  reviewedById String?            @map("reviewed_by") @db.Uuid
+
+  community  Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User?     @relation("JoinRequestReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([communityId, userId])
+  @@map("community_join_requests")
+}
+
+// ================================================================
+// GRUPO 4 — GAMIFICACIÓN
+// ================================================================
+
+model Achievement {
+  id          String @id @default(uuid()) @db.Uuid
+  code        String @unique @db.VarChar(50)       // ej: "EP_100", "HOURS_500"
+  name        String @db.VarChar(100)
+  description String @db.VarChar(300)
+  xpReward    Int    @map("xp_reward")
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  achievementId String   @map("achievement_id") @db.Uuid
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Rank {
+  id             String @id @default(uuid()) @db.Uuid
+  name           String @unique @db.VarChar(100)
+  animeReference String @map("anime_reference") @db.VarChar(100)  // universo anime de referencia
+  xpRequired     Int    @map("xp_required")
+  sortOrder      Int    @map("sort_order")
+
+  @@map("ranks")
+}
+
+// ================================================================
+// GRUPO 5 — MODERACIÓN
+// ================================================================
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String    @db.VarChar(255)
+  token     String    @unique @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([email])
+  @@map("password_reset_tokens")
+}
+
+model Report {
+  id          String            @id @default(uuid()) @db.Uuid
+  reporterId  String            @map("reporter_id") @db.Uuid
+  contentType ReportContentType @map("content_type")
+  contentId   String            @map("content_id") @db.Uuid   // ID del contenido reportado
+  reason      String            @db.VarChar(500)
+  status      ReportStatus      @default(pendiente)
+  reviewedById String?          @map("reviewed_by") @db.Uuid
+  reviewNote  String?           @map("review_note") @db.VarChar(500)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  reporter   User  @relation("ReportSubmitter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("ReportReviewer", fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@map("reports")
+}

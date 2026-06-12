@@ -1,0 +1,43 @@
+_format_version: "1.1"
+
+###############################################################################
+# SERVICIOS
+# Kong actúa como gateway de los servicios internos de Supabase.
+# El frontend (Next.js) y el backend (NestJS) usan estas rutas para
+# conectarse a Supabase Realtime y al panel Studio.
+###############################################################################
+
+services:
+  # ── Supabase Realtime ───────────────────────────────────────────────────
+  - name: realtime
+    url: http://supabase-realtime:4001/
+    routes:
+      - name: realtime-route
+        strip_path: true
+        paths:
+          - /realtime
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - http://localhost:3000
+            - http://localhost:4000
+            - https://kuroshi.lat
+          methods:
+            - GET
+            - POST
+            - OPTIONS
+          headers:
+            - Authorization
+            - Content-Type
+            - apikey
+          credentials: true
+
+  # ── Supabase Studio (pg-meta) ───────────────────────────────────────────
+  - name: meta
+    url: http://supabase-meta:8080/
+    routes:
+      - name: meta-route
+        strip_path: true
+        paths:
+          - /pg

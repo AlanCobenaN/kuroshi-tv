@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#0f0f18"/>
+    </linearGradient>
+    <linearGradient id="red3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e63946"/>
+      <stop offset="100%" style="stop-color:#c42d3a"/>
+    </linearGradient>
+    <linearGradient id="split3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e63946;stop-opacity:0.08"/>
+      <stop offset="100%" style="stop-color:#e63946;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="600" height="400" fill="url(#bg3)"/>
+
+  <!-- Panel izquierdo con tono leve -->
+  <rect x="0" y="0" width="300" height="400" fill="url(#split3)"/>
+
+  <!-- Línea divisoria central sutil -->
+  <line x1="300" y1="40" x2="300" y2="360" stroke="#e63946" stroke-width="1" opacity="0.15"/>
+
+  <!-- Lado izquierdo — stats -->
+  <text x="48" y="80" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="3" fill="#e63946">YA DENTRO</text>
+
+  <!-- Stat 1 -->
+  <text x="48" y="148" font-family="'Helvetica Neue', Arial, sans-serif" font-size="52" font-weight="900" fill="#f0eff4" letter-spacing="-2">12k</text>
+  <text x="48" y="172" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#4e4d5c" letter-spacing="1">OTAKUS ACTIVOS</text>
+
+  <rect x="48" y="188" width="200" height="1" fill="#18181f"/>
+
+  <!-- Stat 2 -->
+  <text x="48" y="236" font-family="'Helvetica Neue', Arial, sans-serif" font-size="52" font-weight="900" fill="#f0eff4" letter-spacing="-2">340+</text>
+  <text x="48" y="260" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#4e4d5c" letter-spacing="1">COMUNIDADES</text>
+
+  <rect x="48" y="276" width="200" height="1" fill="#18181f"/>
+
+  <!-- Stat 3 -->
+  <text x="48" y="324" font-family="'Helvetica Neue', Arial, sans-serif" font-size="52" font-weight="900" fill="url(#red3)" letter-spacing="-2">∞</text>
+  <text x="48" y="348" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#4e4d5c" letter-spacing="1">ANIME GRATIS</text>
+
+  <!-- Lado derecho — CTA -->
+  <text x="336" y="80" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="3" fill="#9190a0">INVITA A TUS AMIGOS</text>
+
+  <text x="336" y="156" font-family="'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="800" fill="#f0eff4" letter-spacing="-1">¿Ves anime</text>
+  <text x="336" y="200" font-family="'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="800" fill="#f0eff4" letter-spacing="-1">solo?</text>
+
+  <text x="336" y="244" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#9190a0">Comparte el link. Comenten</text>
+  <text x="336" y="264" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#9190a0">al mismo minuto del video.</text>
+
+  <!-- Avatares apilados decorativos -->
+  <circle cx="336" cy="316" r="16" fill="#18181f" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="336" y="321" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#9190a0" text-anchor="middle">A</text>
+  <circle cx="358" cy="316" r="16" fill="#1f1f28" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="358" y="321" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#9190a0" text-anchor="middle">K</text>
+  <circle cx="380" cy="316" r="16" fill="#25252f" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="380" y="321" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#9190a0" text-anchor="middle">M</text>
+  <circle cx="402" cy="316" r="16" fill="#e63946" stroke="#0a0a0f" stroke-width="2"/>
+  <text x="402" y="321" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">+</text>
+
+  <!-- CTA Button -->
+  <rect x="336" y="346" width="208" height="34" rx="6" fill="url(#red3)"/>
+  <text x="440" y="368" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="0.3">Invitar amigos</text>
+
+  <!-- Borde -->
+  <rect width="600" height="400" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.05"/>
+</svg>

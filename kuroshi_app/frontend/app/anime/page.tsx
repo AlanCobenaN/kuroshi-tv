@@ -1,0 +1,116 @@
+// app/anime/page.tsx
+import type { Metadata } from 'next'
+import { animeApi } from '@/lib/api'
+import { AnimeSummary, PaginatedResponse } from '@/types'
+import { CatalogGrid } from './CatalogGrid'
+import { CatalogFilters } from './CatalogFilters'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Footer } from '@/components/layout/Footer'
+import { AdBanner } from '@/components/ads/AdBanner'
+import { CatalogWithAds } from '@/components/ads/CatalogWithAds'
+
+export const metadata: Metadata = {
+  title: 'Catálogo de Anime',
+  description: 'Explora el catálogo completo de anime en Kuroshi.tv. Filtra por género, estado, temporada y más.',
+}
+
+interface SearchParams {
+  [key: string]: string | undefined
+  genre?: string
+  status?: string
+  season?: string
+  year?: string
+  studio?: string
+  order?: string
+  page?: string
+  q?: string
+}
+
+interface Props {
+  searchParams: Promise<SearchParams>
+}
+
+export default async function AnimeCatalogPage({ searchParams }: Props) {
+  const params = await searchParams
+
+  const filters = {
+    genre:   params.genre,
+    status:  params.status,
+    season:  params.season,
+    year:    params.year ? Number(params.year) : undefined,
+    studio:  params.studio,
+    order:   params.order ?? 'popular',
+    page:    params.page ? Number(params.page) : 1,
+    limit:   24,
+    q:       params.q,
+  }
+
+  // Fetch paralelo: catálogo + animes en emisión para el carrusel top
+  const [catalogRes, airingRes] = await Promise.allSettled([
+    animeApi.getCatalog(filters),
+    animeApi.getAiring(),
+  ])
+
+  const catalog = catalogRes.status === 'fulfilled'
+    ? (catalogRes.value as PaginatedResponse<AnimeSummary & { total_episodes?: number; year?: number }>)
+    : { data: [], meta: { page: 1, total: 0, total_pages: 0, limit: 24 } }
+
+  const airing = airingRes.status === 'fulfilled'
+    ? (airingRes.value as AnimeSummary[])
+    : []
+
+  const hasActiveFilters = !!(params.genre || params.status || params.season || params.year || params.studio || params.q)
+
+  return (
+    <>
+      <div className="catalog-page container" style={{ paddingBottom: 0 }}>
+        {/* Header */}
+        <div className="catalog-header">
+          <SectionHeader
+            title={params.q ? `Resultados para "${params.q}"` : 'Catálogo de Anime'}
+            subtitle={
+              catalog.meta.total > 0
+                ? `${catalog.meta.total.toLocaleString('es')} títulos${hasActiveFilters ? ' con filtros aplicados' : ''}`
+                : undefined
+            }
+          />
+        </div>
+
+        {/* Anuncio horizontal */}
+        <AdBanner />
+      </div>
+
+      {/* Layout: filtros laterales + grid con ads verticales — full-width */}
+      <CatalogWithAds>
+        <div className="catalog-layout">
+          {/* Sidebar de filtros */}
+          <aside className="catalog-sidebar" aria-label="Filtros del catálogo">
+            <CatalogFilters currentFilters={params} />
+          </aside>
+
+          {/* Grid de resultados */}
+          <main className="catalog-main" aria-label="Resultados del catálogo">
+            {/* Animes en emisión — solo en la vista sin filtros activos */}
+            {!hasActiveFilters && airing.length > 0 && (
+              <div className="catalog-airing-strip">
+                <p className="catalog-strip-label">
+                  <span className="strip-dot" aria-hidden="true" />
+                  En emisión ahora — {airing.length} series activas
+                </p>
+              </div>
+            )}
+
+            <CatalogGrid
+              animes={catalog.data}
+              meta={catalog.meta}
+              currentPage={filters.page ?? 1}
+              currentFilters={params}
+            />
+          </main>
+        </div>
+      </CatalogWithAds>
+
+      <Footer />
+    </>
+  )
+}

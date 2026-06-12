@@ -1,0 +1,57 @@
+services:
+  # ─────────────────────────────────────────
+  # BASE DE DATOS
+  # ─────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: kuroshi_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - kuroshi_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # BACKEND — NestJS
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: kuroshi_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    networks:
+      - kuroshi_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run start:dev
+
+# ─────────────────────────────────────────
+# VOLÚMENES Y RED
+# ─────────────────────────────────────────
+volumes:
+  postgres_data:
+
+networks:
+  kuroshi_network:
+    driver: bridge

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="600" viewBox="0 0 160 600">
+  <defs>
+    <linearGradient id="bgV2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d0d14"/>
+      <stop offset="100%" style="stop-color:#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="amberV2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f4a261"/>
+      <stop offset="100%" style="stop-color:#e07b3c"/>
+    </linearGradient>
+    <linearGradient id="redV2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e63946"/>
+      <stop offset="100%" style="stop-color:#c42d3a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="160" height="600" fill="url(#bgV2)"/>
+
+  <!-- Línea derecha amber -->
+  <rect x="157" y="0" width="3" height="600" fill="url(#amberV2)" opacity="0.5"/>
+
+  <!-- Bloque superior decorativo -->
+  <rect x="0" y="0" width="160" height="3" fill="url(#amberV2)" opacity="0.7"/>
+
+  <!-- Logo -->
+  <text x="80" y="52" font-family="'Helvetica Neue', Arial, sans-serif" font-size="19" font-weight="900" fill="#f0eff4" text-anchor="middle" letter-spacing="-0.5">kuro<tspan fill="#e63946">shi</tspan></text>
+  <text x="80" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#4e4d5c" text-anchor="middle">.lat</text>
+
+  <rect x="20" y="82" width="120" height="1" fill="#18181f"/>
+
+  <!-- Eyebrow -->
+  <text x="80" y="106" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="2" fill="#f4a261" text-anchor="middle">COMUNIDADES</text>
+
+  <!-- Headline -->
+  <text x="80" y="150" font-family="'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="900" fill="#f0eff4" text-anchor="middle" letter-spacing="-0.8">Tu</text>
+  <text x="80" y="180" font-family="'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="900" fill="#f0eff4" text-anchor="middle" letter-spacing="-0.8">fandom,</text>
+  <text x="80" y="216" font-family="'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="900" fill="#f4a261" text-anchor="middle" letter-spacing="-0.8">tu casa.</text>
+
+  <rect x="20" y="232" width="120" height="1" fill="#18181f"/>
+
+  <!-- Descripción -->
+  <text x="80" y="258" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#9190a0" text-anchor="middle">Crea una comunidad</text>
+  <text x="80" y="276" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#9190a0" text-anchor="middle">de fans. Publica,</text>
+  <text x="80" y="294" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#9190a0" text-anchor="middle">chatea, crece.</text>
+
+  <rect x="20" y="310" width="120" height="1" fill="#18181f"/>
+
+  <!-- Progress circle decorativo -->
+  <circle cx="80" cy="376" r="50" fill="none" stroke="#18181f" stroke-width="8"/>
+  <!-- Arco de progreso ~67% -->
+  <circle cx="80" cy="376" r="50" fill="none" stroke="#f4a261" stroke-width="8"
+    stroke-dasharray="210 314"
+    stroke-dashoffset="78"
+    stroke-linecap="round"
+    transform="rotate(-90 80 376)"/>
+  <text x="80" y="370" font-family="'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="900" fill="#f0eff4" text-anchor="middle">847</text>
+  <text x="80" y="388" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" fill="#4e4d5c" text-anchor="middle">/ 1000</text>
+
+  <text x="80" y="442" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#9190a0" text-anchor="middle">miembros para</text>
+  <text x="80" y="458" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#9190a0" text-anchor="middle">ser <tspan font-weight="700" fill="#f4a261">oficial</tspan></text>
+
+  <rect x="20" y="474" width="120" height="1" fill="#18181f"/>
+
+  <!-- CTA -->
+  <rect x="16" y="492" width="128" height="36" rx="6" fill="none" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="80" y="515" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#f4a261" text-anchor="middle">Crear comunidad</text>
+
+  <text x="80" y="548" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" fill="#4e4d5c" text-anchor="middle">kuroshi.lat</text>
+
+  <rect width="160" height="600" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.05"/>
+</svg>

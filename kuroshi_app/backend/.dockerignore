@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-seed
+.env
+.env.*
+!.env.example
+npm-debug.log*
+tsconfig.tsbuildinfo
+.git
+.gitignore
+README.md

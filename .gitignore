@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+
+# Backend build
+kuroshi_app/backend/dist/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma
+kuroshi_app/backend/node_modules/.prisma/
+
+# Docker
+kuroshi_app/backend/postgres-data/
+
+# Dev
+dev-server.log
+
+# Documents
+*.docx
+
+# Backup
+publicidad/
