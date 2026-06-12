@@ -38,6 +38,7 @@ export class CommunitiesController {
   constructor(private readonly communitiesService: CommunitiesService) {}
 
   // GET /api/communities
+  @Public()
   @UseGuards(OptionalJwtGuard)
   @Get()
   @ApiOperation({ summary: 'Explorar comunidades con filtros, featured y trending' })

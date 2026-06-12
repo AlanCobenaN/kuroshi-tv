@@ -9,22 +9,25 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    // On public routes, still attempt JWT validation if a token is present,
-    // but don't throw if missing/invalid — allows @CurrentUser to work.
     if (isPublic) {
-      return super.canActivate(context);
+      try {
+        return await super.canActivate(context);
+      } catch {
+        return true;
+      }
     }
 
-    return super.canActivate(context);
+    return super.canActivate(context) as boolean;
   }
 
   handleRequest(err: any, user: any) {
-    return user ?? null;
+    if (err) throw err;
+    return user;
   }
 }

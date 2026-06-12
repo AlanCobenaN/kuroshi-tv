@@ -48,6 +48,7 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId, currentMinute
     episodeId,
     currentMinute,
     isLoggedIn: !!session,
+    accessToken: session?.accessToken,
   })
 
   const displayedComments = showAll ? allComments : visibleComments
