@@ -164,8 +164,7 @@ export const animeApi = {
   getEpisode: (slug: string, number: number, token?: string) =>
     api.get(`/anime/${slug}/episode/${number}`, {
       token,
-      revalidate: 3600,
-      tags: [`episode-${slug}-${number}`],
+      cache: 'no-store',
     }),
 
   getEpisodeComments: (slug: string, number: number, minute?: number) => {

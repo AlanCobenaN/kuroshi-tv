@@ -47,8 +47,12 @@ export default async function EpisodePlayerPage({ params }: Props) {
 
   const episode     = episodeRes.value as Episode & { anime?: Anime }
   const anime       = animeRes.status === 'fulfilled' ? (animeRes.value as Anime) : null
-  const allEpisodes = allEpisodesRes.status === 'fulfilled'
-    ? (Array.isArray(allEpisodesRes.value) ? allEpisodesRes.value : (allEpisodesRes.value as any).data ?? []) as Episode[]
+  const allEpisodesRaw = allEpisodesRes.status === 'fulfilled'
+    ? (Array.isArray(allEpisodesRes.value) ? allEpisodesRes.value : (allEpisodesRes.value as any).data ?? [])
+    : []
+
+  const allEpisodes: Episode[] = Array.isArray(allEpisodesRaw)
+    ? allEpisodesRaw.flatMap((item: any) => item.episodes ?? [item])
     : []
 
   const prevEpisode = allEpisodes.find(ep => ep.number === epNum - 1)
