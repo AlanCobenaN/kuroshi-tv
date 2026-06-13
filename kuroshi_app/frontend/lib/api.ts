@@ -172,11 +172,10 @@ export const animeApi = {
     return api.get(`/anime/${slug}/episode/${number}/comments${query}`, { cache: 'no-store' })
   },
 
-  // ✅ CORREGIDO: videoMinute en camelCase — coincide con el DTO del backend
   postComment: (
     slug: string,
     number: number,
-    body: { content: string; videoMinute: number; hasSpoiler?: boolean },
+    body: { content: string; videoMinute: number; videoSecond: number; hasSpoiler?: boolean },
     token: string
   ) => api.post(`/anime/${slug}/episode/${number}/comments`, body, { token }),
 

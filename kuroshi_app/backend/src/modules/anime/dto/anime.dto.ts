@@ -117,6 +117,12 @@ export class CreateEpisodeCommentDto {
   @Min(0)
   videoMinute: number;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(59)
+  videoSecond: number = 0;
+
   @IsOptional()
   @IsBoolean()
   hasSpoiler?: boolean = false;

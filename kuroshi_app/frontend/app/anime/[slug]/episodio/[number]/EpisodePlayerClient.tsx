@@ -1,13 +1,12 @@
 'use client'
 // app/anime/[slug]/episodio-[number]/EpisodePlayerClient.tsx
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Anime, AnimeSummary, Episode } from '@/types'
 import { VideoPlayer } from '@/components/episode/VideoPlayer'
 import { EpisodeChat } from '@/components/episode/EpisodeChat'
 import { EpisodeNavigator } from '@/components/episode/EpisodeNavigator'
-import { usersApi } from '@/lib/api'
 import { PlayerWithAds } from '@/components/ads/PlayerWithAds'
 import { AdBanner } from '@/components/ads/AdBanner'
 
@@ -34,22 +33,10 @@ export function EpisodePlayerClient({
   userId,
   relatedAnimes,
 }: Props) {
-  const [currentMinute, setCurrentMinute] = useState(0)
   const [showMobileChat, setShowMobileChat] = useState(false)
 
   const animeData = anime ?? episode.anime
   const servers   = episode.video_servers ?? []
-
-  const handleProgressSave = useCallback(async (minute: number, completed: boolean) => {
-    const token = (window as any).__kuroshi_token__ as string | undefined
-    if (!token || !isLoggedIn) return
-    try {
-      await usersApi.saveProgress(
-        { episodeId: episode.id, lastMinute: minute, completed },
-        token
-      )
-    } catch {}
-  }, [episode.id, isLoggedIn])
 
   return (
     <PlayerWithAds>
@@ -80,11 +67,6 @@ export function EpisodePlayerClient({
         <div className="player-main">
           <VideoPlayer
             servers={servers}
-            animeTitle={animeData?.title_es ?? 'Anime'}
-            animeSlug={animeSlug}
-            episodeNumber={episode.number}
-            onMinuteChange={setCurrentMinute}
-            onProgressSave={handleProgressSave}
           />
 
           {/* Info del episodio */}
@@ -186,7 +168,6 @@ export function EpisodePlayerClient({
             animeSlug={animeSlug}
             episodeNumber={episode.number}
             episodeId={episode.id}
-            currentMinute={currentMinute}
           />
         </aside>
       </div>
@@ -215,7 +196,6 @@ export function EpisodePlayerClient({
               animeSlug={animeSlug}
               episodeNumber={episode.number}
               episodeId={episode.id}
-              currentMinute={currentMinute}
             />
           </div>
         </div>

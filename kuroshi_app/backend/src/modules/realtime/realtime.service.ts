@@ -45,6 +45,7 @@ export class RealtimeService implements OnModuleInit {
           id: comment.id,
           content: comment.content,
           video_minute: comment.videoMinute,
+          video_second: comment.videoSecond,
           likes_count: comment.likesCount,
           has_spoiler: comment.hasSpoiler,
           created_at: comment.createdAt,

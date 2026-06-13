@@ -1,53 +1,15 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { VideoServer } from '@/types'
 
 interface Props {
   servers: VideoServer[]
-  animeTitle: string
-  animeSlug: string
-  episodeNumber: number
-  onMinuteChange: (minute: number) => void
-  onProgressSave: (minute: number, completed: boolean) => void
 }
 
-export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onMinuteChange, onProgressSave }: Props) {
+export function VideoPlayer({ servers }: Props) {
   const [activeServer, setActiveServer] = useState<VideoServer | null>(
     servers.length > 0 ? servers[0] : null
   )
-  const [currentMinute, setCurrentMinute] = useState(0)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const minuteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const lastSavedMinRef = useRef(0)
-
-  useEffect(() => {
-    if (!activeServer) return
-
-    let elapsedSeconds = 0
-
-    minuteTimerRef.current = setInterval(() => {
-      elapsedSeconds += 1
-      const minute = Math.floor(elapsedSeconds / 60)
-      if (minute !== currentMinute) {
-        setCurrentMinute(minute)
-        onMinuteChange(minute)
-      }
-    }, 1000)
-
-    progressTimerRef.current = setInterval(() => {
-      if (elapsedSeconds > 0 && Math.floor(elapsedSeconds / 60) !== lastSavedMinRef.current) {
-        lastSavedMinRef.current = Math.floor(elapsedSeconds / 60)
-        onProgressSave(lastSavedMinRef.current, false)
-      }
-    }, 30_000)
-
-    return () => {
-      if (minuteTimerRef.current) clearInterval(minuteTimerRef.current)
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeServer?.id])
 
   if (servers.length === 0) {
     return (
@@ -84,7 +46,6 @@ export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onM
       <div className="player-frame-wrapper">
         {activeServer && (
           <iframe
-            ref={iframeRef}
             src={activeServer.embed_url}
             className="player-iframe"
             allowFullScreen
@@ -110,13 +71,6 @@ export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onM
             </button>
           ))}
         </div>
-
-        <span className="player-minute">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-          </svg>
-          min {currentMinute}
-        </span>
       </div>
 
       <style>{`
@@ -184,16 +138,6 @@ export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onM
           color: var(--text-primary);
           background: var(--bg-hover);
           border-color: var(--accent);
-        }
-
-        .player-minute {
-          display: flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-family: var(--font-display);
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--text-muted);
         }
       `}</style>
     </div>

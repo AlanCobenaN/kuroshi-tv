@@ -298,27 +298,17 @@ export class AnimeService {
       throw new ForbiddenException('El comentario no puede superar 200 caracteres');
     }
 
-    const existing = await this.prisma.episodeComment.findUnique({
-      where: {
-        episodeId_userId_videoMinute: {
-          episodeId: episode.id,
-          userId,
-          videoMinute: dto.videoMinute,
-        },
-      },
-    });
-    if (existing) throw new ConflictException('Ya comentaste en este minuto del episodio');
-
     const comment = await this.prisma.episodeComment.create({
       data: {
         episodeId: episode.id,
         userId,
         content: dto.content,
         videoMinute: dto.videoMinute,
+        videoSecond: dto.videoSecond,
         hasSpoiler: dto.hasSpoiler ?? false,
       },
       select: {
-        id: true, content: true, videoMinute: true, likesCount: true,
+        id: true, content: true, videoMinute: true, videoSecond: true, likesCount: true,
         hasSpoiler: true, createdAt: true,
         user: { select: { id: true, username: true, avatarUrl: true, role: true } },
       },

@@ -354,6 +354,7 @@ model EpisodeComment {
   userId      String   @map("user_id") @db.Uuid
   content     String   @db.VarChar(200)                    // límite 200 caracteres del documento
   videoMinute Int      @map("video_minute")                // minuto del video donde se escribió
+  videoSecond Int      @default(0) @map("video_second")    // segundo del video donde se escribió (0-59)
   likesCount  Int      @default(0) @map("likes_count")
   hasSpoiler  Boolean  @default(false) @map("has_spoiler")
   isDeleted   Boolean  @default(false) @map("is_deleted")  // borrado lógico para moderación
@@ -362,9 +363,7 @@ model EpisodeComment {
   episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Un usuario solo puede comentar una vez por minuto de episodio
-  @@unique([episodeId, userId, videoMinute])
-  @@index([episodeId, videoMinute])
+  @@index([episodeId, videoMinute, videoSecond])
   @@map("episode_comments")
 }
 

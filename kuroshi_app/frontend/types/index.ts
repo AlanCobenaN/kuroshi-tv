@@ -212,6 +212,7 @@ export interface EpisodeComment {
   }
   content: string
   video_minute: number
+  video_second: number
   likes_count: number
   has_spoiler: boolean
   created_at: string
@@ -459,6 +460,7 @@ export interface WsNewComment {
   id: string
   content: string
   video_minute: number
+  video_second: number
   likes_count: number
   has_spoiler: boolean
   user: {
