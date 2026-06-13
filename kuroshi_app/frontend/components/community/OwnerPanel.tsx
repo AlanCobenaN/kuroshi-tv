@@ -33,7 +33,7 @@ export function OwnerPanel({
         <button onClick={() => setTab('requests')} className={`op-tab ${tab === 'requests' ? 'op-tab--active' : ''}`}>Solicitudes</button>
       </div>
 
-      {tab === 'settings' && <SettingsTab slug={slug} accessToken={accessToken} communityName={communityName} communityDescription={communityDescription} communityBannerUrl={communityBannerUrl} communityAvatarUrl={communityAvatarUrl} communityIsPrivate={communityIsPrivate} onUpdated={onCommunityUpdated} />}
+      {tab === 'settings' && <SettingsTab slug={slug} accessToken={accessToken} communityName={communityName} communityDescription={communityDescription} communityBannerUrl={communityBannerUrl} communityAvatarUrl={communityAvatarUrl} communityIsPrivate={communityIsPrivate} onUpdated={onCommunityUpdated} onDelete={onDelete} />}
       {tab === 'moderators' && <ModeratorsTab slug={slug} accessToken={accessToken} />}
       {tab === 'bans' && <BansTab slug={slug} accessToken={accessToken} />}
       {tab === 'requests' && <RequestsTab slug={slug} accessToken={accessToken} />}
@@ -52,9 +52,9 @@ export function OwnerPanel({
 
 /* ─── Settings Tab ─────────────────────────────────────── */
 
-function SettingsTab({ slug, accessToken, communityName, communityDescription, communityBannerUrl, communityAvatarUrl, communityIsPrivate, onUpdated }: {
+function SettingsTab({ slug, accessToken, communityName, communityDescription, communityBannerUrl, communityAvatarUrl, communityIsPrivate, onUpdated, onDelete }: {
   slug: string; accessToken: string; communityName: string; communityDescription?: string;
-  communityBannerUrl?: string; communityAvatarUrl?: string; communityIsPrivate?: boolean; onUpdated: () => void
+  communityBannerUrl?: string; communityAvatarUrl?: string; communityIsPrivate?: boolean; onUpdated: () => void; onDelete?: () => void
 }) {
   const [name, setName] = useState(communityName)
   const [description, setDescription] = useState(communityDescription ?? '')
