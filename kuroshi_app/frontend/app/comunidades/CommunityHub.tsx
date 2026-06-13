@@ -17,6 +17,7 @@ interface Props {
   userId?: string
   username?: string
   accessToken?: string
+  initialSelectedSlug?: string | null
 }
 
 export function CommunityHub({
@@ -27,6 +28,7 @@ export function CommunityHub({
   userId,
   username,
   accessToken: serverToken,
+  initialSelectedSlug,
 }: Props) {
   const { data: clientSession, status } = useSession()
 
@@ -35,7 +37,7 @@ export function CommunityHub({
   const effectiveUserId = userId || clientSession?.user?.id
   const effectiveUsername = username || clientSession?.user?.username
 
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null)
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(initialSelectedSlug ?? null)
   const [showCreatePost, setShowCreatePost] = useState(false)
   const [myCommunities, setMyCommunities] = useState<CommunityWithMembership[]>(initialMyCommunities)
   const [members, setMembers] = useState<CommunityMemberInfo[]>([])
@@ -60,6 +62,13 @@ export function CommunityHub({
       refreshMyCommunities(effectiveToken)
     }
   }, [effectiveToken])
+
+  // Auto-select community from URL query param when token is ready
+  useEffect(() => {
+    if (initialSelectedSlug && effectiveToken) {
+      handleSelectCommunity(initialSelectedSlug)
+    }
+  }, [initialSelectedSlug, effectiveToken, handleSelectCommunity])
 
   // Heartbeat cada 2 min para mantener lastActiveAt actualizado
   useEffect(() => {

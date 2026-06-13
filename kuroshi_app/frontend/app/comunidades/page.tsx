@@ -14,7 +14,12 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function ComunidadesPage() {
+interface Props {
+  searchParams: Promise<{ slug?: string }>
+}
+
+export default async function ComunidadesPage({ searchParams }: Props) {
+  const { slug: initialSelectedSlug } = await searchParams
   const session = await getServerSession(authOptions)
   const token = session?.accessToken
 
@@ -41,6 +46,7 @@ export default async function ComunidadesPage() {
           userId={session?.user?.id}
           username={session?.user?.username}
           accessToken={token}
+          initialSelectedSlug={initialSelectedSlug ?? null}
         />
       </CommunitiesWithAds>
       <Footer />

@@ -143,8 +143,8 @@ const NOTIF_CONFIG: Record<NotificationType, {
         <path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4Z" />
       </svg>
     ),
-    getLink: (meta) => meta?.community_slug && meta?.post_id
-      ? `/comunidad/${meta.community_slug}?post=${meta.post_id}`
+    getLink: (meta) => meta?.community_slug
+      ? `/comunidades?slug=${meta.community_slug}`
       : undefined,
   },
 }
