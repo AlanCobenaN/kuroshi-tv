@@ -135,6 +135,18 @@ const NOTIF_CONFIG: Record<NotificationType, {
       ? `/comunidad/${meta.community_slug}?post=${meta.post_id}`
       : undefined,
   },
+  anuncio_comunidad: {
+    label: 'Anuncio',
+    color: 'var(--amber)',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4Z" />
+      </svg>
+    ),
+    getLink: (meta) => meta?.community_slug && meta?.post_id
+      ? `/comunidad/${meta.community_slug}?post=${meta.post_id}`
+      : undefined,
+  },
 }
 
 type FilterType = 'todas' | 'anime' | 'social' | 'comunidades'
@@ -147,10 +159,10 @@ const FILTER_TYPES: { id: FilterType; label: string }[] = [
 ]
 
 const FILTER_MAP: Record<FilterType, NotificationType[]> = {
-  todas:       ['nuevo_ep', 'like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada', 'logro_desbloqueado', 'comunidad_promovida', 'retoma_anime', 'respuesta_post', 'respuesta_comment'],
+  todas:       ['nuevo_ep', 'like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada', 'logro_desbloqueado', 'comunidad_promovida', 'retoma_anime', 'respuesta_post', 'respuesta_comment', 'anuncio_comunidad'],
   anime:       ['nuevo_ep', 'retoma_anime', 'logro_desbloqueado'],
-  social:      ['like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada', 'respuesta_post', 'respuesta_comment'],
-  comunidades: ['comunidad_promovida'],
+  social:      ['like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada', 'respuesta_post', 'respuesta_comment', 'anuncio_comunidad'],
+  comunidades: ['comunidad_promovida', 'anuncio_comunidad'],
 }
 
 function timeAgo(dateStr: string): string {

@@ -10,10 +10,11 @@ interface Props {
   initialMeta: PaginatedResponse<Community>['meta']
   selectedSlug: string | null
   onSelect: (slug: string | null) => void
+  removedSlugs?: string[]
 }
 
-export function LeftSidebar({ initialCommunities, initialMeta, selectedSlug, onSelect }: Props) {
-  const [communities, setCommunities] = useState(initialCommunities)
+export function LeftSidebar({ initialCommunities, initialMeta, selectedSlug, onSelect, removedSlugs }: Props) {
+  const [communities, setCommunities] = useState(initialCommunities.filter(c => !removedSlugs?.includes(c.slug)))
   const [meta, setMeta] = useState(initialMeta)
   const [loading, setLoading] = useState(false)
 

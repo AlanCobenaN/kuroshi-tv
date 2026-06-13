@@ -20,15 +20,16 @@ interface Props {
   accessToken?: string
   myCommunities: CommunityWithMembership[]
   onRefreshMyCommunities: () => void
+  onDeleteCommunity: (slug: string) => void
 }
 
-export function CenterPanel({ selectedSlug, isLoggedIn, userId, username, accessToken, myCommunities, onRefreshMyCommunities }: Props) {
+export function CenterPanel({ selectedSlug, isLoggedIn, userId, username, accessToken, myCommunities, onRefreshMyCommunities, onDeleteCommunity }: Props) {
   if (!selectedSlug) {
     return <GlobalFeedPanel isLoggedIn={isLoggedIn} accessToken={accessToken} />
   }
 
   return (
-    <CommunityView
+      <CommunityView
       slug={selectedSlug}
       isLoggedIn={isLoggedIn}
       userId={userId}
@@ -36,6 +37,7 @@ export function CenterPanel({ selectedSlug, isLoggedIn, userId, username, access
       accessToken={accessToken}
       myCommunities={myCommunities}
       onRefreshMyCommunities={onRefreshMyCommunities}
+      onDeleteCommunity={onDeleteCommunity}
     />
   )
 }
@@ -193,7 +195,7 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
 
 /* ─── Specific Community View ────────────────────────────── */
 
-function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myCommunities, onRefreshMyCommunities }: {
+function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myCommunities, onRefreshMyCommunities, onDeleteCommunity }: {
   slug: string
   isLoggedIn: boolean
   userId?: string
@@ -201,6 +203,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
   accessToken?: string
   myCommunities: CommunityWithMembership[]
   onRefreshMyCommunities: () => void
+  onDeleteCommunity: (slug: string) => void
 }) {
   const [community, setCommunity] = useState<Community | null>(null)
   const [isMember, setIsMember] = useState(false)
@@ -354,6 +357,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
             communityAvatarUrl={community.avatar_url}
             communityIsPrivate={(community as any).is_private}
             onCommunityUpdated={refreshCommunity}
+            onDelete={() => onDeleteCommunity(slug)}
           />
         )}
       </div>

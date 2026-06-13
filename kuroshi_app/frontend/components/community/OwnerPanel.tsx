@@ -13,12 +13,13 @@ interface Props {
   communityAvatarUrl?: string
   communityIsPrivate?: boolean
   onCommunityUpdated: () => void
+  onDelete?: () => void
 }
 
 export function OwnerPanel({
   slug, accessToken, communityName, communityDescription,
   communityBannerUrl, communityAvatarUrl, communityIsPrivate,
-  onCommunityUpdated,
+  onCommunityUpdated, onDelete,
 }: Props) {
   const [tab, setTab] = useState<'settings' | 'moderators' | 'bans' | 'requests'>('settings')
 
@@ -110,7 +111,7 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
     if (!confirm('¿Eliminar la comunidad permanentemente? Esta acción no se puede deshacer.')) return
     try {
       await communitiesApi.deleteCommunity(slug, accessToken)
-      window.location.reload()
+      onDelete?.()
     } catch (e: any) {
       showMsg('error', e?.message || 'Error al eliminar')
     }

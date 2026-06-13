@@ -406,7 +406,7 @@ export class CommunitiesService {
       });
     }
 
-    return this.prisma.post.create({
+    const post = await this.prisma.post.create({
       data: {
         communityId: community.id,
         userId,
@@ -423,6 +423,32 @@ export class CommunitiesService {
         user: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
+
+    // Si la comunidad es "Anuncios", notificar a todos los usuarios
+    if (slug === 'anuncios') {
+      const author = post.user?.username ?? 'Alguien';
+      const allUsers = await this.prisma.user.findMany({
+        select: { id: true },
+      });
+      const notificationPromises = allUsers.map(u =>
+        this.usersService.createNotification(u.id, 'anuncio_comunidad', {
+          title: `Nuevo anuncio — ${author}`,
+          body: dto.content.length > 120
+            ? dto.content.slice(0, 120) + '…'
+            : dto.content,
+          metadata: {
+            postId: post.id,
+            community_slug: slug,
+            content: dto.content,
+            imageUrl: dto.imageUrl,
+            author: author,
+          },
+        }),
+      );
+      await Promise.allSettled(notificationPromises);
+    }
+
+    return post;
   }
 
   // ── PATCH /communities/:slug/posts/:id/hide ───────────────

@@ -39,6 +39,7 @@ export function CommunityHub({
   const [showCreatePost, setShowCreatePost] = useState(false)
   const [myCommunities, setMyCommunities] = useState<CommunityWithMembership[]>(initialMyCommunities)
   const [members, setMembers] = useState<CommunityMemberInfo[]>([])
+  const [deletedSlugs, setDeletedSlugs] = useState<string[]>([])
 
   const refreshMyCommunities = useCallback(async (token: string) => {
     try {
@@ -89,6 +90,12 @@ export function CommunityHub({
     await refreshMyCommunities(effectiveToken)
   }, [effectiveToken, refreshMyCommunities])
 
+  const handleDeleteCommunity = useCallback((slug: string) => {
+    setDeletedSlugs(prev => [...prev, slug])
+    setSelectedSlug(null)
+    setMyCommunities(prev => prev.filter(c => c.slug !== slug))
+  }, [])
+
   return (
     <div className="hub">
       <div className="hub-layout">
@@ -97,6 +104,7 @@ export function CommunityHub({
           initialMeta={initialMeta}
           selectedSlug={selectedSlug}
           onSelect={handleSelectCommunity}
+          removedSlugs={deletedSlugs}
         />
         <CenterPanel
           selectedSlug={selectedSlug}
@@ -106,6 +114,7 @@ export function CommunityHub({
           accessToken={effectiveToken}
           myCommunities={myCommunities}
           onRefreshMyCommunities={handleRefreshMyCommunities}
+          onDeleteCommunity={handleDeleteCommunity}
         />
         <RightSidebar
           selectedSlug={selectedSlug}

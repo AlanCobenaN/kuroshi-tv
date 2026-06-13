@@ -28,6 +28,7 @@ export type NotificationType =
   | 'retoma_anime'
   | 'respuesta_post'
   | 'respuesta_comment'
+  | 'anuncio_comunidad'
 
 // ─── Grupo Usuarios ──────────────────────────────────────────
 
