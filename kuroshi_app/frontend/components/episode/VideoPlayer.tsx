@@ -1,9 +1,6 @@
 'use client'
-// components/episode/VideoPlayer.tsx
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { VideoServer } from '@/types'
-import { useMiniPlayer } from './MiniPlayerProvider'
 
 interface Props {
   servers: VideoServer[]
@@ -14,58 +11,79 @@ interface Props {
   onProgressSave: (minute: number, completed: boolean) => void
 }
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onMinuteChange, onProgressSave }: Props) {
-  const router = useRouter()
-  const { minimize } = useMiniPlayer()
   const [activeServer, setActiveServer] = useState<VideoServer | null>(
     servers.length > 0 ? servers[0] : null
   )
-  const [currentMinute, setCurrentMinute] = useState(0)
-  const [isPiP, setIsPiP] = useState(false)
-  const iframeRef        = useRef<HTMLIFrameElement>(null)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [timerRunning, setTimerRunning] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const minuteTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
-  const lastSavedMinRef  = useRef(0)
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastSavedMinRef = useRef(0)
+  const lastEmittedMinRef = useRef(0)
 
-  // Simular tracking del minuto (el iframe del embed no da acceso real al tiempo)
+  const currentMinute = Math.floor(elapsedSeconds / 60)
+
+  // Emit minute change when crossing minute boundary
+  useEffect(() => {
+    if (currentMinute !== lastEmittedMinRef.current) {
+      lastEmittedMinRef.current = currentMinute
+      onMinuteChange(currentMinute)
+    }
+  }, [currentMinute, onMinuteChange])
+
+  // Timer tick — only runs when timerRunning is true
+  useEffect(() => {
+    if (!timerRunning || !activeServer) return
+
+    tickRef.current = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1)
+    }, 1000)
+
+    return () => {
+      if (tickRef.current) clearInterval(tickRef.current)
+    }
+  }, [timerRunning, activeServer?.id])
+
+  // Progress save — always runs regardless of timer state
   useEffect(() => {
     if (!activeServer) return
 
-    let elapsedSeconds = 0
-
-    minuteTimerRef.current = setInterval(() => {
-      elapsedSeconds += 1
-      const minute = Math.floor(elapsedSeconds / 60)
-      if (minute !== currentMinute) {
-        setCurrentMinute(minute)
-        onMinuteChange(minute)
-      }
-    }, 1000)
-
-    // Guardar progreso cada 30 segundos
     progressTimerRef.current = setInterval(() => {
-      if (elapsedSeconds > 0 && Math.floor(elapsedSeconds / 60) !== lastSavedMinRef.current) {
-        lastSavedMinRef.current = Math.floor(elapsedSeconds / 60)
-        onProgressSave(lastSavedMinRef.current, false)
+      const minute = Math.floor(elapsedSeconds / 60)
+      if (minute > 0 && minute !== lastSavedMinRef.current) {
+        lastSavedMinRef.current = minute
+        onProgressSave(minute, false)
       }
     }, 30_000)
 
     return () => {
-      if (minuteTimerRef.current)  clearInterval(minuteTimerRef.current)
       if (progressTimerRef.current) clearInterval(progressTimerRef.current)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeServer?.id])
 
-  const handlePiP = useCallback(() => {
-    if (!activeServer) return
-    const pip = window.open(
-      activeServer.embed_url,
-      'kuroshi-pip',
-      'width=640,height=360,resizable=yes,scrollbars=no,toolbar=no,menubar=no'
-    )
-    if (pip) setIsPiP(true)
-  }, [activeServer])
+  const toggleTimer = useCallback(() => {
+    setTimerRunning(prev => !prev)
+  }, [])
+
+  const seek = useCallback((delta: number) => {
+    setElapsedSeconds(prev => Math.max(0, prev + delta))
+  }, [])
+
+  const resetTimer = useCallback(() => {
+    setElapsedSeconds(0)
+    setTimerRunning(false)
+    lastSavedMinRef.current = 0
+    lastEmittedMinRef.current = 0
+  }, [])
 
   if (servers.length === 0) {
     return (
@@ -119,7 +137,10 @@ export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onM
           {servers.map((server, i) => (
             <button
               key={server.id}
-              onClick={() => setActiveServer(server)}
+              onClick={() => {
+                setActiveServer(server)
+                resetTimer()
+              }}
               className={`player-server-btn ${activeServer?.id === server.id ? 'player-server-btn--active' : ''}`}
               aria-pressed={activeServer?.id === server.id}
               aria-label={`Cambiar a ${server.server_name}`}
@@ -129,50 +150,71 @@ export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onM
           ))}
         </div>
 
-        <div className="player-actions">
+        <div className="player-timer">
           <button
-            onClick={handlePiP}
-            className="player-action-btn"
-            title="Picture in Picture"
-            aria-label="Abrir en ventana flotante"
+            onClick={() => seek(-60)}
+            className="player-timer-btn"
+            title="Retroceder 1 minuto"
+            aria-label="Retroceder 1 minuto"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <rect x="12" y="9" width="9" height="7" rx="1" ry="1" fill="currentColor" />
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
             </svg>
-            PiP
           </button>
 
           <button
-            onClick={() => {
-              if (activeServer) {
-                minimize({
-                  embedUrl: activeServer.embed_url,
-                  serverName: activeServer.server_name,
-                  animeTitle,
-                  animeSlug,
-                  episodeNumber,
-                })
-                router.push('/')
-              }
-            }}
-            className="player-action-btn"
-            title="Ventana flotante"
-            aria-label="Minimizar reproductor"
+            onClick={() => seek(-10)}
+            className="player-timer-btn"
+            title="Retroceder 10 segundos"
+            aria-label="Retroceder 10 segundos"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <rect x="9" y="7" width="8" height="6" rx="1" ry="1" fill="currentColor" />
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
             </svg>
-            Minimizar
+            <span className="player-timer-seek-label">10s</span>
           </button>
 
-          <span className="player-minute">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          <button
+            onClick={toggleTimer}
+            className="player-timer-play"
+            title={timerRunning ? 'Pausar temporizador' : 'Iniciar temporizador'}
+            aria-label={timerRunning ? 'Pausar temporizador' : 'Iniciar temporizador'}
+          >
+            {timerRunning ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+            )}
+          </button>
+
+          <span className="player-timer-display">{formatTime(elapsedSeconds)}</span>
+
+          <button
+            onClick={() => seek(10)}
+            className="player-timer-btn"
+            title="Avanzar 10 segundos"
+            aria-label="Avanzar 10 segundos"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
-            min {currentMinute}
-          </span>
+            <span className="player-timer-seek-label">10s</span>
+          </button>
+
+          <button
+            onClick={() => seek(60)}
+            className="player-timer-btn"
+            title="Avanzar 1 minuto"
+            aria-label="Avanzar 1 minuto"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -243,36 +285,52 @@ export function VideoPlayer({ servers, animeTitle, animeSlug, episodeNumber, onM
           border-color: var(--accent);
         }
 
-        .player-actions {
+        .player-timer {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.25rem;
         }
-        .player-action-btn {
+        .player-timer-btn {
           display: flex;
           align-items: center;
-          gap: 0.35rem;
-          padding: 0.25rem 0.625rem;
+          gap: 0.15rem;
+          padding: 0.25rem 0.4rem;
           font-family: var(--font-display);
-          font-size: 0.75rem;
+          font-size: 0.6875rem;
           font-weight: 600;
-          color: var(--text-secondary);
+          color: var(--text-muted);
           background: var(--bg-overlay);
           border: 1px solid var(--border);
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-sm);
           cursor: pointer;
           transition: all var(--transition-fast);
         }
-        .player-action-btn:hover { color: var(--text-primary); border-color: var(--border-hover); }
-
-        .player-minute {
+        .player-timer-btn:hover { color: var(--text-primary); border-color: var(--border-hover); }
+        .player-timer-seek-label { font-size: 0.5625rem; }
+        .player-timer-play {
           display: flex;
           align-items: center;
-          gap: 0.3rem;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          padding: 0;
+          background: var(--accent);
+          border: none;
+          border-radius: var(--radius-full);
+          color: #fff;
+          cursor: pointer;
+          transition: background var(--transition-fast);
+        }
+        .player-timer-play:hover { background: var(--accent-dim); }
+        .player-timer-display {
           font-family: var(--font-display);
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--text-muted);
+          font-size: 0.8125rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          color: var(--text-primary);
+          min-width: 3.5ch;
+          text-align: center;
+          font-variant-numeric: tabular-nums;
         }
       `}</style>
     </div>

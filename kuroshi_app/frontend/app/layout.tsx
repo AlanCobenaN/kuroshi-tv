@@ -5,8 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { TokenProvider } from '@/components/providers/TokenProvider'
-import { MiniPlayerProvider } from '@/components/episode/MiniPlayerProvider'
-import { MiniPlayer } from '@/components/episode/MiniPlayer'
+
 import { Header } from '@/components/layout/Header'
 import { SubNav } from '@/components/layout/SubNav'
 import './globals.css'
@@ -60,14 +59,11 @@ export default async function RootLayout({
       <body>
         <SessionProvider session={session}>
           <TokenProvider>
-            <MiniPlayerProvider>
-              <Header />
-              <SubNav />
-              <main className="page-content">
-                {children}
-              </main>
-              <MiniPlayer />
-            </MiniPlayerProvider>
+            <Header />
+            <SubNav />
+            <main className="page-content">
+              {children}
+            </main>
           </TokenProvider>
         </SessionProvider>
       </body>
