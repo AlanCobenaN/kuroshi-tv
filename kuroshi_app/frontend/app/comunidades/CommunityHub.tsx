@@ -56,29 +56,6 @@ export function CommunityHub({
     }
   }, [])
 
-  // Refetch my communities when token becomes available and server didn't provide them
-  useEffect(() => {
-    if (myCommunities.length === 0 && effectiveToken) {
-      refreshMyCommunities(effectiveToken)
-    }
-  }, [effectiveToken])
-
-  // Auto-select community from URL query param when token is ready
-  useEffect(() => {
-    if (initialSelectedSlug && effectiveToken) {
-      handleSelectCommunity(initialSelectedSlug)
-    }
-  }, [initialSelectedSlug, effectiveToken, handleSelectCommunity])
-
-  // Heartbeat cada 2 min para mantener lastActiveAt actualizado
-  useEffect(() => {
-    if (!effectiveToken) return
-    const id = setInterval(() => {
-      authApi.ping(effectiveToken).catch(() => {})
-    }, 120000)
-    return () => clearInterval(id)
-  }, [effectiveToken])
-
   const handleSelectCommunity = useCallback(async (slug: string | null) => {
     setSelectedSlug(slug)
     if (slug && effectiveToken) {
@@ -104,6 +81,29 @@ export function CommunityHub({
     setSelectedSlug(null)
     setMyCommunities(prev => prev.filter(c => c.slug !== slug))
   }, [])
+
+  // Refetch my communities when token becomes available and server didn't provide them
+  useEffect(() => {
+    if (myCommunities.length === 0 && effectiveToken) {
+      refreshMyCommunities(effectiveToken)
+    }
+  }, [effectiveToken])
+
+  // Auto-select community from URL query param when token is ready
+  useEffect(() => {
+    if (initialSelectedSlug && effectiveToken) {
+      handleSelectCommunity(initialSelectedSlug)
+    }
+  }, [initialSelectedSlug, effectiveToken, handleSelectCommunity])
+
+  // Heartbeat cada 2 min para mantener lastActiveAt actualizado
+  useEffect(() => {
+    if (!effectiveToken) return
+    const id = setInterval(() => {
+      authApi.ping(effectiveToken).catch(() => {})
+    }, 120000)
+    return () => clearInterval(id)
+  }, [effectiveToken])
 
   return (
     <div className="hub">
