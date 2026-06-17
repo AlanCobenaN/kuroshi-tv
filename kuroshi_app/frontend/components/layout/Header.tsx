@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useSession, signOut, getSession } from 'next-auth/react'
 import Image from 'next/image'
 import { usersApi, authApi } from '@/lib/api'
+import { userNotificationsChannel } from '@/lib/supabase'
+import { WsNotification } from '@/types'
 
 export function Header() {
   const { data: session, update } = useSession()
@@ -21,6 +23,22 @@ export function Header() {
       })
       .catch(() => {})
   }, [session?.accessToken])
+
+  // Suscripción en tiempo real a nuevas notificaciones
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    const channel = userNotificationsChannel(session.user.id)
+    if (!channel) return
+
+    channel
+      .on('broadcast', { event: 'notification' }, ({ payload }: { payload: WsNotification }) => {
+        setNotifCount(prev => prev + 1)
+      })
+      .subscribe()
+
+    return () => { channel.unsubscribe() }
+  }, [session?.user?.id])
 
   // Sync fresh avatar from API when session exists
   useEffect(() => {
