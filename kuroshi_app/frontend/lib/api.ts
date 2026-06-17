@@ -224,7 +224,7 @@ export const authApi = {
 
 export const usersApi = {
   getProfile: (username: string, token?: string) =>
-    api.get(`/users/${username}`, { token, revalidate: 60 }),
+    api.get(`/users/${username}`, { token, cache: token ? 'no-store' : undefined, revalidate: token ? undefined : 60 }),
 
   updateMe: (
     body: Partial<{
@@ -263,13 +263,13 @@ export const usersApi = {
   ) => api.post('/users/me/progress', body, { token }),
 
   getActivity: (username: string, token?: string) =>
-    api.get(`/users/${username}/activity`, { token, revalidate: 60 }),
+    api.get(`/users/${username}/activity`, { token, cache: token ? 'no-store' : undefined, revalidate: token ? undefined : 60 }),
 
   getFriends: (username: string, token?: string) =>
-    api.get(`/users/${username}/friends`, { token, revalidate: 60 }),
+    api.get(`/users/${username}/friends`, { token, cache: token ? 'no-store' : undefined, revalidate: token ? undefined : 60 }),
 
   getUserCommunities: (username: string, token?: string) =>
-    api.get(`/users/${username}/communities`, { token, revalidate: 60 }),
+    api.get(`/users/${username}/communities`, { token, cache: token ? 'no-store' : undefined, revalidate: token ? undefined : 60 }),
 
   sendFriendRequest: (username: string, token: string) =>
     api.post(`/users/${username}/friend-request`, {}, { token }),

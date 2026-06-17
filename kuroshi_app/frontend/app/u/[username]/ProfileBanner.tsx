@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { UserPublicProfile } from '@/types'
 import { usersApi } from '@/lib/api'
 
@@ -16,6 +17,7 @@ interface Props {
 export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
   const [isPending, startTransition] = useTransition()
   const [requestSent, setRequestSent] = useState(profile.friendship_status === 'pendiente')
+  const router = useRouter()
   const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
 
   const handleFriendRequest = () => {
@@ -25,6 +27,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
       try {
         await usersApi.sendFriendRequest(profile.username, token)
         setRequestSent(true)
+        router.refresh()
       } catch {}
     })
   }
