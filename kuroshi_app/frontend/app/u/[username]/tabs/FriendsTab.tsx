@@ -14,30 +14,34 @@ interface Props {
 
 export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
   const [friends, setFriends] = useState<Friendship[]>([])
-  const [pending, setPending] = useState<Friendship[]>([])
+  const [received, setReceived] = useState<any[]>([])
+  const [sent, setSent] = useState<any[]>([])
   const [isLoading, setIsLoading]    = useState(true)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     setIsLoading(true)
-    usersApi.getFriends(username, accessToken)
-      .then((data: any) => {
-        const items: Friendship[] = Array.isArray(data) ? data : data.data ?? []
-        setFriends(items)
+    Promise.all([
+      usersApi.getFriends(username, accessToken),
+      isOwnProfile && accessToken ? usersApi.getFriendRequests(accessToken) : Promise.resolve({ received: [], sent: [] }),
+    ])
+      .then(([friendsData, requestsData]: any) => {
+        setFriends(Array.isArray(friendsData) ? friendsData : friendsData.data ?? [])
+        if (requestsData) {
+          setReceived(requestsData.received ?? [])
+          setSent(requestsData.sent ?? [])
+        }
       })
-      .catch(() => setFriends([]))
+      .catch(() => { setFriends([]); setReceived([]); setSent([]) })
       .finally(() => setIsLoading(false))
-  }, [username, accessToken])
+  }, [username, accessToken, isOwnProfile])
 
   const handleRespond = (id: string, action: 'aceptada' | 'rechazada') => {
     if (!accessToken) return
     startTransition(async () => {
       try {
         await usersApi.respondFriendRequest(id, action, accessToken)
-        setPending(prev => prev.filter(f => f.id !== id))
-        if (action === 'aceptada') {
-          // Refrescar lista de amigos
-        }
+        setReceived(prev => prev.filter((f: any) => f.id !== id))
       } catch {}
     })
   }
@@ -57,15 +61,15 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
 
   return (
     <div className="friends-tab">
-      {/* Solicitudes pendientes — solo en perfil propio */}
-      {isOwnProfile && pending.length > 0 && (
+      {/* Solicitudes recibidas — solo en perfil propio */}
+      {isOwnProfile && received.length > 0 && (
         <div className="friends-pending">
           <h3 className="friends-section-title">
-            Solicitudes pendientes
-            <span className="friends-pending-count">{pending.length}</span>
+            Solicitudes recibidas
+            <span className="friends-pending-count">{received.length}</span>
           </h3>
           <div className="friends-pending-list">
-            {pending.map(req => (
+            {received.map((req: any) => (
               <div key={req.id} className="pending-row">
                 <div className="friend-avatar-wrapper">
                   {req.user?.avatar_url ? (
@@ -95,6 +99,36 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Solicitudes enviadas — solo en perfil propio */}
+      {isOwnProfile && sent.length > 0 && (
+        <div className="friends-pending">
+          <h3 className="friends-section-title">
+            Solicitudes enviadas
+            <span className="friends-pending-count">{sent.length}</span>
+          </h3>
+          <div className="friends-pending-list">
+            {sent.map((req: any) => (
+              <div key={req.id} className="pending-row">
+                <div className="friend-avatar-wrapper">
+                  {req.user?.avatar_url ? (
+                    <Image src={req.user.avatar_url} alt={req.user.username ?? ''} width={40} height={40} className="friend-avatar" />
+                  ) : (
+                    <div className="friend-avatar-fallback">{req.user?.username?.[0]?.toUpperCase()}</div>
+                  )}
+                </div>
+                <div className="friend-info">
+                  <span className="friend-name">{req.user?.username}</span>
+                  <span className="friend-meta">solicitud enviada — esperando respuesta</span>
+                </div>
+                <div className="pending-actions" style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  Pendiente
                 </div>
               </div>
             ))}

@@ -281,6 +281,9 @@ export const usersApi = {
     token: string
   ) => api.put(`/users/me/friend-request/${id}`, { action }, { token }),
 
+  getFriendRequests: (token: string) =>
+    api.get('/users/me/friend-requests', { token, cache: 'no-store' }),
+
   getNotifications: (params: { type?: string; page?: number }, token: string) => {
     const query = new URLSearchParams(
       Object.entries(params)

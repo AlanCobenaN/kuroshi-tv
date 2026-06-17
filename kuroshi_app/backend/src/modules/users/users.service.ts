@@ -671,6 +671,45 @@ export class UsersService {
     return updated;
   }
 
+  // ── GET /users/me/friend-requests ─────────────────────────
+  async getFriendRequests(userId: string) {
+    const [received, sent] = await Promise.all([
+      this.prisma.friendship.findMany({
+        where: { addresseeId: userId, status: 'pendiente' },
+        select: {
+          id: true,
+          createdAt: true,
+          requester: {
+            select: { id: true, username: true, avatarUrl: true, bio: true },
+          },
+        },
+      }),
+      this.prisma.friendship.findMany({
+        where: { requesterId: userId, status: 'pendiente' },
+        select: {
+          id: true,
+          createdAt: true,
+          addressee: {
+            select: { id: true, username: true, avatarUrl: true, bio: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      received: received.map((f) => ({
+        id: f.id,
+        user: f.requester,
+        createdAt: f.createdAt,
+      })),
+      sent: sent.map((f) => ({
+        id: f.id,
+        user: f.addressee,
+        createdAt: f.createdAt,
+      })),
+    };
+  }
+
   // ── GET /users/me/notifications ───────────────────────────
   async getNotifications(userId: string, dto: GetNotificationsDto) {
     const where: any = { userId };

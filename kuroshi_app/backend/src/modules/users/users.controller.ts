@@ -182,6 +182,15 @@ export class UsersController {
     return this.usersService.respondFriendRequest(userId, friendshipId, dto);
   }
 
+  // GET /api/users/me/friend-requests
+  @Get('me/friend-requests')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Solicitudes de amistad recibidas y enviadas pendientes' })
+  getFriendRequests(@CurrentUser('id') userId: string) {
+    return this.usersService.getFriendRequests(userId);
+  }
+
   // GET /api/users/me/notifications
   @Get('me/notifications')
   @UseGuards(JwtAuthGuard)
