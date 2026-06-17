@@ -159,7 +159,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
                   </svg>
                   Amigos
                 </span>
-              ) : profile.friendship_status === 'pendiente' ? (
+              ) : (profile.friendship_status === 'pendiente' || requestSent) ? (
                 <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
