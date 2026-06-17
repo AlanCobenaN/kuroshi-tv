@@ -47,10 +47,10 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
         if (action === 'aceptada' && req?.user) {
           const newFriend: Friendship = {
             id,
-            requesterId: req.user.id,
-            addresseeId: '',
+            requester_id: req.user.id,
+            addressee_id: '',
             status: 'aceptada',
-            createdAt: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             user: req.user,
           }
           setFriends(prev => [newFriend, ...prev])
