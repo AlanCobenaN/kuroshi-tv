@@ -426,6 +426,13 @@ export function Header() {
           font-size: 0.8125rem;
           height: 34px;
         }
+        @media (max-width: 640px) {
+          .btn-sm {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+            height: 30px;
+          }
+        }
 
         .avatar-btn {
           display: flex;
@@ -552,7 +559,7 @@ export function Header() {
         .mobile-search-close { display: none; }
 
         @media (max-width: 640px) {
-          .kuroshi-header { gap: 0.5rem; padding: 0 0.75rem; }
+          .kuroshi-header { gap: 0.35rem; padding: 0 0.5rem; }
 
           /* Logo hidden when search is open */
           .logo-hidden-mobile {
@@ -563,16 +570,14 @@ export function Header() {
             overflow: hidden;
           }
 
-          /* Search form: compact when closed, full-width when open */
+          /* Search form: hidden by default, full-width when open */
           .kuroshi-search-form {
-            max-width: 180px;
-            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                        border-color var(--transition-fast),
-                        background var(--transition-fast);
+            display: none;
           }
           .kuroshi-search-form.mobile-open {
-            max-width: 100%;
+            display: flex;
             flex: 1;
+            max-width: 100%;
           }
 
           .search-hint-desktop { display: none; }
