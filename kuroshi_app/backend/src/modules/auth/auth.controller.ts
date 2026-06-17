@@ -29,7 +29,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle({ default: { limit: 3, ttl: 300000 } })
   @ApiOperation({ summary: 'Registro con email, username y contraseña' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -37,7 +37,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 5, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login con email y contraseña' })
   async login(@Body() dto: LoginDto) {
@@ -135,7 +135,7 @@ export class AuthController {
 
   @Public()
   @Post('forgot-password')
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle({ default: { limit: 3, ttl: 300000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Solicitar cambio de contraseña (envía email de confirmación)' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
