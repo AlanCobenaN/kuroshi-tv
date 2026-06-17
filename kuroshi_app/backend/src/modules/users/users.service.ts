@@ -106,11 +106,33 @@ export class UsersService {
       },
     });
 
+    // Estado de amistad con el visitante
+    let friendshipStatus: string | null = null;
+    let friendshipId: string | null = null;
+
+    if (requesterId && requesterId !== user.id) {
+      const friendship = await this.prisma.friendship.findFirst({
+        where: {
+          OR: [
+            { requesterId, addresseeId: user.id },
+            { requesterId: user.id, addresseeId: requesterId },
+          ],
+        },
+        select: { id: true, status: true },
+      });
+      if (friendship) {
+        friendshipStatus = friendship.status;
+        friendshipId = friendship.id;
+      }
+    }
+
     return {
       ...user,
       episodesWatched: progressStats._count.id,
       hoursWatched,
       friendsCount,
+      friendshipStatus,
+      friendshipId,
       isPrivate: false,
     };
   }
@@ -396,16 +418,30 @@ export class UsersService {
       },
     });
 
+    // Posts recientes del usuario
+    const recentPosts = await this.prisma.post.findMany({
+      where: { userId: user.id, isDeleted: false },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        community: { select: { slug: true, name: true } },
+      },
+    });
+
     const activity: any[] = [];
 
     // Mapear episodios vistos
     for (const p of recentProgress) {
+      const anime = p.episode.season.anime;
       activity.push({
         id: `progress_${p.id}`,
         type: 'episode_watched',
-        description: `Vio el episodio ${p.episode.number} de ${p.episode.season.anime.titleEs}`,
-        link: `/anime/${p.episode.season.anime.slug}`,
-        meta: p.episode.title ?? `EP ${p.episode.number}`,
+        description: `Vio el episodio ${p.episode.number}${p.completed ? '' : ' (en progreso)'} de ${anime.titleEs}`,
+        link: `/anime/${anime.slug}`,
+        meta: `EP ${p.episode.number} — ${anime.titleEs}`,
         createdAt: p.watchedAt,
       });
     }
@@ -431,6 +467,18 @@ export class UsersService {
         link: undefined,
         meta: `+${a.achievement.xpReward} XP`,
         createdAt: a.unlockedAt,
+      });
+    }
+
+    // Mapear posts
+    for (const p of recentPosts) {
+      activity.push({
+        id: `post_${p.id}`,
+        type: 'post',
+        description: `Publicó en ${p.community.name}: "${p.content.substring(0, 80)}${p.content.length > 80 ? '...' : ''}"`,
+        link: `/comunidad/${p.community.slug}`,
+        meta: p.community.name,
+        createdAt: p.createdAt,
       });
     }
 
@@ -581,6 +629,13 @@ export class UsersService {
       metadata: { requesterId, friendshipId: friendship.id },
     });
 
+    // Notificar al remitente que la solicitud fue enviada
+    await this.createNotification(requesterId, 'amistad_enviada' as any, {
+      title: 'Solicitud de amistad enviada',
+      body: `Le enviaste una solicitud de amistad a ${targetUsername}`,
+      metadata: { targetUsername, friendshipId: friendship.id },
+    });
+
     return friendship;
   }
 
@@ -684,7 +739,20 @@ export class UsersService {
       select: { status: true, manualOverride: true },
     });
 
-    if (!entry || entry.manualOverride) return; // respetar decisión manual
+    // Si no hay entrada en la watchlist, crear una con estado "viendo"
+    if (!entry) {
+      await this.prisma.userWatchlist.create({
+        data: {
+          userId,
+          animeId,
+          status: 'viendo',
+          lastWatchedAt: new Date(),
+        },
+      });
+      return;
+    }
+
+    if (entry.manualOverride) return; // respetar decisión manual
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentProgress = await this.prisma.userProgress.findFirst({
@@ -700,7 +768,6 @@ export class UsersService {
     if (recentProgress) {
       if (entry.status === 'abandonado' || entry.status === 'pendiente') {
         newStatus = 'viendo';
-        // Notificar retoma si venía de abandonado
         if (entry.status === 'abandonado') {
           await this.createNotification(userId, 'retoma_anime', {
             title: '¡Retomaste un anime!',
@@ -727,7 +794,7 @@ export class UsersService {
     type: any,
     payload: { title: string; body: string; metadata?: any; stackKey?: string },
   ) {
-    const SOCIAL_TYPES: any[] = ['respuesta_post', 'respuesta_comment', 'like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada'];
+    const SOCIAL_TYPES: any[] = ['respuesta_post', 'respuesta_comment', 'like_post', 'like_comment', 'amistad_recibida', 'amistad_enviada', 'amistad_aceptada'];
 
     // 1) Stacking — si hay una notif del mismo tipo+stackKey sin leer en los últimos 5 min, incrementar
     if (payload.stackKey) {

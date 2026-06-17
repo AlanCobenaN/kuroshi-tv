@@ -22,6 +22,7 @@ export type NotificationType =
   | 'like_post'
   | 'like_comment'
   | 'amistad_recibida'
+  | 'amistad_enviada'
   | 'amistad_aceptada'
   | 'logro_desbloqueado'
   | 'comunidad_promovida'
@@ -59,6 +60,8 @@ export interface UserPublicProfile {
   email_verified?: boolean
   favorite_anime?: AnimeSummary
   created_at: string
+  friendship_status?: 'pendiente' | 'aceptada' | 'rechazada' | 'bloqueada'
+  friendship_id?: string
   stats: {
     episodes_watched: number
     hours_watched: number

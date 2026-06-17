@@ -15,7 +15,7 @@ interface Props {
 
 export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [requestSent, setRequestSent] = useState(false)
+  const [requestSent, setRequestSent] = useState(profile.friendship_status === 'pendiente')
   const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
 
   const handleFriendRequest = () => {
@@ -29,7 +29,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
     })
   }
 
-  // Formato "Otaku desde Junio 2024"
+  // Formato "Se unió desde Junio 2024"
   const joinDate = profile.created_at ? new Date(profile.created_at) : null
   const validDate = joinDate && !isNaN(joinDate.getTime())
   const joinLabel = validDate ? joinDate.toLocaleDateString('es-LA', { month: 'long', year: 'numeric' }) : 'siempre'
@@ -118,7 +118,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
             </svg>
-            Otaku desde {joinLabel}
+            Se unió desde {joinLabel}
           </p>
 
           {profile.rank && (
@@ -149,30 +149,38 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
               </svg>
               Editar perfil
             </Link>
-          ) : isLoggedIn ? (
-            <button
-              onClick={handleFriendRequest}
-              disabled={isPending || requestSent}
-              className={`profile-action-btn ${requestSent ? 'profile-action-btn--sent' : 'profile-action-btn--primary'}`}
-              aria-label={requestSent ? 'Solicitud enviada' : 'Enviar solicitud de amistad'}
-            >
-              {requestSent ? (
-                <>
+          ) : (
+            <>
+              {profile.friendship_status === 'aceptada' ? (
+                <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Amigos
+                </span>
+              ) : profile.friendship_status === 'pendiente' ? (
+                <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Solicitud enviada
-                </>
+                </span>
               ) : (
-                <>
+                <button
+                  onClick={handleFriendRequest}
+                  disabled={isPending || requestSent}
+                  className="profile-action-btn profile-action-btn--primary"
+                  aria-label="Enviar solicitud de amistad"
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" />
                   </svg>
                   Agregar amigo
-                </>
+                </button>
               )}
-            </button>
+            </>
           ) : null}
         </div>
       </div>

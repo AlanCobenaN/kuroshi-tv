@@ -67,6 +67,16 @@ const NOTIF_CONFIG: Record<NotificationType, {
     ),
     getLink: (meta) => meta?.username ? `/u/${meta.username}` : undefined,
   },
+  amistad_enviada: {
+    label: 'Solicitud enviada',
+    color: '#60a5fa',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    ),
+    getLink: (meta) => meta?.targetUsername ? `/u/${meta.targetUsername}` : undefined,
+  },
   amistad_aceptada: {
     label: 'Amistad aceptada',
     color: '#4ade80',
@@ -159,9 +169,9 @@ const FILTER_TYPES: { id: FilterType; label: string }[] = [
 ]
 
 const FILTER_MAP: Record<FilterType, NotificationType[]> = {
-  todas:       ['nuevo_ep', 'like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada', 'logro_desbloqueado', 'comunidad_promovida', 'retoma_anime', 'respuesta_post', 'respuesta_comment', 'anuncio_comunidad'],
+  todas:       ['nuevo_ep', 'like_post', 'like_comment', 'amistad_recibida', 'amistad_enviada', 'amistad_aceptada', 'logro_desbloqueado', 'comunidad_promovida', 'retoma_anime', 'respuesta_post', 'respuesta_comment', 'anuncio_comunidad'],
   anime:       ['nuevo_ep', 'retoma_anime', 'logro_desbloqueado'],
-  social:      ['like_post', 'like_comment', 'amistad_recibida', 'amistad_aceptada', 'respuesta_post', 'respuesta_comment', 'anuncio_comunidad'],
+  social:      ['like_post', 'like_comment', 'amistad_recibida', 'amistad_enviada', 'amistad_aceptada', 'respuesta_post', 'respuesta_comment', 'anuncio_comunidad'],
   comunidades: ['comunidad_promovida', 'anuncio_comunidad'],
 }
 

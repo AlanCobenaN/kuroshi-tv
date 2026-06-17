@@ -55,6 +55,8 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
     visibility: profile.visibility ?? 'publico',
     email_verified: profile.emailVerified ?? profile.email_verified ?? false,
     created_at: profile.createdAt ?? profile.created_at,
+    friendship_status: profile.friendshipStatus ?? profile.friendship_status ?? undefined,
+    friendship_id: profile.friendshipId ?? profile.friendship_id ?? undefined,
     favorite_anime: profile.favoriteAnime
       ? {
           id:       profile.favoriteAnime.id,

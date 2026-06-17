@@ -48,6 +48,7 @@ enum NotificationType {
   like_post
   like_comment
   amistad_recibida
+  amistad_enviada
   amistad_aceptada
   logro_desbloqueado
   comunidad_promovida
