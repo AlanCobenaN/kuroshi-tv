@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Friendship } from '@/types'
 import { usersApi } from '@/lib/api'
 
@@ -19,6 +20,7 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
   const [isLoading, setIsLoading]    = useState(true)
   const [isPending, startTransition] = useTransition()
   const [pendingUnfriend, setPendingUnfriend] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     setIsLoading(true)
@@ -55,6 +57,7 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
           }
           setFriends(prev => [newFriend, ...prev])
         }
+        router.refresh()
       } catch {}
     })
   }
@@ -66,6 +69,7 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
       try {
         await usersApi.removeFriend(friendshipId, accessToken)
         setFriends(prev => prev.filter(f => f.id !== friendshipId))
+        router.refresh()
       } catch {}
       finally { setPendingUnfriend(null) }
     })
