@@ -12,6 +12,7 @@ interface Props {
   isOwnProfile: boolean
   isLoggedIn: boolean
   accessToken?: string
+  currentUserId?: string
   initialTab?: TabId
 }
 
@@ -24,7 +25,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'amigos',      label: 'Amigos' },
 ]
 
-export function ProfileTabs({ profile, isOwnProfile, isLoggedIn, accessToken, initialTab }: Props) {
+export function ProfileTabs({ profile, isOwnProfile, isLoggedIn, accessToken, currentUserId, initialTab }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab && ['lista', 'actividad', 'comunidades', 'amigos'].includes(initialTab) ? initialTab : 'lista')
 
   const isPrivate   = profile.visibility === 'privado'
@@ -74,7 +75,7 @@ export function ProfileTabs({ profile, isOwnProfile, isLoggedIn, accessToken, in
           {activeTab === 'lista'       && <WatchlistTab username={profile.username} isOwnProfile={isOwnProfile} accessToken={accessToken} />}
           {activeTab === 'actividad'   && <ActivityTab username={profile.username} />}
           {activeTab === 'comunidades' && <CommunitiesTab username={profile.username} />}
-          {activeTab === 'amigos'      && <FriendsTab username={profile.username} isOwnProfile={isOwnProfile} accessToken={accessToken} />}
+          {activeTab === 'amigos'      && <FriendsTab username={profile.username} isOwnProfile={isOwnProfile} accessToken={accessToken} currentUserId={currentUserId} />}
         </div>
       )}
 

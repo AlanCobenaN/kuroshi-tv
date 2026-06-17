@@ -589,11 +589,15 @@ export class UsersService {
 
   // ── POST /users/:username/friend-request ──────────────────
   async sendFriendRequest(requesterId: string, targetUsername: string) {
+    const requester = await this.prisma.user.findUnique({
+      where: { id: requesterId },
+      select: { id: true, username: true, avatarUrl: true },
+    });
     const target = await this.prisma.user.findUnique({
       where: { username: targetUsername },
-      select: { id: true },
+      select: { id: true, username: true, avatarUrl: true },
     });
-    if (!target) throw new NotFoundException('Usuario no encontrado');
+    if (!target || !requester) throw new NotFoundException('Usuario no encontrado');
 
     if (requesterId === target.id) {
       throw new BadRequestException('No puedes enviarte una solicitud a ti mismo');
@@ -636,6 +640,25 @@ export class UsersService {
       metadata: { targetUsername, friendshipId: friendship.id },
     });
 
+    // Emitir actualización en tiempo real a ambos usuarios
+    await this.realtime.emitFriendshipUpdate(requesterId, {
+      friendship_id: friendship.id,
+      status: 'pendiente',
+      actor_id: requesterId,
+      other_user_id: target.id,
+      other_username: target.username,
+      other_avatar_url: target.avatarUrl ?? undefined,
+    });
+
+    await this.realtime.emitFriendshipUpdate(target.id, {
+      friendship_id: friendship.id,
+      status: 'pendiente',
+      actor_id: requesterId,
+      other_user_id: requesterId,
+      other_username: requester.username,
+      other_avatar_url: requester.avatarUrl ?? undefined,
+    });
+
     return friendship;
   }
 
@@ -654,6 +677,18 @@ export class UsersService {
       throw new BadRequestException('La solicitud ya fue respondida');
     }
 
+    // Obtener datos de ambos usuarios para el payload del evento
+    const [requester, addressee] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: friendship.requesterId },
+        select: { id: true, username: true, avatarUrl: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: friendship.addresseeId },
+        select: { id: true, username: true, avatarUrl: true },
+      }),
+    ]);
+
     const updated = await this.prisma.friendship.update({
       where: { id: friendshipId },
       data: { status: dto.action },
@@ -665,6 +700,27 @@ export class UsersService {
         title: 'Solicitud aceptada',
         body: 'Tu solicitud de amistad fue aceptada',
         metadata: { friendshipId },
+      });
+    }
+
+    // Emitir actualización en tiempo real a ambos usuarios
+    if (requester && addressee) {
+      await this.realtime.emitFriendshipUpdate(friendship.requesterId, {
+        friendship_id: friendshipId,
+        status: dto.action,
+        actor_id: userId,
+        other_user_id: addressee.id,
+        other_username: addressee.username,
+        other_avatar_url: addressee.avatarUrl ?? undefined,
+      });
+
+      await this.realtime.emitFriendshipUpdate(friendship.addresseeId, {
+        friendship_id: friendshipId,
+        status: dto.action,
+        actor_id: userId,
+        other_user_id: requester.id,
+        other_username: requester.username,
+        other_avatar_url: requester.avatarUrl ?? undefined,
       });
     }
 

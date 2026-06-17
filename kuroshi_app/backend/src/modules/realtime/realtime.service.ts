@@ -121,6 +121,27 @@ export class RealtimeService implements OnModuleInit {
       });
   }
 
+  // ── Canal user:{id} — actualización de amistad ────────────
+  // Emite cuando cambia el estado de una amistad (solicitud enviada, aceptada, rechazada)
+  async emitFriendshipUpdate(userId: string, payload: {
+    friendship_id: string;
+    status: string;
+    actor_id: string;
+    other_user_id: string;
+    other_username: string;
+    other_avatar_url?: string;
+  }) {
+    if (!this.supabase) return;
+
+    await this.supabase
+      .channel(`user:${userId}`)
+      .send({
+        type: 'broadcast',
+        event: 'friendship_update',
+        payload,
+      });
+  }
+
   // ── Canal user:{id} ───────────────────────────────────────
   // Emite notificación push al usuario sin necesidad de recargar la página
   async emitNotification(userId: string, notification: any) {

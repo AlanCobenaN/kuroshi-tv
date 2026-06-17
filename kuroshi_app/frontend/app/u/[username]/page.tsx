@@ -120,6 +120,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
               isOwnProfile={isOwnProfile}
               isLoggedIn={!!session}
               accessToken={session?.accessToken}
+              currentUserId={session?.user?.id}
               initialTab={sp.tab as 'lista' | 'actividad' | 'comunidades' | 'amigos' | undefined}
             />
           </div>

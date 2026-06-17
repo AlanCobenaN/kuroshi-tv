@@ -1,27 +1,31 @@
 'use client'
 // app/u/[username]/tabs/FriendsTab.tsx
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Friendship } from '@/types'
 import { usersApi } from '@/lib/api'
+import { useFriendshipRealtime } from '@/hooks/useFriendshipRealtime'
 
 interface Props {
   username: string
   isOwnProfile: boolean
   accessToken?: string
+  currentUserId?: string
 }
 
-export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
+export function FriendsTab({ username, isOwnProfile, accessToken, currentUserId }: Props) {
   const [friends, setFriends] = useState<Friendship[]>([])
   const [received, setReceived] = useState<any[]>([])
   const [sent, setSent] = useState<any[]>([])
   const [isLoading, setIsLoading]    = useState(true)
   const [isPending, startTransition] = useTransition()
   const [pendingUnfriend, setPendingUnfriend] = useState<string | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   const router = useRouter()
 
+  // Re-fetch cuando cambia refreshTrigger (por evento en tiempo real)
   useEffect(() => {
     setIsLoading(true)
     Promise.all([
@@ -37,7 +41,12 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
       })
       .catch(() => { setFriends([]); setReceived([]); setSent([]) })
       .finally(() => setIsLoading(false))
-  }, [username, accessToken, isOwnProfile])
+  }, [username, accessToken, isOwnProfile, refreshTrigger])
+
+  // Escuchar cambios en tiempo real en las amistades
+  useFriendshipRealtime(currentUserId, useCallback(() => {
+    setRefreshTrigger(prev => prev + 1)
+  }, []))
 
   const handleRespond = (id: string, action: 'aceptada' | 'rechazada') => {
     if (!accessToken) return

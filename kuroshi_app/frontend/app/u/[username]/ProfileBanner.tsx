@@ -2,10 +2,11 @@
 // app/u/[username]/ProfileBanner.tsx
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPublicProfile } from '@/types'
 import { usersApi } from '@/lib/api'
+import { useFriendshipRealtime, FriendshipUpdatePayload } from '@/hooks/useFriendshipRealtime'
 
 interface Props {
   profile: UserPublicProfile
@@ -14,11 +15,27 @@ interface Props {
   currentUserId?: string
 }
 
-export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
+export function ProfileBanner({ profile, isOwnProfile, isLoggedIn, currentUserId }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [requestSent, setRequestSent] = useState(profile.friendship_status === 'pendiente')
+  const [friendshipStatus, setFriendshipStatus] = useState<string | null | undefined>(
+    profile.friendship_status
+  )
   const router = useRouter()
   const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
+
+  // Sincronizar cuando cambie el perfil (navegación entre usuarios)
+  useEffect(() => {
+    setFriendshipStatus(profile.friendship_status)
+  }, [profile.id, profile.friendship_status])
+
+  // Escuchar actualizaciones en tiempo real del estado de amistad
+  const handleFriendshipUpdate = useCallback((payload: FriendshipUpdatePayload) => {
+    if (payload.other_user_id === profile.id) {
+      setFriendshipStatus(payload.status)
+    }
+  }, [profile.id])
+
+  useFriendshipRealtime(currentUserId, handleFriendshipUpdate)
 
   const handleFriendRequest = () => {
     const token = (window as any).__kuroshi_token__ as string | undefined
@@ -26,7 +43,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
     startTransition(async () => {
       try {
         await usersApi.sendFriendRequest(profile.username, token)
-        setRequestSent(true)
+        setFriendshipStatus('pendiente')
         router.refresh()
       } catch {}
     })
@@ -154,7 +171,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
             </Link>
           ) : isLoggedIn ? (
             <>
-              {profile.friendship_status === 'aceptada' ? (
+              {friendshipStatus === 'aceptada' ? (
                 <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
@@ -162,7 +179,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
                   </svg>
                   Amigos
                 </span>
-              ) : (profile.friendship_status === 'pendiente' || requestSent) ? (
+              ) : friendshipStatus === 'pendiente' ? (
                 <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
@@ -172,7 +189,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
               ) : (
                 <button
                   onClick={handleFriendRequest}
-                  disabled={isPending || requestSent}
+                  disabled={isPending || friendshipStatus === 'pendiente'}
                   className="profile-action-btn profile-action-btn--primary"
                   aria-label="Enviar solicitud de amistad"
                 >
