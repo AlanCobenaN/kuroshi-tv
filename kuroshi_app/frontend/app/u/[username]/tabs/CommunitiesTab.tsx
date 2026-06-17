@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { usersApi } from '@/lib/api'
 
 interface CommunityEntry {
   id: string
@@ -25,10 +26,14 @@ export function CommunitiesTab({ username }: { username: string }) {
   const [isLoading, setIsLoading]    = useState(true)
 
   useEffect(() => {
-    // Endpoint: GET /users/:username/activity filtra por tipo comunidad
-    // Por ahora simulamos con datos vacíos hasta que el backend lo exponga
-    setIsLoading(false)
-    setCommunities([])
+    setIsLoading(true)
+    usersApi.getUserCommunities(username)
+      .then((data: any) => {
+        const items: CommunityEntry[] = Array.isArray(data) ? data : data.data ?? []
+        setCommunities(items)
+      })
+      .catch(() => setCommunities([]))
+      .finally(() => setIsLoading(false))
   }, [username])
 
   if (isLoading) {

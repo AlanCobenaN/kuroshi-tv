@@ -19,10 +19,15 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    // En una implementación real, GET /users/:username/friends
-    // Por ahora dejamos vacío — el backend lo expondrá
-    setIsLoading(false)
-  }, [username])
+    setIsLoading(true)
+    usersApi.getFriends(username, accessToken)
+      .then((data: any) => {
+        const items: Friendship[] = Array.isArray(data) ? data : data.data ?? []
+        setFriends(items)
+      })
+      .catch(() => setFriends([]))
+      .finally(() => setIsLoading(false))
+  }, [username, accessToken])
 
   const handleRespond = (id: string, action: 'aceptada' | 'rechazada') => {
     if (!accessToken) return

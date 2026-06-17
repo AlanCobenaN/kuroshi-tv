@@ -135,6 +135,28 @@ export class UsersController {
     return this.usersService.getActivity(username, requesterId);
   }
 
+  // GET /api/users/:username/friends
+  @Public()
+  @Get(':username/friends')
+  @ApiOperation({ summary: 'Lista de amigos del perfil' })
+  getFriends(
+    @Param('username') username: string,
+    @CurrentUser('id') requesterId?: string,
+  ) {
+    return this.usersService.getFriends(username, requesterId);
+  }
+
+  // GET /api/users/:username/communities
+  @Public()
+  @Get(':username/communities')
+  @ApiOperation({ summary: 'Comunidades del usuario con rol' })
+  getUserCommunities(
+    @Param('username') username: string,
+    @CurrentUser('id') requesterId?: string,
+  ) {
+    return this.usersService.getUserCommunities(username, requesterId);
+  }
+
   // POST /api/users/:username/friend-request
   @Post(':username/friend-request')
   @UseGuards(JwtAuthGuard)

@@ -265,6 +265,12 @@ export const usersApi = {
   getActivity: (username: string, token?: string) =>
     api.get(`/users/${username}/activity`, { token, revalidate: 60 }),
 
+  getFriends: (username: string, token?: string) =>
+    api.get(`/users/${username}/friends`, { token, revalidate: 60 }),
+
+  getUserCommunities: (username: string, token?: string) =>
+    api.get(`/users/${username}/communities`, { token, revalidate: 60 }),
+
   sendFriendRequest: (username: string, token: string) =>
     api.post(`/users/${username}/friend-request`, {}, { token }),
 

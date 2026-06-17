@@ -202,6 +202,9 @@ export class UsersService {
       where: { userId: user.id },
       orderBy: { lastWatchedAt: 'desc' },
       select: {
+        id: true,
+        userId: true,
+        animeId: true,
         status: true,
         personalRating: true,
         lastWatchedAt: true,
@@ -232,6 +235,7 @@ export class UsersService {
     return {
       total: watchlist.length,
       grouped,
+      data: watchlist,
     };
   }
 
@@ -351,6 +355,7 @@ export class UsersService {
       orderBy: { watchedAt: 'desc' },
       take: 10,
       select: {
+        id: true,
         watchedAt: true,
         completed: true,
         episode: {
@@ -373,6 +378,7 @@ export class UsersService {
       orderBy: { joinedAt: 'desc' },
       take: 5,
       select: {
+        id: true,
         joinedAt: true,
         community: { select: { slug: true, name: true, avatarUrl: true } },
       },
@@ -384,16 +390,153 @@ export class UsersService {
       orderBy: { unlockedAt: 'desc' },
       take: 5,
       select: {
+        id: true,
         unlockedAt: true,
         achievement: { select: { name: true, description: true, xpReward: true } },
       },
     });
 
-    return {
-      recentProgress,
-      recentCommunities,
-      recentAchievements,
-    };
+    const activity: any[] = [];
+
+    // Mapear episodios vistos
+    for (const p of recentProgress) {
+      activity.push({
+        id: `progress_${p.id}`,
+        type: 'episode_watched',
+        description: `Vio el episodio ${p.episode.number} de ${p.episode.season.anime.titleEs}`,
+        link: `/anime/${p.episode.season.anime.slug}`,
+        meta: p.episode.title ?? `EP ${p.episode.number}`,
+        createdAt: p.watchedAt,
+      });
+    }
+
+    // Mapear comunidades unidas
+    for (const c of recentCommunities) {
+      activity.push({
+        id: `community_${c.id}`,
+        type: 'community_joined',
+        description: `Se unió a la comunidad ${c.community.name}`,
+        link: `/comunidad/${c.community.slug}`,
+        meta: c.community.name,
+        createdAt: c.joinedAt,
+      });
+    }
+
+    // Mapear logros
+    for (const a of recentAchievements) {
+      activity.push({
+        id: `achievement_${a.id}`,
+        type: 'achievement',
+        description: `Desbloqueó el logro: ${a.achievement.name}`,
+        link: undefined,
+        meta: `+${a.achievement.xpReward} XP`,
+        createdAt: a.unlockedAt,
+      });
+    }
+
+    // Ordenar por fecha descendente
+    activity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return { data: activity };
+  }
+
+  // ── GET /users/:username/friends ──────────────────────────
+  async getFriends(username: string, requesterId?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true, visibility: true },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const isOwner = requesterId === user.id;
+    const isFriend = requesterId ? await this.areFriends(user.id, requesterId) : false;
+    const canSee =
+      isOwner ||
+      user.visibility === 'publico' ||
+      (user.visibility === 'solo_amigos' && isFriend);
+
+    if (!canSee) throw new ForbiddenException('Lista de amigos privada');
+
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        OR: [
+          { requesterId: user.id, status: 'aceptada' },
+          { addresseeId: user.id, status: 'aceptada' },
+        ],
+      },
+      select: {
+        id: true,
+        requesterId: true,
+        addresseeId: true,
+        status: true,
+        createdAt: true,
+        requester: {
+          select: { id: true, username: true, avatarUrl: true, bio: true },
+        },
+        addressee: {
+          select: { id: true, username: true, avatarUrl: true, bio: true },
+        },
+      },
+    });
+
+    // Aplanar: devolver el otro usuario como "user"
+    return friendships.map((f) => {
+      const friendUser = f.requesterId === user.id ? f.addressee : f.requester;
+      return {
+        id: f.id,
+        requesterId: f.requesterId,
+        addresseeId: f.addresseeId,
+        status: f.status,
+        createdAt: f.createdAt,
+        user: friendUser,
+      };
+    });
+  }
+
+  // ── GET /users/:username/communities ──────────────────────
+  async getUserCommunities(username: string, requesterId?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true, visibility: true },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const isOwner = requesterId === user.id;
+    const isFriend = requesterId ? await this.areFriends(user.id, requesterId) : false;
+    const canSee =
+      isOwner ||
+      user.visibility === 'publico' ||
+      (user.visibility === 'solo_amigos' && isFriend);
+
+    if (!canSee) throw new ForbiddenException('Comunidades privadas');
+
+    const memberships = await this.prisma.communityMember.findMany({
+      where: { userId: user.id },
+      select: {
+        role: true,
+        joinedAt: true,
+        community: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            avatarUrl: true,
+            type: true,
+            membersCount: true,
+          },
+        },
+      },
+    });
+
+    return memberships.map((m) => ({
+      id: m.community.id,
+      slug: m.community.slug,
+      name: m.community.name,
+      avatarUrl: m.community.avatarUrl,
+      type: m.community.type,
+      membersCount: m.community.membersCount,
+      role: m.role,
+    }));
   }
 
   // ── POST /users/:username/friend-request ──────────────────
@@ -543,12 +686,12 @@ export class UsersService {
 
     if (!entry || entry.manualOverride) return; // respetar decisión manual
 
-    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentProgress = await this.prisma.userProgress.findFirst({
       where: {
         userId,
         episode: { season: { animeId } },
-        watchedAt: { gte: fiveDaysAgo },
+        watchedAt: { gte: sevenDaysAgo },
       },
     });
 
