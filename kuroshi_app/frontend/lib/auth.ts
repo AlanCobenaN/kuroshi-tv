@@ -136,12 +136,10 @@ export const authOptions: NextAuthOptions = {
         token.picture = avatarUrl ?? null
       }
 
-      if (trigger === 'update') {
-        const updatedAvatar = sessionData?.avatar_url ?? sessionData?.image
-        if (updatedAvatar) {
-          token.avatar_url = updatedAvatar
-          token.picture = updatedAvatar
-        }
+      if (trigger === 'update' && sessionData) {
+        const updatedAvatar = sessionData.avatar_url || sessionData.image || undefined
+        token.avatar_url = updatedAvatar ?? token.avatar_url
+        token.picture = updatedAvatar ?? token.picture
       }
 
       if (account?.provider) {

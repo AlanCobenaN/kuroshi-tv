@@ -35,9 +35,9 @@ export class UploadsService {
 
     // Validar tamaño aproximado (base64 es ~33% más grande que el original)
     const approximateSizeBytes = (base64Image.length * 3) / 4;
-    const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+    const maxSizeBytes = 3 * 1024 * 1024; // 3MB
     if (approximateSizeBytes > maxSizeBytes) {
-      throw new BadRequestException('La imagen no puede superar 2MB');
+      throw new BadRequestException('La imagen no puede superar 3MB');
     }
 
     try {

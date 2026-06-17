@@ -213,8 +213,8 @@ function ProfileSection({ username, accessToken, avatarUrl, onSaved, isPending, 
       setError('Formato no soportado. Usa JPG, PNG, GIF o WebP.')
       return
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setError('La imagen no puede superar 2MB.')
+    if (file.size > 3 * 1024 * 1024) {
+      setError('La imagen no puede superar 3MB.')
       return
     }
 
@@ -378,7 +378,7 @@ function AvatarSection({ currentAvatar, previewUrl, uploading, onSelect, onUploa
         )}
       </div>
 
-      <p className="avatar-hint">JPG, PNG, GIF o WebP. Máximo 2MB.</p>
+      <p className="avatar-hint">JPG, PNG, GIF o WebP. Máximo 3MB.</p>
 
       <style>{`
         .avatar-section {

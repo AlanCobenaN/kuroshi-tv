@@ -2,14 +2,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useSession, signOut } from 'next-auth/react'
+import { useSession, signOut, getSession } from 'next-auth/react'
 import Image from 'next/image'
-import { usersApi } from '@/lib/api'
+import { usersApi, authApi } from '@/lib/api'
 
 export function Header() {
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
   const router = useRouter()
   const [notifCount, setNotifCount] = useState(0)
+  const [freshAvatar, setFreshAvatar] = useState<string | null | undefined>(undefined)
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -21,8 +22,27 @@ export function Header() {
       .catch(() => {})
   }, [session?.accessToken])
 
+  // Sync fresh avatar from API when session exists
+  useEffect(() => {
+    if (!session?.accessToken) {
+      setFreshAvatar(undefined)
+      return
+    }
+    authApi.me(session.accessToken)
+      .then((data: any) => {
+        const url = data?.avatarUrl ?? data?.avatar_url ?? null
+        setFreshAvatar(url)
+        // If session has a different avatar, update it
+        const current = session.user?.avatar_url ?? session.user?.image ?? null
+        if (url && url !== current) {
+          update({ avatar_url: url, image: url })
+        }
+      })
+      .catch(() => {})
+  }, [session?.accessToken])
+
   const resolveAvatar = (user: { avatar_url?: string | null; image?: string | null } | null | undefined): string | null => {
-    return user?.avatar_url ?? user?.image ?? null
+    return freshAvatar ?? user?.avatar_url ?? user?.image ?? null
   }
   const [query, setQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
