@@ -149,7 +149,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
               </svg>
               Editar perfil
             </Link>
-          ) : (
+          ) : isLoggedIn ? (
             <>
               {profile.friendship_status === 'aceptada' ? (
                 <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
