@@ -2,11 +2,10 @@
 // app/u/[username]/ProfileBanner.tsx
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useTransition, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPublicProfile } from '@/types'
 import { usersApi } from '@/lib/api'
-import { useFriendshipRealtime, FriendshipUpdatePayload } from '@/hooks/useFriendshipRealtime'
 
 interface Props {
   profile: UserPublicProfile
@@ -15,38 +14,31 @@ interface Props {
   currentUserId?: string
 }
 
-export function ProfileBanner({ profile, isOwnProfile, isLoggedIn, currentUserId }: Props) {
-  const [isPending, startTransition] = useTransition()
+export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
   const [friendshipStatus, setFriendshipStatus] = useState<string | null | undefined>(
     profile.friendship_status
   )
+  const [sending, setSending] = useState(false)
   const router = useRouter()
   const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
 
-  // Sincronizar cuando cambie el perfil (navegación entre usuarios)
-  useEffect(() => {
-    setFriendshipStatus(profile.friendship_status)
-  }, [profile.id, profile.friendship_status])
-
-  // Escuchar actualizaciones en tiempo real del estado de amistad
-  const handleFriendshipUpdate = useCallback((payload: FriendshipUpdatePayload) => {
-    if (payload.other_user_id === profile.id) {
-      setFriendshipStatus(payload.status)
-    }
-  }, [profile.id])
-
-  useFriendshipRealtime(currentUserId, handleFriendshipUpdate)
-
-  const handleFriendRequest = () => {
+  const handleFriendRequest = async () => {
+    if (sending) return
     const token = (window as any).__kuroshi_token__ as string | undefined
-    if (!token) return
-    startTransition(async () => {
-      try {
-        await usersApi.sendFriendRequest(profile.username, token)
-        setFriendshipStatus('pendiente')
-        router.refresh()
-      } catch {}
-    })
+    if (!token) {
+      console.warn('[ProfileBanner] No token disponible')
+      return
+    }
+    setSending(true)
+    try {
+      await usersApi.sendFriendRequest(profile.username, token)
+      setFriendshipStatus('pendiente')
+      router.refresh()
+    } catch (err) {
+      console.error('[ProfileBanner] Error al enviar solicitud:', err)
+    } finally {
+      setSending(false)
+    }
   }
 
   // Formato "Se unió desde Junio 2024"
@@ -189,7 +181,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn, currentUserId
               ) : (
                 <button
                   onClick={handleFriendRequest}
-                  disabled={isPending || friendshipStatus === 'pendiente'}
+                  disabled={sending || friendshipStatus === 'pendiente'}
                   className="profile-action-btn profile-action-btn--primary"
                   aria-label="Enviar solicitud de amistad"
                 >
