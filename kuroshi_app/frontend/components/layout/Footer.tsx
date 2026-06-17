@@ -36,6 +36,13 @@ export function Footer() {
             <Link href="/registro" className="footer-link">Registrarse</Link>
             <Link href="/login" className="footer-link">Iniciar sesión</Link>
           </div>
+          <div className="footer-col">
+            <h4 className="footer-col-title">Legal</h4>
+            <Link href="/dmca" className="footer-link">DMCA</Link>
+            <Link href="/terminos" className="footer-link">Términos</Link>
+            <Link href="/privacidad" className="footer-link">Privacidad</Link>
+            <Link href="/contacto" className="footer-link">Contacto</Link>
+          </div>
         </div>
       </div>
 

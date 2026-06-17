@@ -16,7 +16,8 @@ export function LoginForm({ mode }: Props) {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('') // solo en registro
-  const [error, setError]       = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [error, setError]            = useState('')
   const [loading, setLoading]   = useState(false)
   const [oauthLoading, setOauthLoading] = useState<'google' | 'discord' | null>(null)
   const [showForgotPass, setShowForgotPass] = useState(false)
@@ -217,7 +218,7 @@ export function LoginForm({ mode }: Props) {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (isRegister && !acceptTerms)}
             className="btn-primary auth-submit"
           >
             {loading ? <Spinner /> : null}
@@ -226,11 +227,32 @@ export function LoginForm({ mode }: Props) {
         </form>
 
         {/* Nota de verificación */}
-        {isRegister && (
-          <p className="auth-note">
-            Al registrarte puedes usar el sitio de inmediato. Te enviaremos un email de verificación, pero no es obligatorio para empezar.
-          </p>
-        )}
+          {isRegister && (
+            <>
+              <label className="terms-checkbox">
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={e => setAcceptTerms(e.target.checked)}
+                  required
+                  aria-label="Acepto los términos y condiciones"
+                />
+                <span className="terms-checkbox-text">
+                  Acepto los{' '}
+                  <a href="/terminos" target="_blank" className="terms-link" rel="noopener noreferrer">
+                    Términos y Condiciones
+                  </a>{' '}
+                  y la{' '}
+                  <a href="/privacidad" target="_blank" className="terms-link" rel="noopener noreferrer">
+                    Política de Privacidad
+                  </a>
+                </span>
+              </label>
+              <p className="auth-note">
+                Al registrarte puedes usar el sitio de inmediato. Te enviaremos un email de verificación, pero no es obligatorio para empezar.
+              </p>
+            </>
+          )}
 
         {/* Link al otro modo */}
         <p className="auth-switch">
@@ -393,6 +415,33 @@ export function LoginForm({ mode }: Props) {
           margin-top: 0.25rem;
         }
 
+        .terms-checkbox {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          cursor: pointer;
+          padding: 0.5rem 0;
+        }
+        .terms-checkbox input[type="checkbox"] {
+          margin-top: 2px;
+          accent-color: var(--accent);
+          width: 16px;
+          height: 16px;
+          flex-shrink: 0;
+        }
+        .terms-checkbox-text {
+          font-size: 0.8125rem;
+          color: var(--text-secondary);
+          line-height: 1.5;
+        }
+        .terms-link {
+          color: var(--accent);
+          text-decoration: none;
+          font-weight: 600;
+        }
+        .terms-link:hover {
+          text-decoration: underline;
+        }
         .auth-note {
           font-size: 0.75rem;
           color: var(--text-muted);
