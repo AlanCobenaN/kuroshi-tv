@@ -510,3 +510,23 @@ export interface WsNotification {
 export interface WsUserTyping {
   username: string
 }
+
+// ─── Cloudflare Turnstile ──────────────────────────────────
+export interface TurnstileObject {
+  render: (container: HTMLElement, options: TurnstileOptions) => string
+  remove: (widgetId: string) => void
+  reset: (widgetId: string) => void
+}
+
+export interface TurnstileOptions {
+  sitekey: string
+  callback: (token: string) => void
+  'expired-callback': () => void
+  theme?: 'light' | 'dark' | 'auto'
+}
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileObject
+  }
+}

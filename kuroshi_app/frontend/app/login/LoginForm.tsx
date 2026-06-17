@@ -1,6 +1,6 @@
 'use client'
 // app/login/LoginForm.tsx
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -21,6 +21,47 @@ export function LoginForm({ mode }: Props) {
   const [loading, setLoading]   = useState(false)
   const [oauthLoading, setOauthLoading] = useState<'google' | 'discord' | null>(null)
   const [showForgotPass, setShowForgotPass] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const turnstileRef = useRef<HTMLDivElement>(null)
+  const turnstileWidgetId = useRef<string | null>(null)
+
+  // Cargar Turnstile y renderizar widget
+  useEffect(() => {
+    const scriptId = 'turnstile-script'
+    const container = turnstileRef.current
+    if (!container) return
+
+    const initTurnstile = () => {
+      if (!window.turnstile) return
+      if (turnstileWidgetId.current) {
+        window.turnstile.remove(turnstileWidgetId.current)
+      }
+      turnstileWidgetId.current = window.turnstile.render(container, {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
+        callback: (token: string) => setTurnstileToken(token),
+        'expired-callback': () => setTurnstileToken(''),
+        theme: 'dark',
+      })
+    }
+
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+      script.async = true
+      script.defer = true
+      script.onload = initTurnstile
+      document.body.appendChild(script)
+    } else {
+      initTurnstile()
+    }
+
+    return () => {
+      if (turnstileWidgetId.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetId.current)
+      }
+    }
+  }, [])
 
   const isRegister = mode === 'register'
 
@@ -37,7 +78,7 @@ export function LoginForm({ mode }: Props) {
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password }),
+            body: JSON.stringify({ username, email, password, turnstileToken }),
           }
         )
         const data = await res.json()
@@ -47,10 +88,16 @@ export function LoginForm({ mode }: Props) {
           return
         }
 
+        // Reset turnstile after success
+        if (turnstileWidgetId.current && window.turnstile) {
+          window.turnstile.reset(turnstileWidgetId.current)
+        }
+
         // Tras registrar, hacer login automáticamente
         const result = await signIn('credentials', {
           email,
           password,
+          turnstileToken,
           redirect: false,
         })
 
@@ -72,12 +119,17 @@ export function LoginForm({ mode }: Props) {
     const result = await signIn('credentials', {
       email,
       password,
+      turnstileToken,
       redirect: false,
     })
 
     setLoading(false)
 
     if (result?.ok) {
+      // Reset turnstile after success
+      if (turnstileWidgetId.current && window.turnstile) {
+        window.turnstile.reset(turnstileWidgetId.current)
+      }
       await update()
       router.push('/')
     } else {
@@ -215,6 +267,8 @@ export function LoginForm({ mode }: Props) {
               {error}
             </div>
           )}
+
+          <div ref={turnstileRef} className="turnstile-wrapper" />
 
           <button
             type="submit"
@@ -464,6 +518,12 @@ export function LoginForm({ mode }: Props) {
         .auth-switch-link:hover { text-decoration: underline; }
         .forgot-link { background: none; border: none; cursor: pointer; padding: 0; margin-top: 0.375rem; font-size: 0.75rem; color: var(--text-muted); text-align: left; transition: color var(--transition-fast); align-self: flex-start; }
         .forgot-link:hover { color: var(--accent); }
+
+        .turnstile-wrapper {
+          display: flex;
+          justify-content: center;
+          min-height: 65px;
+        }
       `}</style>
     </div>
   )

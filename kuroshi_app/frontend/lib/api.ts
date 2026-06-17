@@ -189,10 +189,10 @@ export const animeApi = {
 // ─── Módulo Auth — 7 endpoints ───────────────────────────────
 
 export const authApi = {
-  register: (body: { username: string; email: string; password: string }) =>
+  register: (body: { username: string; email: string; password: string; turnstileToken?: string }) =>
     api.post('/auth/register', body),
 
-  login: (body: { email: string; password: string }) =>
+  login: (body: { email: string; password: string; turnstileToken?: string }) =>
     api.post('/auth/login', body),
 
   logout: (token: string) =>

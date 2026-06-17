@@ -25,7 +25,25 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
+  private async verifyTurnstile(token?: string): Promise<void> {
+    if (!token) return;
+    const secret = this.config.get<string>('TURNSTILE_SECRET_KEY');
+    if (!secret) return;
+    const form = new URLSearchParams();
+    form.append('secret', secret);
+    form.append('response', token);
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: form,
+    });
+    const data: any = await res.json();
+    if (!data.success) {
+      throw new UnauthorizedException('Falló la verificación de seguridad. Intenta de nuevo.');
+    }
+  }
+
   async register(dto: RegisterDto) {
+    await this.verifyTurnstile(dto.turnstileToken);
     const existingUsername = await this.prisma.user.findUnique({
       where: { username: dto.username },
     });
@@ -68,6 +86,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    await this.verifyTurnstile(dto.turnstileToken);
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
       select: {
