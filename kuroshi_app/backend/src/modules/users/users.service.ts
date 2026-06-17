@@ -671,6 +671,26 @@ export class UsersService {
     return updated;
   }
 
+  // ── DELETE /users/me/friend/:friendshipId ─────────────────
+  async removeFriend(userId: string, friendshipId: string) {
+    const friendship = await this.prisma.friendship.findUnique({
+      where: { id: friendshipId },
+      select: { id: true, requesterId: true, addresseeId: true, status: true },
+    });
+
+    if (!friendship) throw new NotFoundException('Amistad no encontrada');
+    if (friendship.requesterId !== userId && friendship.addresseeId !== userId) {
+      throw new ForbiddenException('No puedes eliminar esta amistad');
+    }
+    if (friendship.status !== 'aceptada') {
+      throw new BadRequestException('La amistad no está activa');
+    }
+
+    await this.prisma.friendship.delete({ where: { id: friendshipId } });
+
+    return { message: 'Amigo eliminado' };
+  }
+
   // ── GET /users/me/friend-requests ─────────────────────────
   async getFriendRequests(userId: string) {
     const [received, sent] = await Promise.all([

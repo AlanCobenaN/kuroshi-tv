@@ -6,11 +6,9 @@ interface Props {
 }
 
 export function ProfileStats({ profile }: Props) {
-  // ✅ CORREGIDO: el backend devuelve episodesWatched y friendsCount
-  // directamente en el objeto, no dentro de profile.stats
-  const episodesWatched = (profile as any).episodes_watched ?? profile.stats?.episodes_watched ?? 0
-  const friendsCount    = (profile as any).friends_count    ?? profile.stats?.friends_count    ?? 0
-  const communitiesCount = (profile as any)._count?.community_memberships ?? profile.stats?.communities_count ?? 0
+  const episodesWatched = profile.stats?.episodes_watched ?? 0
+  const friendsCount    = profile.stats?.friends_count ?? 0
+  const communitiesCount = profile.stats?.communities_count ?? 0
   const hoursWatched    = profile.stats?.hours_watched ?? 0
 
   const stats = [

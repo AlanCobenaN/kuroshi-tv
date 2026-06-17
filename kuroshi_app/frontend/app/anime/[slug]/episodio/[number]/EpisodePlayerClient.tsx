@@ -1,9 +1,10 @@
 'use client'
 // app/anime/[slug]/episodio-[number]/EpisodePlayerClient.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Anime, AnimeSummary, Episode } from '@/types'
+import { usersApi } from '@/lib/api'
 import { VideoPlayer } from '@/components/episode/VideoPlayer'
 import { EpisodeChat } from '@/components/episode/EpisodeChat'
 import { EpisodeNavigator } from '@/components/episode/EpisodeNavigator'
@@ -34,6 +35,13 @@ export function EpisodePlayerClient({
   relatedAnimes,
 }: Props) {
   const [showMobileChat, setShowMobileChat] = useState(false)
+
+  useEffect(() => {
+    if (!isLoggedIn || !episode.id) return
+    const token = (window as any).__kuroshi_token__ as string | undefined
+    if (!token) return
+    usersApi.saveProgress({ episodeId: episode.id, lastMinute: 0, completed: true }, token).catch(() => {})
+  }, [episode.id, isLoggedIn])
 
   const animeData = anime ?? episode.anime
   const servers   = episode.video_servers ?? []

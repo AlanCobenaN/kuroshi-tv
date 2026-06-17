@@ -182,6 +182,18 @@ export class UsersController {
     return this.usersService.respondFriendRequest(userId, friendshipId, dto);
   }
 
+  // DELETE /api/users/me/friend/:friendshipId
+  @Delete('me/friend/:friendshipId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar amigo (cualquier lado de la amistad)' })
+  removeFriend(
+    @Param('friendshipId') friendshipId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.removeFriend(userId, friendshipId);
+  }
+
   // GET /api/users/me/friend-requests
   @Get('me/friend-requests')
   @UseGuards(JwtAuthGuard)

@@ -18,6 +18,7 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
   const [sent, setSent] = useState<any[]>([])
   const [isLoading, setIsLoading]    = useState(true)
   const [isPending, startTransition] = useTransition()
+  const [pendingUnfriend, setPendingUnfriend] = useState<string | null>(null)
 
   useEffect(() => {
     setIsLoading(true)
@@ -40,9 +41,33 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
     if (!accessToken) return
     startTransition(async () => {
       try {
+        const req = received.find((f: any) => f.id === id)
         await usersApi.respondFriendRequest(id, action, accessToken)
         setReceived(prev => prev.filter((f: any) => f.id !== id))
+        if (action === 'aceptada' && req?.user) {
+          const newFriend: Friendship = {
+            id,
+            requesterId: req.user.id,
+            addresseeId: '',
+            status: 'aceptada',
+            createdAt: new Date().toISOString(),
+            user: req.user,
+          }
+          setFriends(prev => [newFriend, ...prev])
+        }
       } catch {}
+    })
+  }
+
+  const handleUnfriend = (friendshipId: string) => {
+    if (!accessToken) return
+    setPendingUnfriend(friendshipId)
+    startTransition(async () => {
+      try {
+        await usersApi.removeFriend(friendshipId, accessToken)
+        setFriends(prev => prev.filter(f => f.id !== friendshipId))
+      } catch {}
+      finally { setPendingUnfriend(null) }
     })
   }
 
@@ -148,19 +173,35 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
             const friend = f.user
             if (!friend) return null
             return (
-              <Link key={f.id} href={`/u/${friend.username}`} className="friend-card">
-                <div className="friend-avatar-wrapper">
-                  {friend.avatar_url ? (
-                    <Image src={friend.avatar_url} alt={friend.username} width={48} height={48} className="friend-avatar" />
-                  ) : (
-                    <div className="friend-avatar-fallback">{friend.username[0].toUpperCase()}</div>
-                  )}
-                </div>
-                <div className="friend-info">
-                  <span className="friend-name">{friend.username}</span>
-                  {friend.bio && <span className="friend-bio">{friend.bio}</span>}
-                </div>
-              </Link>
+              <div key={f.id} className="friend-card-wrapper">
+                <Link href={`/u/${friend.username}`} className="friend-card">
+                  <div className="friend-avatar-wrapper">
+                    {friend.avatar_url ? (
+                      <Image src={friend.avatar_url} alt={friend.username} width={48} height={48} className="friend-avatar" />
+                    ) : (
+                      <div className="friend-avatar-fallback">{friend.username[0].toUpperCase()}</div>
+                    )}
+                  </div>
+                  <div className="friend-info">
+                    <span className="friend-name">{friend.username}</span>
+                    {friend.bio && <span className="friend-bio">{friend.bio}</span>}
+                  </div>
+                </Link>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => handleUnfriend(f.id)}
+                    disabled={pendingUnfriend === f.id}
+                    className="unfriend-btn"
+                    aria-label={`Eliminar a ${friend.username} de amigos`}
+                    title="Eliminar amigo"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" />
+                      <line x1="18" y1="9" x2="23" y2="14" /><line x1="23" y1="9" x2="18" y2="14" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             )
           })}
         </div>
@@ -244,20 +285,44 @@ export function FriendsTab({ username, isOwnProfile, accessToken }: Props) {
 
         /* Grid de amigos */
         .friends-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+        .friend-card-wrapper {
+          display: flex;
+          align-items: center;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          transition: all var(--transition-fast);
+        }
+        .friend-card-wrapper:hover { border-color: var(--border-hover); background: var(--bg-elevated); transform: translateY(-1px); }
         .friend-card {
           display: flex;
           align-items: center;
           gap: 0.875rem;
           padding: 0.875rem;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
+          flex: 1;
           text-decoration: none;
-          transition: all var(--transition-fast);
+          min-width: 0;
         }
-        .friend-card:hover { border-color: var(--border-hover); background: var(--bg-elevated); transform: translateY(-1px); }
         .friend-card .friend-avatar { width: 48px; height: 48px; }
         .friend-card .friend-avatar-fallback { width: 48px; height: 48px; }
+        .unfriend-btn {
+          flex-shrink: 0;
+          width: 36px;
+          height: 36px;
+          margin-right: 0.5rem;
+          border-radius: var(--radius-md);
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--transition-fast);
+        }
+        .unfriend-btn:hover { background: var(--accent-glow); color: var(--accent); }
+        .unfriend-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Empty */
         .friends-empty { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem; text-align: center; color: var(--text-muted); }

@@ -284,6 +284,9 @@ export const usersApi = {
   getFriendRequests: (token: string) =>
     api.get('/users/me/friend-requests', { token, cache: 'no-store' }),
 
+  removeFriend: (friendshipId: string, token: string) =>
+    api.delete(`/users/me/friend/${friendshipId}`, { token }),
+
   getNotifications: (params: { type?: string; page?: number }, token: string) => {
     const query = new URLSearchParams(
       Object.entries(params)
