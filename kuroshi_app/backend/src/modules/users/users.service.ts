@@ -619,6 +619,48 @@ export class UsersService {
       if (existing.status === 'pendiente') {
         throw new ConflictException('Ya existe una solicitud pendiente');
       }
+      if (existing.status === 'rechazada') {
+        const friendship = await this.prisma.friendship.update({
+          where: { id: existing.id },
+          data: { status: 'pendiente' },
+          select: { id: true, status: true, createdAt: true },
+        });
+
+        await this.createNotification(target.id, 'amistad_recibida', {
+          title: 'Nueva solicitud de amistad',
+          body: `Te enviaron una solicitud de amistad`,
+          metadata: { requesterId, friendshipId: friendship.id },
+        });
+
+        await this.createNotification(requesterId, 'amistad_enviada' as any, {
+          title: 'Solicitud de amistad enviada',
+          body: `Le enviaste una solicitud de amistad a ${targetUsername}`,
+          metadata: { targetUsername, friendshipId: friendship.id },
+        });
+
+        await this.realtime.emitFriendshipUpdate(requesterId, {
+          friendship_id: friendship.id,
+          status: 'pendiente',
+          actor_id: requesterId,
+          other_user_id: target.id,
+          other_username: target.username,
+          other_avatar_url: target.avatarUrl ?? undefined,
+        });
+
+        await this.realtime.emitFriendshipUpdate(target.id, {
+          friendship_id: friendship.id,
+          status: 'pendiente',
+          actor_id: requesterId,
+          other_user_id: requesterId,
+          other_username: requester.username,
+          other_avatar_url: requester.avatarUrl ?? undefined,
+        });
+
+        return friendship;
+      }
+      if (existing.status === 'bloqueada') {
+        throw new ForbiddenException('No puedes enviar una solicitud a este usuario');
+      }
     }
 
     const friendship = await this.prisma.friendship.create({

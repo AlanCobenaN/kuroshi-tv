@@ -36,48 +36,60 @@ export class RealtimeService implements OnModuleInit {
   async emitNewEpisodeComment(episodeId: string, comment: any) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`episode:${episodeId}`)
-      .send({
-        type: 'broadcast',
-        event: 'new_comment',
-        payload: {
-          id: comment.id,
-          content: comment.content,
-          video_minute: comment.videoMinute,
-          video_second: comment.videoSecond,
-          likes_count: comment.likesCount,
-          has_spoiler: comment.hasSpoiler,
-          created_at: comment.createdAt,
-          user: comment.user,
-        },
-      });
+    try {
+      await this.supabase
+        .channel(`episode:${episodeId}`)
+        .send({
+          type: 'broadcast',
+          event: 'new_comment',
+          payload: {
+            id: comment.id,
+            content: comment.content,
+            video_minute: comment.videoMinute,
+            video_second: comment.videoSecond,
+            likes_count: comment.likesCount,
+            has_spoiler: comment.hasSpoiler,
+            created_at: comment.createdAt,
+            user: comment.user,
+          },
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir new_comment en episode:${episodeId}`, err);
+    }
   }
 
   // Emite cuando un comentario de episodio recibe un like
   async emitEpisodeCommentLiked(episodeId: string, commentId: string, likesCount: number) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`episode:${episodeId}`)
-      .send({
-        type: 'broadcast',
-        event: 'comment_liked',
-        payload: { comment_id: commentId, likes_count: likesCount },
-      });
+    try {
+      await this.supabase
+        .channel(`episode:${episodeId}`)
+        .send({
+          type: 'broadcast',
+          event: 'comment_liked',
+          payload: { comment_id: commentId, likes_count: likesCount },
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir comment_liked en episode:${episodeId}`, err);
+    }
   }
 
   // Emite cuando un moderador elimina un comentario de episodio
   async emitEpisodeCommentDeleted(episodeId: string, commentId: string) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`episode:${episodeId}`)
-      .send({
-        type: 'broadcast',
-        event: 'comment_deleted',
-        payload: { comment_id: commentId },
-      });
+    try {
+      await this.supabase
+        .channel(`episode:${episodeId}`)
+        .send({
+          type: 'broadcast',
+          event: 'comment_deleted',
+          payload: { comment_id: commentId },
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir comment_deleted en episode:${episodeId}`, err);
+    }
   }
 
   // ── Canal community:{id} ──────────────────────────────────
@@ -85,40 +97,48 @@ export class RealtimeService implements OnModuleInit {
   async emitNewCommunityMessage(communityId: string, message: any) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`community:${communityId}`)
-      .send({
-        type: 'broadcast',
-        event: 'new_message',
-        payload: {
-          id: message.id,
-          content: message.content,
-          reply_to_id: message.replyToId ?? null,
-          created_at: message.createdAt,
-          reply_to: message.replyTo
-            ? { id: message.replyTo.id, content: message.replyTo.content, user: { username: message.replyTo.user.username, avatar_url: message.replyTo.user.avatarUrl } }
-            : null,
-          user: {
-            id: message.user.id,
-            username: message.user.username,
-            avatar_url: message.user.avatarUrl,
-            role: message.user.role,
+    try {
+      await this.supabase
+        .channel(`community:${communityId}`)
+        .send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: {
+            id: message.id,
+            content: message.content,
+            reply_to_id: message.replyToId ?? null,
+            created_at: message.createdAt,
+            reply_to: message.replyTo
+              ? { id: message.replyTo.id, content: message.replyTo.content, user: { username: message.replyTo.user.username, avatar_url: message.replyTo.user.avatarUrl } }
+              : null,
+            user: {
+              id: message.user.id,
+              username: message.user.username,
+              avatar_url: message.user.avatarUrl,
+              role: message.user.role,
+            },
           },
-        },
-      });
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir new_message en community:${communityId}`, err);
+    }
   }
 
   // Emite cuando un moderador elimina un mensaje del chat
   async emitCommunityMessageDeleted(communityId: string, messageId: string) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`community:${communityId}`)
-      .send({
-        type: 'broadcast',
-        event: 'message_deleted',
-        payload: { message_id: messageId, is_deleted: true },
-      });
+    try {
+      await this.supabase
+        .channel(`community:${communityId}`)
+        .send({
+          type: 'broadcast',
+          event: 'message_deleted',
+          payload: { message_id: messageId, is_deleted: true },
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir message_deleted en community:${communityId}`, err);
+    }
   }
 
   // ── Canal user:{id} — actualización de amistad ────────────
@@ -133,13 +153,17 @@ export class RealtimeService implements OnModuleInit {
   }) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`user:${userId}`)
-      .send({
-        type: 'broadcast',
-        event: 'friendship_update',
-        payload,
-      });
+    try {
+      await this.supabase
+        .channel(`user:${userId}`)
+        .send({
+          type: 'broadcast',
+          event: 'friendship_update',
+          payload,
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir friendship_update en user:${userId}`, err);
+    }
   }
 
   // ── Canal user:{id} ───────────────────────────────────────
@@ -147,20 +171,24 @@ export class RealtimeService implements OnModuleInit {
   async emitNotification(userId: string, notification: any) {
     if (!this.supabase) return;
 
-    await this.supabase
-      .channel(`user:${userId}`)
-      .send({
-        type: 'broadcast',
-        event: 'notification',
-        payload: {
-          id: notification.id,
-          type: notification.type,
-          title: notification.title,
-          body: notification.body,
-          is_read: notification.isRead,
-          metadata: notification.metadata,
-          created_at: notification.createdAt,
-        },
-      });
+    try {
+      await this.supabase
+        .channel(`user:${userId}`)
+        .send({
+          type: 'broadcast',
+          event: 'notification',
+          payload: {
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            body: notification.body,
+            is_read: notification.isRead,
+            metadata: notification.metadata,
+            created_at: notification.createdAt,
+          },
+        });
+    } catch (err) {
+      this.logger.error(`Error al emitir notification en user:${userId}`, err);
+    }
   }
 }
