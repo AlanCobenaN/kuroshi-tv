@@ -278,8 +278,8 @@ function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onS
       try {
         await usersApi.updateUsername(newUsername.trim(), accessToken)
         setSavedUsername(newUsername.trim())
-        updateSession({ username: newUsername.trim() })
-        onSaved()
+        await updateSession({ username: newUsername.trim() })
+        window.location.reload()
       } catch (e: any) {
         setError(e?.message ?? 'No se pudo cambiar el nombre de usuario.')
       }
