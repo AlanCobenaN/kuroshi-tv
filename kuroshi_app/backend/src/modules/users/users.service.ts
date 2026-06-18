@@ -203,6 +203,62 @@ export class UsersService {
     });
   }
 
+  // ── GET /users/me/continue-watching ───────────────────────
+  async getContinueWatching(userId: string) {
+    const progress = await this.prisma.userProgress.findMany({
+      where: { userId, completed: false },
+      orderBy: { watchedAt: 'desc' },
+      take: 30,
+      include: {
+        episode: {
+          select: {
+            id: true,
+            number: true,
+            title: true,
+            season: {
+              select: {
+                number: true,
+                anime: {
+                  select: {
+                    id: true,
+                    slug: true,
+                    titleEs: true,
+                    titleJp: true,
+                    coverUrl: true,
+                    bannerUrl: true,
+                    totalEpisodes: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const seen = new Set<string>();
+    const result: any[] = [];
+    for (const p of progress) {
+      const animeId = p.episode.season.anime.id;
+      if (seen.has(animeId)) continue;
+      seen.add(animeId);
+      result.push({
+        anime: p.episode.season.anime,
+        episode: {
+          id: p.episode.id,
+          number: p.episode.number,
+          title: p.episode.title,
+          seasonNumber: p.episode.season.number,
+        },
+        lastMinute: p.lastMinute,
+        watchedAt: p.watchedAt,
+      });
+      if (result.length >= 10) break;
+    }
+    return result;
+  }
+
   // ── GET /users/:username/watchlist ────────────────────────
   async getWatchlist(username: string, requesterId?: string) {
     const user = await this.prisma.user.findUnique({

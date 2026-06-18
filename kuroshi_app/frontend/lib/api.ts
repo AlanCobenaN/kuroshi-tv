@@ -262,6 +262,9 @@ export const usersApi = {
     token: string
   ) => api.post('/users/me/progress', body, { token }),
 
+  getContinueWatching: (token: string) =>
+    api.get('/users/me/continue-watching', { token, cache: 'no-store' }),
+
   getActivity: (username: string, token?: string) =>
     api.get(`/users/${username}/activity`, { token, cache: token ? 'no-store' : undefined, revalidate: token ? undefined : 60 }),
 

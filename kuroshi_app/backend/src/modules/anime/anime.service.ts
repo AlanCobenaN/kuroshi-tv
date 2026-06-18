@@ -72,7 +72,7 @@ export class AnimeService {
       take: 10,
       select: {
         id: true, slug: true, titleEs: true, titleJp: true, malRating: true,
-        coverUrl: true, totalViews: true, status: true,
+        coverUrl: true, bannerUrl: true, totalViews: true, status: true,
         genres: { select: { genre: { select: { name: true } } } },
       },
     });
@@ -86,7 +86,7 @@ export class AnimeService {
       take: 20,
       select: {
         id: true, slug: true, titleEs: true, titleJp: true, malRating: true,
-        coverUrl: true, status: true,
+        coverUrl: true, bannerUrl: true, status: true,
         genres: { select: { genre: { select: { name: true } } } },
         seasons: {
           orderBy: { number: 'desc' }, take: 1,

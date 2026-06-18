@@ -64,6 +64,15 @@ export class UsersController {
     return this.usersService.updateUsername(userId, dto);
   }
 
+  // GET /api/users/me/continue-watching
+  @Get('me/continue-watching')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Animes que el usuario está viendo con su último progreso' })
+  getContinueWatching(@CurrentUser('id') userId: string) {
+    return this.usersService.getContinueWatching(userId);
+  }
+
   // GET /api/users/:username/watchlist
   @Public()
   @Get(':username/watchlist')

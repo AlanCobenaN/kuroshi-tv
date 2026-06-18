@@ -127,6 +127,7 @@ export class AdminService {
           totalViews: true,
           malRating: true,
           coverUrl: true,
+          bannerUrl: true,
           _count: { select: { seasons: true } },
         },
       }),
