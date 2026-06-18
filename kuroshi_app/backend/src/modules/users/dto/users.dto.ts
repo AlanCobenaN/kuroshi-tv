@@ -6,6 +6,7 @@ import {
   Max,
   IsEnum,
   MaxLength,
+  Matches,
 } from 'class-validator';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -42,6 +43,7 @@ export class UpdateUsernameDto {
   @ApiProperty()
   @IsString()
   @MaxLength(30)
+  @Matches(/^[a-zA-Z0-9_]+$/, { message: 'El username solo puede contener letras, números y guión bajo.' })
   username: string;
 }
 

@@ -196,8 +196,9 @@ export function SettingsClient({ username: initialUsername, email, accessToken, 
 
 /* ─── Sección Perfil ─────────────────────────────────────── */
 
-function ProfileSection({ username, accessToken, avatarUrl, onSaved, isPending, startTransition, updateSession }: any) {
-  const [newUsername, setNewUsername] = useState(username)
+function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onSaved, isPending, startTransition, updateSession }: any) {
+  const [savedUsername, setSavedUsername] = useState(initialUsername)
+  const [newUsername, setNewUsername] = useState(initialUsername)
   const [bio, setBio]                 = useState('')
   const [error, setError]             = useState('')
 
@@ -261,10 +262,13 @@ function ProfileSection({ username, accessToken, avatarUrl, onSaved, isPending, 
   }
 
   const handleUsernameChange = () => {
-    if (!newUsername.trim() || newUsername === username) return
+    if (!newUsername.trim() || newUsername === savedUsername) return
+    setError('')
     startTransition(async () => {
       try {
         await usersApi.updateUsername(newUsername.trim(), accessToken)
+        setSavedUsername(newUsername.trim())
+        updateSession({ username: newUsername.trim() })
         onSaved()
       } catch (e: any) {
         setError(e?.message ?? 'No se pudo cambiar el nombre de usuario.')
@@ -297,7 +301,7 @@ function ProfileSection({ username, accessToken, avatarUrl, onSaved, isPending, 
           />
           <button
             onClick={handleUsernameChange}
-            disabled={isPending || newUsername === username || !newUsername.trim()}
+            disabled={isPending || newUsername === savedUsername || !newUsername.trim()}
             className="settings-save-btn"
           >
             Cambiar
