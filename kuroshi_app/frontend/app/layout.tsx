@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
-import { Syne, DM_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { SessionProvider } from '@/components/providers/SessionProvider'
@@ -10,21 +11,19 @@ import { Header } from '@/components/layout/Header'
 import { SubNav } from '@/components/layout/SubNav'
 import './globals.css'
 
-const syne = Syne({
-  subsets: ['latin'],
+const syne = localFont({
+  src: '../public/fonts/Syne.woff2',
   variable: '--font-syne',
-  weight: ['400', '500', '600', '700', '800'],
+  weight: '400 800',
   display: 'swap',
 })
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
+const dmSans = localFont({
+  src: '../public/fonts/DM_Sans.woff2',
   variable: '--font-dm-sans',
-  weight: ['300', '400', '500'],
-  style: ['normal', 'italic'],
+  weight: '300 500',
   display: 'swap',
 })
-
 export const metadata: Metadata = {
   title: {
     default: 'Kuroshi.lat — Anime + Comunidad',
