@@ -307,6 +307,7 @@ function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onS
             Cambiar
           </button>
         </div>
+        {error && <p className="settings-error" role="alert" style={{ marginTop: '0.5rem' }}>{error}</p>}
       </SettingsField>
 
       <SettingsField label="Bio" hint="Máximo 150 caracteres">
@@ -321,8 +322,6 @@ function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onS
         />
         <span className="char-count">{bio.length}/150</span>
       </SettingsField>
-
-      {error && <p className="settings-error" role="alert">{error}</p>}
 
       <button onClick={handleSave} disabled={isPending} className="settings-primary-btn">
         {isPending ? 'Guardando…' : 'Guardar cambios'}
