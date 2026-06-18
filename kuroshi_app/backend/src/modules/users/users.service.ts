@@ -206,7 +206,7 @@ export class UsersService {
   // ── GET /users/me/continue-watching ───────────────────────
   async getContinueWatching(userId: string) {
     const progress = await this.prisma.userProgress.findMany({
-      where: { userId, completed: false },
+      where: { userId },
       orderBy: { watchedAt: 'desc' },
       take: 30,
       include: {

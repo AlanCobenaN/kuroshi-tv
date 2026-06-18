@@ -4,7 +4,7 @@ import { LoginForm } from '@/app/login/LoginForm'
 
 export const metadata: Metadata = {
   title: 'Crear cuenta',
-  description: 'Regístrate en Kuroshi.tv y únete a la comunidad otaku latinoamericana.',
+  description: 'Regístrate en Kuroshi.lat y únete a la comunidad otaku latinoamericana.',
 }
 
 export default function RegisterPage() {

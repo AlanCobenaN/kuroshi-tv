@@ -149,7 +149,7 @@ export function LoginForm({ mode }: Props) {
         <Link href="/" className="auth-logo">
           <span style={{ color: 'var(--text-primary)' }}>kuro</span>
           <span style={{ color: 'var(--accent)' }}>shi</span>
-          <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 400 }}>.tv</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 400 }}>.lat</span>
         </Link>
 
         <h1 className="auth-title">
