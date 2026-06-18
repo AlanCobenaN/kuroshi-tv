@@ -1,6 +1,5 @@
 'use client'
 // app/anime/[slug]/AnimeBanner.tsx
-import Image from 'next/image'
 import { Anime } from '@/types'
 
 interface Props {
@@ -12,13 +11,10 @@ export function AnimeBanner({ anime }: Props) {
 
   return (
     <div className="anime-banner" aria-hidden="true">
-      <Image
+      <img
         src={bannerSrc}
         alt=""
-        fill
-        sizes="100vw"
         className="anime-banner-img"
-        priority
       />
       {/* Gradientes de legibilidad */}
       <div className="anime-banner-grad-bottom" />

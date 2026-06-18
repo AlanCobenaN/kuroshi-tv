@@ -1,7 +1,6 @@
 'use client'
 // components/home/HeroSection.tsx
 import Link from 'next/link'
-import Image from 'next/image'
 import { Anime } from '@/types'
 
 interface Props {
@@ -13,27 +12,12 @@ export function HeroSection({ anime }: Props) {
     <section className="hero" aria-label="Anime destacado">
       {/* Banner a sangre */}
       <div className="hero-bg">
-        {anime.banner_url ? (
-          <Image
-            src={anime.banner_url}
-            alt=""
-            fill
-            sizes="100vw"
-            className="hero-bg-img"
-            priority
-            aria-hidden="true"
-          />
-        ) : (
-          <Image
-            src={anime.cover_url}
-            alt=""
-            fill
-            sizes="100vw"
-            className="hero-bg-img hero-bg-img--cover"
-            priority
-            aria-hidden="true"
-          />
-        )}
+        <img
+          src={anime.banner_url || anime.cover_url}
+          alt=""
+          className={`hero-bg-img${!anime.banner_url ? ' hero-bg-img--cover' : ''}`}
+          aria-hidden="true"
+        />
         {/* Gradientes superpuestos */}
         <div className="hero-gradient-left"  aria-hidden="true" />
         <div className="hero-gradient-bottom" aria-hidden="true" />

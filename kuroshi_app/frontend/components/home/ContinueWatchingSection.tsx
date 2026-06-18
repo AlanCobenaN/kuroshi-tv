@@ -35,7 +35,7 @@ export function ContinueWatchingSection({ items }: Props) {
       <div>
         <SectionHeader
           title="Continuar viendo"
-          subtitle="Seguí desde donde lo dejaste"
+          subtitle="Sigue desde donde lo dejaste"
         />
 
         <div className="continue-grid">
