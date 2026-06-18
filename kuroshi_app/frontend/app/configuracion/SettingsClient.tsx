@@ -1,6 +1,6 @@
 'use client'
 // app/configuracion/SettingsClient.tsx
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { usersApi, uploadsApi, authApi } from '@/lib/api'
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
@@ -205,6 +205,16 @@ function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onS
   const [currentAvatar, setCurrentAvatar] = useState(avatarUrl || '')
   const [previewUrl, setPreviewUrl]       = useState('')
   const [uploading, setUploading]         = useState(false)
+
+  useEffect(() => {
+    authApi.me(accessToken).then((u: any) => {
+      if (u?.username && u.username !== initialUsername) {
+        setSavedUsername(u.username)
+        setNewUsername(u.username)
+        updateSession({ username: u.username })
+      }
+    }).catch(() => {})
+  }, [accessToken, initialUsername, updateSession])
 
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
