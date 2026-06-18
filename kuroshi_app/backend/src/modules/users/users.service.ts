@@ -628,8 +628,8 @@ export class UsersService {
 
         await this.createNotification(target.id, 'amistad_recibida', {
           title: 'Nueva solicitud de amistad',
-          body: `Te enviaron una solicitud de amistad`,
-          metadata: { requesterId, friendshipId: friendship.id },
+          body: `${requester.username} te envió una solicitud de amistad`,
+          metadata: { requesterId, friendshipId: friendship.id, username: requester.username },
         });
 
         await this.createNotification(requesterId, 'amistad_enviada' as any, {
@@ -671,8 +671,8 @@ export class UsersService {
     // Notificar al destinatario
     await this.createNotification(target.id, 'amistad_recibida', {
       title: 'Nueva solicitud de amistad',
-      body: `Te enviaron una solicitud de amistad`,
-      metadata: { requesterId, friendshipId: friendship.id },
+      body: `${requester.username} te envió una solicitud de amistad`,
+      metadata: { requesterId, friendshipId: friendship.id, username: requester.username },
     });
 
     // Notificar al remitente que la solicitud fue enviada
@@ -737,11 +737,11 @@ export class UsersService {
       select: { id: true, status: true },
     });
 
-    if (dto.action === 'aceptada') {
+    if (dto.action === 'aceptada' && addressee) {
       await this.createNotification(friendship.requesterId, 'amistad_aceptada', {
         title: 'Solicitud aceptada',
-        body: 'Tu solicitud de amistad fue aceptada',
-        metadata: { friendshipId },
+        body: `${addressee.username} aceptó tu solicitud de amistad`,
+        metadata: { friendshipId, username: addressee.username },
       });
     }
 

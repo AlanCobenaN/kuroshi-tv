@@ -35,6 +35,7 @@ export default async function NotificationsPage() {
           initialUnread={unread}
           userId={session.user.id}
           accessToken={session.accessToken}
+          currentUsername={session.user.username}
         />
       </div>
       <Footer />

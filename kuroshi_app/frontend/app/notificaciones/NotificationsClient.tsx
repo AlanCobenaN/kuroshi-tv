@@ -10,6 +10,7 @@ interface Props {
   initialUnread: number
   userId: string
   accessToken: string
+  currentUsername: string
 }
 
 // ─── Configuración visual de cada tipo ───────────────────────
@@ -187,7 +188,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-LA', { day: 'numeric', month: 'short' })
 }
 
-export function NotificationsClient({ initialNotifications, initialUnread, userId, accessToken }: Props) {
+export function NotificationsClient({ initialNotifications, initialUnread, userId, accessToken, currentUsername }: Props) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('todas')
   const [isPending, startTransition]    = useTransition()
 
@@ -271,6 +272,7 @@ export function NotificationsClient({ initialNotifications, initialUnread, userI
               key={notif.id}
               notif={notif}
               index={i}
+              currentUsername={currentUsername}
             />
           ))}
         </div>
@@ -409,9 +411,12 @@ export function NotificationsClient({ initialNotifications, initialUnread, userI
 
 /* ─── Item individual de notificación ────────────────────────── */
 
-function NotificationItem({ notif, index }: { notif: Notification; index: number }) {
+function NotificationItem({ notif, index, currentUsername }: { notif: Notification; index: number; currentUsername: string }) {
   const config = NOTIF_CONFIG[notif.type]
-  const link   = config?.getLink(notif.metadata)
+  let link = config?.getLink(notif.metadata)
+  if (notif.type === 'amistad_recibida') {
+    link = `/u/${currentUsername}?tab=amigos`
+  }
 
   const content = (
     <div
