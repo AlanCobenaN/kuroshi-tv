@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
 
       // CDN de banners/covers de MAL y AniList
       { protocol: 'https', hostname: 'cdn.myanimelist.net' },
+      { protocol: 'https', hostname: 'api.myanimelist.net' },
       { protocol: 'https', hostname: 's4.anilist.co' },
 
       // Avatares de OAuth (Google, Discord)

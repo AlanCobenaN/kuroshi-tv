@@ -2,7 +2,7 @@
 // app/u/[username]/ProfileBanner.tsx
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPublicProfile } from '@/types'
 import { usersApi } from '@/lib/api'
@@ -19,8 +19,11 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
     profile.friendship_status
   )
   const [sending, setSending] = useState(false)
+  const [bannerError, setBannerError] = useState(false)
   const router = useRouter()
-  const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
+  const initialBannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
+  const bannerUrl = bannerError ? null : initialBannerUrl
+  const handleBannerError = useCallback(() => setBannerError(true), [])
 
   const handleFriendRequest = async () => {
     if (sending) return
@@ -66,6 +69,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
             className="profile-banner-img"
             priority
             aria-hidden="true"
+            onError={handleBannerError}
           />
         ) : (
           <div className="profile-banner-fallback" aria-hidden="true" />

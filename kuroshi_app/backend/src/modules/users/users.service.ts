@@ -39,7 +39,10 @@ export class UsersService {
         createdAt: true,
         lastActiveAt: true,
         favoriteAnime: {
-          select: { id: true, slug: true, titleEs: true, coverUrl: true, bannerUrl: true },
+          select: {
+            id: true, slug: true, titleEs: true, titleJp: true,
+            coverUrl: true, bannerUrl: true, malRating: true, status: true,
+          },
         },
         _count: {
           select: {
@@ -166,7 +169,10 @@ export class UsersService {
         avatarUrl: true,
         visibility: true,
         favoriteAnime: {
-          select: { id: true, slug: true, titleEs: true, bannerUrl: true },
+          select: {
+            id: true, slug: true, titleEs: true, titleJp: true,
+            coverUrl: true, bannerUrl: true, malRating: true, status: true,
+          },
         },
       },
     });
