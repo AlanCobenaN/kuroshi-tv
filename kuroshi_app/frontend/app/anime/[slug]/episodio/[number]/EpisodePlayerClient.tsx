@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Anime, AnimeSummary, Episode } from '@/types'
-import { usersApi } from '@/lib/api'
+import { animeApi, usersApi } from '@/lib/api'
 import { ReportModal } from '@/components/community/ReportModal'
 import { VideoPlayer } from '@/components/episode/VideoPlayer'
 import { EpisodeChat } from '@/components/episode/EpisodeChat'
@@ -39,11 +39,12 @@ export function EpisodePlayerClient({
   const [showReport, setShowReport] = useState(false)
 
   useEffect(() => {
+    animeApi.trackView(animeSlug, episode.number).catch(() => {})
     if (!isLoggedIn || !episode.id) return
     const token = (window as any).__kuroshi_token__ as string | undefined
     if (!token) return
     usersApi.saveProgress({ episodeId: episode.id, lastMinute: 0, completed: false }, token).catch(() => {})
-  }, [episode.id, isLoggedIn])
+  }, [episode.id, isLoggedIn, animeSlug, episode.number])
 
   const animeData = anime ?? episode.anime
   const servers   = episode.video_servers ?? []
@@ -93,13 +94,18 @@ export function EpisodePlayerClient({
                   Episodio {episode.number}
                   {episode.title && <span className="episode-ep-title">: {episode.title}</span>}
                 </h1>
-                {episode.air_date && (
-                  <p className="episode-air-date">
-                    Emitido el {new Date(episode.air_date).toLocaleDateString('es-LA', {
-                      day: 'numeric', month: 'long', year: 'numeric'
-                    })}
-                  </p>
-                )}
+                <div className="episode-meta-row">
+                  {episode.air_date && (
+                    <p className="episode-air-date">
+                      Emitido el {new Date(episode.air_date).toLocaleDateString('es-LA', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                      })}
+                    </p>
+                  )}
+                  {episode.views !== undefined && episode.views > 0 && (
+                    <p className="episode-views">{Number(episode.views).toLocaleString('es')} vistas</p>
+                  )}
+                </div>
               </div>
 
               {/* Botón de reportar link caído */}
@@ -322,7 +328,18 @@ export function EpisodePlayerClient({
         .episode-anime-link:hover { opacity: 0.8; }
         .episode-sep { color: var(--text-muted); }
         .episode-ep-title { font-weight: 400; color: var(--text-secondary); }
+        .episode-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
         .episode-air-date {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin: 0.25rem 0 0;
+        }
+        .episode-views {
           font-size: 0.75rem;
           color: var(--text-muted);
           margin: 0.25rem 0 0;

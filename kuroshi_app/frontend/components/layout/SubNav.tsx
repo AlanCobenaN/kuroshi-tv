@@ -126,6 +126,13 @@ export function SubNav() {
           padding: 0.1rem 0.4rem;
           line-height: 1;
         }
+
+        @media (max-width: 640px) {
+          .subnav-inner { padding: 0 0.5rem; gap: 0; }
+          .subnav-link { padding: 0.2rem 0.5rem; font-size: 0.75rem; }
+          .subnav-link--active::after { left: 0.5rem; right: 0.5rem; }
+          .subnav-soon { font-size: 0.5rem; padding: 0.05rem 0.3rem; }
+        }
       `}</style>
     </nav>
   )

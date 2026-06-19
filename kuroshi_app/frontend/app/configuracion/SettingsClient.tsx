@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { usersApi, uploadsApi, authApi } from '@/lib/api'
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
+import { useTheme } from '@/components/providers/ThemeProvider'
 
 interface Props {
   username: string
@@ -832,37 +833,55 @@ function PrivacySection({ accessToken, onSaved, isPending, startTransition }: an
 /* ─── Sección Apariencia ─────────────────────────────────── */
 
 function AppearanceSection() {
-  const [theme, setTheme] = useState<'oscuro' | 'claro'>('oscuro')
+  const { currentTheme, setTheme, availableThemes } = useTheme()
 
   return (
     <div className="settings-section">
       <h2 className="section-title">Apariencia</h2>
 
-      <SettingsField label="Tema" hint="El tema claro está en desarrollo">
-        <div className="theme-options" role="radiogroup" aria-label="Tema">
-          {(['oscuro', 'claro'] as const).map(t => (
-            <label key={t} className={`theme-option ${theme === t ? 'theme-option--active' : ''} ${t === 'claro' ? 'theme-option--disabled' : ''}`}>
+      <SettingsField label="Tema">
+        <div className="theme-grid" role="radiogroup" aria-label="Tema">
+          {availableThemes.map(t => (
+            <label
+              key={t.id}
+              className={`theme-card ${currentTheme.id === t.id ? 'theme-card--active' : ''}`}
+            >
               <input
                 type="radio"
                 name="theme"
-                value={t}
-                checked={theme === t}
-                onChange={() => t === 'oscuro' && setTheme(t)}
-                disabled={t === 'claro'}
+                value={t.id}
+                checked={currentTheme.id === t.id}
+                onChange={() => setTheme(t.id)}
                 className="sr-only"
-                aria-label={`Tema ${t}`}
+                aria-label={t.name}
               />
-              <div className={`theme-preview theme-preview--${t}`} aria-hidden="true">
-                <div className="preview-bar" />
-                <div className="preview-content">
-                  <div className="preview-line preview-line--lg" />
-                  <div className="preview-line" />
+              <div className="theme-card-preview" aria-hidden="true">
+                <div
+                  className="theme-card-bar"
+                  style={{ background: t.colors['--bg-surface'] }}
+                />
+                <div
+                  className="theme-card-body"
+                  style={{ background: t.colors['--bg-base'] }}
+                >
+                  <span
+                    className="theme-card-accent"
+                    style={{
+                      background: t.colors['--accent'],
+                      width: Math.random() > 0.5 ? '70%' : '50%',
+                    }}
+                  />
+                  <span
+                    className="theme-card-line"
+                    style={{ background: t.colors['--bg-overlay'] }}
+                  />
+                  <span
+                    className="theme-card-line theme-card-line--short"
+                    style={{ background: t.colors['--bg-overlay'] }}
+                  />
                 </div>
               </div>
-              <span className="theme-label">
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-                {t === 'claro' && <span className="theme-soon">Próximamente</span>}
-              </span>
+              <span className="theme-card-name">{t.name}</span>
             </label>
           ))}
         </div>
@@ -998,22 +1017,17 @@ function SectionStyles() {
       .toggle-input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); }
       .toggle-text { font-family: var(--font-display); font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
 
-      /* Theme options */
-      .theme-options { display: flex; gap: 1rem; }
-      .theme-option { display: flex; flex-direction: column; gap: 0.5rem; cursor: pointer; }
-      .theme-option--disabled { opacity: 0.4; cursor: not-allowed; }
-      .theme-preview { width: 120px; height: 80px; border-radius: var(--radius-lg); overflow: hidden; border: 2px solid var(--border); transition: border-color var(--transition-fast); display: flex; flex-direction: column; }
-      .theme-option--active .theme-preview { border-color: var(--accent); }
-      .theme-preview--oscuro { background: #0a0a0f; }
-      .theme-preview--claro  { background: #f5f5f5; }
-      .preview-bar { height: 12px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.06); }
-      .theme-preview--claro .preview-bar { background: rgba(0,0,0,0.05); border-bottom: 1px solid rgba(0,0,0,0.08); }
-      .preview-content { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
-      .preview-line { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); }
-      .theme-preview--claro .preview-line { background: rgba(0,0,0,0.08); }
-      .preview-line--lg { width: 70%; }
-      .theme-label { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 0.375rem; }
-      .theme-soon { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: var(--bg-overlay); border-radius: var(--radius-full); padding: 0.1rem 0.4rem; }
+      /* Theme grid */
+      .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.75rem; }
+      .theme-card { display: flex; flex-direction: column; gap: 0.375rem; cursor: pointer; }
+      .theme-card-preview { width: 100%; aspect-ratio: 3 / 2; border-radius: var(--radius-lg); overflow: hidden; border: 2px solid var(--border); transition: border-color var(--transition-fast); display: flex; flex-direction: column; }
+      .theme-card--active .theme-card-preview { border-color: var(--accent); }
+      .theme-card-bar { height: 8px; flex-shrink: 0; }
+      .theme-card-body { flex: 1; padding: 6px; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+      .theme-card-accent { height: 4px; border-radius: 2px; }
+      .theme-card-line { height: 3px; border-radius: 2px; display: block; }
+      .theme-card-line--short { width: 60%; }
+      .theme-card-name { font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-align: center; }
 
       /* Screen reader only */
       .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }

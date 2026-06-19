@@ -443,9 +443,12 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
         }
 
         @media (max-width: 640px) {
-          .profile-header { flex-direction: column; align-items: flex-start; gap: 1rem; margin-top: -48px; }
+          .profile-banner { height: 160px; }
+          .profile-banner-img { object-position: center 30%; }
+          .profile-header { flex-direction: column; align-items: flex-start; gap: 1rem; margin-top: -40px; }
           .profile-actions { margin-left: 0; }
-          .profile-avatar-img, .profile-avatar-fallback { width: 80px; height: 80px; }
+          .profile-avatar-img, .profile-avatar-fallback { width: 72px; height: 72px; }
+          .profile-identity { gap: 0.375rem; }
         }
       `}</style>
     </div>

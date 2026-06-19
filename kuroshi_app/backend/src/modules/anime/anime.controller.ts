@@ -124,4 +124,14 @@ export class AnimeController {
   ) {
     return this.animeService.rateAnime(slug, userId, dto);
   }
+
+  @Public()
+  @Post(':slug/episode/:number/track-view')
+  @ApiOperation({ summary: 'Incrementar contador de vistas del episodio y del anime' })
+  trackView(
+    @Param('slug') slug: string,
+    @Param('number', ParseIntPipe) number: number,
+  ) {
+    return this.animeService.trackView(slug, number);
+  }
 }

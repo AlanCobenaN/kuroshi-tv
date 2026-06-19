@@ -144,13 +144,18 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
                   <div className="ep-row-info">
                     <span className="ep-row-num">Episodio {ep.number}</span>
                     {ep.title && <span className="ep-row-title">{ep.title}</span>}
-                    {ep.air_date && (
-                      <span className="ep-row-date">
-                        {new Date(ep.air_date).toLocaleDateString('es-LA', {
-                          day: 'numeric', month: 'short', year: 'numeric'
-                        })}
-                      </span>
-                    )}
+                    <span className="ep-row-meta">
+                      {ep.air_date && (
+                        <span className="ep-row-date">
+                          {new Date(ep.air_date).toLocaleDateString('es-LA', {
+                            day: 'numeric', month: 'short', year: 'numeric'
+                          })}
+                        </span>
+                      )}
+                      {ep.views !== undefined && ep.views > 0 && (
+                        <span className="ep-row-views">{Number(ep.views).toLocaleString('es')} vistas</span>
+                      )}
+                    </span>
                   </div>
 
                   {/* Indicador de progreso o play */}
@@ -369,8 +374,17 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           overflow: hidden;
           text-overflow: ellipsis;
         }
+        .ep-row-meta {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
         .ep-row-date {
           font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+        .ep-row-views {
+          font-size: 0.6875rem;
           color: var(--text-muted);
         }
 
@@ -395,6 +409,16 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           transition: color var(--transition-fast);
         }
         .ep-play-icon--current { color: var(--accent); }
+
+        @media (max-width: 640px) {
+          .ep-row { padding: 0.625rem 0.75rem; gap: 0.625rem; }
+          .ep-thumb { width: 64px; height: 40px; }
+          .ep-row-num { font-size: 0.75rem; }
+          .ep-row-title { font-size: 0.75rem; }
+          .ep-list-controls { flex-direction: column; gap: 0.5rem; }
+          .ep-search-wrapper { width: 100%; }
+          .ep-order-btn { width: 100%; justify-content: center; }
+        }
       `}</style>
     </div>
   )

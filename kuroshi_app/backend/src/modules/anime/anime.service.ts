@@ -50,11 +50,11 @@ export class AnimeService {
     const [animes, total] = await Promise.all([
       this.prisma.anime.findMany({
         where, orderBy, skip, take: limit,
-        select: {
-          id: true, slug: true, titleEs: true, titleJp: true, status: true,
-          malRating: true, coverUrl: true, year: true, season: true, totalViews: true,
-          genres: { select: { genre: { select: { name: true } } } },
-        },
+      select: {
+        id: true, slug: true, titleEs: true, titleJp: true, status: true,
+        malRating: true, coverUrl: true, bannerUrl: true, year: true, season: true, totalViews: true, totalEpisodes: true,
+        genres: { select: { genre: { select: { name: true } } } },
+      },
       }),
       this.prisma.anime.count({ where }),
     ]);
@@ -377,6 +377,33 @@ export class AnimeService {
       kuroshiRating: Math.round((avg._avg.stars ?? 0) * 10) / 10,
       totalVotes: avg._count.stars,
     };
+  }
+
+  async trackView(slug: string, episodeNumber: number) {
+    const anime = await this.prisma.anime.findUnique({
+      where: { slug, isVisible: true },
+      select: { id: true },
+    });
+    if (!anime) throw new NotFoundException('Anime no encontrado');
+
+    const episode = await this.prisma.episode.findFirst({
+      where: { number: episodeNumber, season: { animeId: anime.id } },
+      select: { id: true },
+    });
+    if (!episode) throw new NotFoundException('Episodio no encontrado');
+
+    await Promise.all([
+      this.prisma.anime.update({
+        where: { id: anime.id },
+        data: { totalViews: { increment: 1 } },
+      }),
+      this.prisma.episode.update({
+        where: { id: episode.id },
+        data: { views: { increment: 1 } },
+      }),
+    ]);
+
+    return { ok: true };
   }
 
   private async findEpisodeBySlugAndNumber(slug: string, episodeNumber: number) {

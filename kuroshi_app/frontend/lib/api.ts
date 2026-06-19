@@ -184,6 +184,9 @@ export const animeApi = {
 
   rateAnime: (slug: string, stars: number, token: string) =>
     api.post(`/anime/${slug}/rate`, { stars }, { token }),
+
+  trackView: (slug: string, number: number) =>
+    api.post(`/anime/${slug}/episode/${number}/track-view`, {}),
 }
 
 // ─── Módulo Auth — 7 endpoints ───────────────────────────────

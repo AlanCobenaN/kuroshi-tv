@@ -281,9 +281,20 @@ export function HeroSection({ anime }: Props) {
         }
 
         @media (max-width: 640px) {
-          .hero { height: clamp(400px, 70vh, 540px); }
+          .hero { height: clamp(360px, 60vh, 480px); }
+          .hero-bg-img { object-position: center 30%; }
+          .hero-gradient-left {
+            background: linear-gradient(
+              to right,
+              rgba(10, 10, 15, 0.95) 0%,
+              rgba(10, 10, 15, 0.75) 60%,
+              rgba(10, 10, 15, 0.5) 100%
+            );
+          }
           .hero-synopsis { display: none; }
-          .hero-body { gap: 0.625rem; }
+          .hero-body { max-width: 100%; gap: 0.625rem; }
+          .hero-title { font-size: clamp(1.5rem, 6vw, 2rem); }
+          .hero-content { padding-bottom: 2.5rem; }
         }
       `}</style>
     </section>

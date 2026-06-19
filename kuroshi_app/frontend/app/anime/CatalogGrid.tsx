@@ -224,6 +224,13 @@ export function CatalogGrid({ animes, meta, currentPage, currentFilters }: Props
           color: var(--text-muted);
           margin: 0;
         }
+
+        @media (max-width: 640px) {
+          .catalog-grid { gap: 0.5rem; }
+          .page-btn { padding: 0.375rem 0.625rem; font-size: 0.75rem; }
+          .page-number { width: 32px; height: 32px; font-size: 0.75rem; }
+          .page-ellipsis { width: 28px; }
+        }
       `}</style>
     </div>
   )

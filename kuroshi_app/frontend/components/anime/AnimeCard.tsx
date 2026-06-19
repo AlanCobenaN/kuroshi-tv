@@ -79,6 +79,9 @@ export function AnimeCard({ anime, priority = false, showNewBadge }: Props) {
           {anime.total_episodes && (
             <span>{anime.total_episodes} eps</span>
           )}
+          {anime.total_views !== undefined && anime.total_views > 0 && (
+            <span>{Number(anime.total_views).toLocaleString('es')} vistas</span>
+          )}
         </div>
       </div>
 

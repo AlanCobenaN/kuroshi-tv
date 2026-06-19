@@ -25,7 +25,6 @@ export function AnimeBanner({ anime }: Props) {
           position: relative;
           height: 320px;
           overflow: hidden;
-          /* Compensa el nav */
           margin-top: calc(var(--total-nav) * -1);
           margin-bottom: -180px;
         }
@@ -49,6 +48,13 @@ export function AnimeBanner({ anime }: Props) {
           right: 0;
           height: 120px;
           background: linear-gradient(to bottom, rgba(10,10,15,0.6) 0%, transparent 100%);
+        }
+
+        @media (max-width: 640px) {
+          .anime-banner { height: 200px; margin-bottom: -100px; }
+          .anime-banner-img { object-position: center 30%; }
+          .anime-banner-grad-bottom { height: 140px; }
+          .anime-banner-grad-top { height: 80px; }
         }
       `}</style>
     </div>

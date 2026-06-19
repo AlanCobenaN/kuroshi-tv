@@ -107,6 +107,12 @@ export function AnimeInfo({ anime, isLoggedIn }: Props) {
             <dd>{anime.total_episodes}</dd>
           </div>
         )}
+        {anime.total_views !== undefined && anime.total_views > 0 && (
+          <div className="anime-meta-item">
+            <dt>Vistas totales</dt>
+            <dd>{Number(anime.total_views).toLocaleString('es')}</dd>
+          </div>
+        )}
       </dl>
 
       {/* Sinopsis */}
@@ -265,6 +271,8 @@ export function AnimeInfo({ anime, isLoggedIn }: Props) {
 
         @media (max-width: 480px) {
           .anime-meta-grid { grid-template-columns: repeat(2, 1fr); }
+          .anime-ratings-row { gap: 0.75rem; }
+          .rating-score { font-size: 0.9375rem; }
         }
       `}</style>
     </div>

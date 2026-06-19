@@ -322,6 +322,33 @@ a {
   min-height: 100dvh;
 }
 
+/* ─── Responsive global ─────────────────────────────────── */
+
+@media (max-width: 640px) {
+  :root {
+    --header-height: 52px;
+    --subnav-height: 40px;
+    --total-nav: 92px;
+  }
+  .container {
+    padding: 0 0.75rem;
+  }
+  .page-content {
+    padding-top: var(--total-nav);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --header-height: 48px;
+    --subnav-height: 38px;
+    --total-nav: 86px;
+  }
+  .container {
+    padding: 0 0.5rem;
+  }
+}
+
 /* ─── Animaciones ───────────────────────────────────────────── */
 
 @keyframes fade-in {
@@ -377,6 +404,10 @@ a {
 }
 .home-section { width: 100%; }
 
+@media (max-width: 640px) {
+  .home-content { gap: 2rem; padding-top: 1.5rem; padding-bottom: 2rem; }
+}
+
 /* app/anime/page.tsx */
 .catalog-page { padding-top: 2rem; padding-bottom: 4rem; }
 .catalog-header { margin-bottom: 1.5rem; }
@@ -391,6 +422,15 @@ a {
   top: calc(var(--total-nav) + 1rem);
 }
 .catalog-airing-strip { margin-bottom: 1.25rem; }
+
+@media (max-width: 640px) {
+  .catalog-page { padding-top: 1rem; padding-bottom: 2rem; }
+  .catalog-header { margin-bottom: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .catalog-page { padding-top: 0.75rem; }
+}
 .catalog-strip-label {
   display: flex;
   align-items: center;
@@ -432,6 +472,11 @@ a {
 @media (max-width: 768px) {
   .anime-detail-layout { grid-template-columns: 1fr; gap: 1.5rem; }
   .anime-detail-sidebar { position: static; }
+}
+@media (max-width: 640px) {
+  .anime-detail-body { padding-top: 1rem; padding-bottom: 2rem; }
+  .anime-detail-layout { margin-bottom: 2rem; }
+  .anime-detail-episodes { margin-top: 1.5rem; }
 }
 
 /* app/comunidades/page.tsx */
@@ -547,6 +592,9 @@ a {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+@media (max-width: 640px) {
+  .profile-body { padding-top: 1rem; padding-bottom: 2rem; gap: 1.25rem; }
 }
 
 /* Trending list (comunidades/page.tsx) */

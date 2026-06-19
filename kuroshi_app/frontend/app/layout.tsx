@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { TokenProvider } from '@/components/providers/TokenProvider'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
 
 import { Header } from '@/components/layout/Header'
 import { SubNav } from '@/components/layout/SubNav'
@@ -58,11 +59,13 @@ export default async function RootLayout({
       <body>
         <SessionProvider session={session}>
           <TokenProvider>
-            <Header />
-            <SubNav />
-            <main className="page-content">
-              {children}
-            </main>
+            <ThemeProvider>
+              <Header />
+              <SubNav />
+              <main className="page-content">
+                {children}
+              </main>
+            </ThemeProvider>
           </TokenProvider>
         </SessionProvider>
       </body>

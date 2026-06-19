@@ -145,6 +145,7 @@ export interface Anime {
   year?: number
   season_name?: string // 'invierno' | 'primavera' | 'verano' | 'otoño'
   total_episodes?: number
+  total_views?: number
   is_visible: boolean
   created_at: string
   // Presentes si hay sesión activa
@@ -162,6 +163,7 @@ export interface AnimeSummary {
   mal_rating?: number
   status: AnimeStatus
   genres: Genre[]
+  total_views?: number
 }
 
 export interface Genre {
@@ -187,6 +189,7 @@ export interface Episode {
   thumbnail_url?: string
   air_date?: string
   duration_minutes?: number
+  views?: number
   // Config de anuncios
   ad_preroll_minute: number
   ad_preroll_enabled: boolean
