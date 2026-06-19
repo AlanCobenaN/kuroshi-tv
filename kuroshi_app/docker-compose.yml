@@ -18,10 +18,7 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: production
+    image: ghcr.io/alancobenam/kuroshi-tv-backend:latest
     container_name: kuroshi_backend
     restart: unless-stopped
     env_file:
@@ -35,9 +32,7 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ghcr.io/alancobenam/kuroshi-tv-frontend:latest
     container_name: kuroshi_frontend
     restart: unless-stopped
     env_file:
