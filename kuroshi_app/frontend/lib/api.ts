@@ -230,7 +230,7 @@ export const usersApi = {
     body: Partial<{
       bio: string
       avatarUrl: string
-      favoriteAnimeId: string
+      favoriteAnimeId: string | null
       visibility: string
     }>,
     token: string

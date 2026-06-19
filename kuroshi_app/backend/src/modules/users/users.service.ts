@@ -144,13 +144,16 @@ export class UsersService {
     if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl;
     if (dto.visibility !== undefined) data.visibility = dto.visibility;
     if (dto.favoriteAnimeId !== undefined) {
-      // Verificar que el anime existe
-      const anime = await this.prisma.anime.findUnique({
-        where: { id: dto.favoriteAnimeId },
-        select: { id: true },
-      });
-      if (!anime) throw new NotFoundException('Anime no encontrado');
-      data.favoriteAnimeId = dto.favoriteAnimeId;
+      if (dto.favoriteAnimeId === null) {
+        data.favoriteAnimeId = null;
+      } else {
+        const anime = await this.prisma.anime.findUnique({
+          where: { id: dto.favoriteAnimeId },
+          select: { id: true },
+        });
+        if (!anime) throw new NotFoundException('Anime no encontrado');
+        data.favoriteAnimeId = dto.favoriteAnimeId;
+      }
     }
 
     return this.prisma.user.update({

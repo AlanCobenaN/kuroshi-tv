@@ -26,7 +26,7 @@ export class UpdateProfileDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  favoriteAnimeId?: string;
+  favoriteAnimeId?: string | null;
 
   @ApiPropertyOptional({ enum: ['publico', 'solo_amigos', 'privado'] })
   @IsOptional()

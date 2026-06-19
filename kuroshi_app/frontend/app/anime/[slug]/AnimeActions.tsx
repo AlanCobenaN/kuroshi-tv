@@ -1,6 +1,6 @@
 'use client'
 // app/anime/[slug]/AnimeActions.tsx
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
@@ -10,6 +10,7 @@ import { usersApi, animeApi } from '@/lib/api'
 interface Props {
   anime: Anime
   isLoggedIn: boolean
+  favoriteAnimeId?: string
 }
 
 const WATCH_STATUSES: { value: WatchStatus; label: string; color: string }[] = [
@@ -19,7 +20,7 @@ const WATCH_STATUSES: { value: WatchStatus; label: string; color: string }[] = [
   { value: 'abandonado', label: 'Abandonado',  color: 'var(--accent)' },
 ]
 
-export function AnimeActions({ anime, isLoggedIn }: Props) {
+export function AnimeActions({ anime, isLoggedIn, favoriteAnimeId }: Props) {
   const { data: session } = useSession()
   const [isPending, startTransition] = useTransition()
 
@@ -29,6 +30,12 @@ export function AnimeActions({ anime, isLoggedIn }: Props) {
   const [showStatuses, setShowStatuses] = useState(false)
   const [userRating, setUserRating]     = useState<number>(0)
   const [ratingHover, setRatingHover]   = useState<number>(0)
+
+  // Favorito
+  const [isFavorite, setIsFavorite] = useState(anime.id === favoriteAnimeId)
+  useEffect(() => {
+    setIsFavorite(anime.id === favoriteAnimeId)
+  }, [anime.id, favoriteAnimeId])
 
   // Determinar el primer episodio con progreso o el primero
   const continueEpisode = progress
@@ -61,6 +68,22 @@ export function AnimeActions({ anime, isLoggedIn }: Props) {
         await usersApi.removeFromWatchlist(anime.id, session.accessToken)
       } catch {
         setStatus(userEntry?.status ?? null)
+      }
+    })
+  }
+
+  const handleToggleFavorite = () => {
+    if (!session?.accessToken) return
+    const newFav = !isFavorite
+    setIsFavorite(newFav)
+    startTransition(async () => {
+      try {
+        await usersApi.updateMe(
+          { favoriteAnimeId: newFav ? anime.id : null },
+          session.accessToken
+        )
+      } catch {
+        setIsFavorite(!newFav)
       }
     })
   }
@@ -193,6 +216,26 @@ export function AnimeActions({ anime, isLoggedIn }: Props) {
         <Link href="/login" className="action-btn action-btn--ghost">
           Iniciar sesión para guardar
         </Link>
+      )}
+
+      {/* Favorito */}
+      {isLoggedIn && (
+        <div className="anime-favorite-section">
+          <button
+            onClick={handleToggleFavorite}
+            disabled={isPending}
+            className={`action-btn action-btn--favorite ${isFavorite ? 'action-btn--favorited' : ''}`}
+            aria-label={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            {isFavorite ? 'Favorito' : 'Marcar como favorito'}
+          </button>
+          {isFavorite && (
+            <p className="anime-favorite-hint">Este anime es tu favorito</p>
+          )}
+        </div>
       )}
 
       {/* Rating de Kuroshi — solo si está logueado */}
@@ -376,6 +419,45 @@ export function AnimeActions({ anime, isLoggedIn }: Props) {
         .star-btn:hover { transform: scale(1.15); }
         .star-btn--active { color: var(--amber); }
         .star-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+
+        /* Favorito */
+        .anime-favorite-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+        }
+        .action-btn--favorite {
+          background: var(--bg-surface);
+          color: var(--text-secondary);
+          border: 1px solid var(--border);
+          justify-content: flex-start;
+          transition: all var(--transition-fast);
+        }
+        .action-btn--favorite:hover {
+          border-color: var(--border-hover);
+          background: var(--bg-elevated);
+          color: var(--text-primary);
+        }
+        .action-btn--favorited {
+          background: rgba(244, 63, 94, 0.08);
+          border-color: rgba(244, 63, 94, 0.25);
+          color: #f43f5e;
+        }
+        .action-btn--favorited:hover {
+          background: rgba(244, 63, 94, 0.15);
+          border-color: rgba(244, 63, 94, 0.4);
+          color: #f43f5e;
+        }
+        .action-btn--favorited svg {
+          filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.5));
+        }
+        .anime-favorite-hint {
+          font-family: var(--font-body);
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin: 0;
+          text-align: center;
+        }
 
         @media (max-width: 768px) {
           .anime-cover-wrapper { max-width: 180px; margin: 0 auto; }

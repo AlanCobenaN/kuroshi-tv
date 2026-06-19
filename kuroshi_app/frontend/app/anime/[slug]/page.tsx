@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { animeApi } from '@/lib/api'
-import { Anime } from '@/types'
+import { animeApi, authApi } from '@/lib/api'
+import { Anime, User } from '@/types'
 import { AnimeBanner } from './AnimeBanner'
 import { AnimeInfo } from './AnimeInfo'
 import { EpisodeList } from './EpisodeList'
@@ -39,6 +39,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AnimeDetailPage({ params }: Props) {
   const { slug } = await params
   const session  = await getServerSession(authOptions)
+
+  // Obtener el anime favorito del usuario autenticado
+  let favoriteAnimeId: string | undefined
+  if (session?.accessToken) {
+    try {
+      const me = await authApi.me(session.accessToken) as User
+      favoriteAnimeId = me.favorite_anime_id
+    } catch {
+      // Si falla, simplemente no mostramos favorito
+    }
+  }
 
   let anime: Anime
   try {
@@ -75,7 +86,7 @@ export default async function AnimeDetailPage({ params }: Props) {
             <div className="anime-detail-layout">
               {/* Columna izquierda: poster + acciones */}
               <aside className="anime-detail-sidebar">
-                <AnimeActions anime={anime} isLoggedIn={!!session} />
+                <AnimeActions anime={anime} isLoggedIn={!!session} favoriteAnimeId={favoriteAnimeId} />
               </aside>
 
               {/* Columna principal: info + episodios */}
