@@ -1,41 +1,37 @@
 # ─────────────────────────────────────────
-# STAGE: base
+# STAGE: deps (solo package.json → npm ci)
 # ─────────────────────────────────────────
-FROM node:20-alpine AS base
+FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache openssl
-
-# ─────────────────────────────────────────
-# STAGE: development
-# ─────────────────────────────────────────
-FROM base AS development
 COPY package*.json ./
 RUN npm ci
-COPY . .
-RUN npx prisma generate
-EXPOSE 4000
-CMD ["npm", "run", "start:dev"]
 
 # ─────────────────────────────────────────
-# STAGE: builder
+# STAGE: builder (compilación)
 # ─────────────────────────────────────────
-FROM base AS builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm ci
-COPY . .
+COPY prisma ./prisma
 RUN npx prisma generate
+COPY . .
 RUN npm run build
 
 # ─────────────────────────────────────────
-# STAGE: production
+# STAGE: production (solo lo necesario)
 # ─────────────────────────────────────────
-FROM base AS production
+FROM node:20-alpine
+WORKDIR /app
+RUN apk add --no-cache openssl
 ENV NODE_ENV=production
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY package*.json ./
 EXPOSE 4000
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
