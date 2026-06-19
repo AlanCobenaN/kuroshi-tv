@@ -192,7 +192,7 @@ export function NotificationsClient({ initialNotifications, initialUnread, userI
   const [activeFilter, setActiveFilter] = useState<FilterType>('todas')
   const [isPending, startTransition]    = useTransition()
 
-  const { notifications, unreadCount, markAllRead } = useNotifications({
+  const { notifications, unreadCount, markAllRead, markAsRead } = useNotifications({
     userId,
     accessToken,
   })
@@ -273,6 +273,7 @@ export function NotificationsClient({ initialNotifications, initialUnread, userI
               notif={notif}
               index={i}
               currentUsername={currentUsername}
+              onMarkRead={markAsRead}
             />
           ))}
         </div>
@@ -411,17 +412,26 @@ export function NotificationsClient({ initialNotifications, initialUnread, userI
 
 /* ─── Item individual de notificación ────────────────────────── */
 
-function NotificationItem({ notif, index, currentUsername }: { notif: Notification; index: number; currentUsername: string }) {
+function NotificationItem({ notif, index, currentUsername, onMarkRead }: { notif: Notification; index: number; currentUsername: string; onMarkRead: (id: string) => void }) {
   const config = NOTIF_CONFIG[notif.type]
   let link = config?.getLink(notif.metadata)
   if (notif.type === 'amistad_recibida') {
     link = `/u/${currentUsername}?tab=amigos`
   }
 
+  const handleClickWrapper = () => {
+    if (!notif.is_read) onMarkRead(notif.id)
+    if (link) window.location.href = link
+  }
+
   const content = (
     <div
       className={`notif-item ${!notif.is_read ? 'notif-item--unread' : ''} animate-fade-in`}
       style={{ animationDelay: `${index * 0.04}s` }}
+      onClick={handleClickWrapper}
+      onKeyDown={e => { if (e.key === 'Enter') handleClickWrapper() }}
+      role={link ? 'link' : undefined}
+      tabIndex={0}
       aria-label={`${notif.is_read ? '' : 'Sin leer — '}${notif.title}`}
     >
       {/* Icono de tipo */}

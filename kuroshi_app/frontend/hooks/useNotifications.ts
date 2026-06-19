@@ -73,5 +73,13 @@ export function useNotifications({ userId, accessToken }: UseNotificationsOption
     } catch {}
   }, [accessToken])
 
-  return { notifications, unreadCount, isLoading, markAllRead }
+  const markAsRead = useCallback(async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+    setUnreadCount(prev => Math.max(0, prev - 1))
+    try {
+      await usersApi.markNotificationRead(id, accessToken)
+    } catch {}
+  }, [accessToken])
+
+  return { notifications, unreadCount, isLoading, markAllRead, markAsRead }
 }

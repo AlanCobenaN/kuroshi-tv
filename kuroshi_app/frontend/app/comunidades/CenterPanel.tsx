@@ -51,7 +51,19 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
   const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null)
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+
+  const handleEdit = useCallback(async (postId: string, newContent: string) => {
+    if (!accessToken) return
+    const post = posts.find(p => p.id === postId)
+    if (!post?.community?.slug) return
+    try {
+      const res: any = await communitiesApi.updatePost(post.community.slug, postId, { content: newContent }, accessToken)
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: res.content ?? newContent } : p))
+      setEditingPost(null)
+    } catch {}
+  }, [accessToken, posts])
 
   useEffect(() => {
     setIsLoading(true)
@@ -142,6 +154,7 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
                   isLoggedIn={isLoggedIn}
                   showCommunity
                   onLike={post.community ? () => handleLike(post.id, post.community!.slug) : undefined}
+                  onEdit={post.community ? () => setEditingPost(post) : undefined}
                   isCommentsOpen={openCommentPostId === post.id}
                   onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
                 />
@@ -165,6 +178,22 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
           </>
         )}
       </div>
+
+      {editingPost && (
+        <div className="cpm-overlay" onClick={() => setEditingPost(null)}>
+          <div className="cpm-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Editar publicación">
+            <div className="cpm-header">
+              <h2 className="cpm-title">Editar publicación</h2>
+              <button onClick={() => setEditingPost(null)} className="cpm-close" aria-label="Cerrar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            <div className="cpm-editor">
+              <EditPostForm post={editingPost} onSave={handleEdit} onCancel={() => setEditingPost(null)} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .center-panel { display: flex; flex-direction: column; overflow-y: auto; max-height: calc(100dvh - var(--total-nav)); }

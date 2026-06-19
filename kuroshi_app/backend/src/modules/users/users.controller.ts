@@ -232,4 +232,16 @@ export class UsersController {
   markAllRead(@CurrentUser('id') userId: string) {
     return this.usersService.markAllNotificationsRead(userId);
   }
+
+  // PUT /api/users/me/notifications/:id/read
+  @Put('me/notifications/:id/read')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Marcar una notificación como leída' })
+  markAsRead(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.markNotificationRead(userId, id);
+  }
 }

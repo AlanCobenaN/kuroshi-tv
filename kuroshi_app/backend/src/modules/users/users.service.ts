@@ -942,6 +942,20 @@ export class UsersService {
     return { message: 'Todas las notificaciones marcadas como leídas' };
   }
 
+  async markNotificationRead(userId: string, notificationId: string) {
+    const notif = await this.prisma.notification.findFirst({
+      where: { id: notificationId, userId },
+    });
+    if (!notif) throw new NotFoundException('Notificación no encontrada');
+
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: { isRead: true },
+    });
+
+    return { message: 'Notificación marcada como leída' };
+  }
+
   // ── Helpers privados ──────────────────────────────────────
   private async areFriends(userAId: string, userBId: string): Promise<boolean> {
     const friendship = await this.prisma.friendship.findFirst({

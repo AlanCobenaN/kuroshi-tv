@@ -304,6 +304,9 @@ export const usersApi = {
 
   markAllNotificationsRead: (token: string) =>
     api.put('/users/me/notifications/read-all', {}, { token }),
+
+  markNotificationRead: (id: string, token: string) =>
+    api.put(`/users/me/notifications/${id}/read`, {}, { token }),
 }
 
 // ─── Módulo Comunidades — 11 endpoints ───────────────────────

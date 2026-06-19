@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Post } from '@/types'
+import { adminApi } from '@/lib/api'
 import { RichText } from '@/components/community/RichText'
 import { ReportModal } from '@/components/community/ReportModal'
 
@@ -46,7 +48,22 @@ export function PostCard({
 }: PostCardProps) {
   const [imgError, setImgError] = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role
+  const isAdmin = userRole === 'owner' || userRole === 'moderador'
   const isHidden = post.is_deleted ?? false
+
+  const handleAdminDelete = async () => {
+    if (!confirm('¿Eliminar esta publicación permanentemente?')) return
+    const token = (window as any).__kuroshi_token__ as string | undefined
+    if (!token) return
+    try {
+      await adminApi.deleteContent('post', post.id, token)
+      window.location.reload()
+    } catch (e) {
+      console.error('Error al eliminar post:', e)
+    }
+  }
 
   return (
     <article
@@ -118,6 +135,14 @@ export function PostCard({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
               <line x1="4" y1="22" x2="4" y2="15" />
+            </svg>
+          </button>
+        )}
+        {isAdmin && (
+          <button onClick={handleAdminDelete} className="fb-mod-btn fb-mod-btn--danger" title="Eliminar permanentemente" aria-label="Eliminar publicación">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
             </svg>
           </button>
         )}
