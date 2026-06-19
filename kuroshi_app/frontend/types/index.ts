@@ -16,7 +16,7 @@ export type SeasonType = 'temporada' | 'ova' | 'especial'
 export type CommunityType = 'oficial' | 'no_oficial'
 export type CommunityRole = 'creador' | 'moderador' | 'miembro'
 export type ReportStatus = 'pendiente' | 'revisado' | 'desestimado'
-export type ReportContentType = 'comentario' | 'post' | 'mensaje' | 'usuario'
+export type ReportContentType = 'comentario' | 'post' | 'mensaje' | 'usuario' | 'episodio'
 export type NotificationType =
   | 'nuevo_ep'
   | 'like_post'
@@ -406,10 +406,14 @@ export interface Report {
   reporter?: UserPublicProfile
   content_type: ReportContentType
   content_id: string
-  reason: string
+  reasons: string[]
+  description?: string
   status: ReportStatus
   reviewed_by?: string
+  reviewed_by_name?: string
+  review_note?: string
   created_at: string
+  content_ref?: string
 }
 
 // ─── Respuestas de API ───────────────────────────────────────

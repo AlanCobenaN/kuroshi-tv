@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPublicProfile } from '@/types'
 import { usersApi } from '@/lib/api'
+import { ReportModal } from '@/components/community/ReportModal'
 
 interface Props {
   profile: UserPublicProfile
@@ -19,6 +20,7 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
     profile.friendship_status
   )
   const [sending, setSending] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const router = useRouter()
   const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
 
@@ -160,6 +162,12 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
             </Link>
           ) : isLoggedIn ? (
             <>
+              <button onClick={() => setShowReport(true)} className="profile-action-btn profile-action-btn--ghost" aria-label="Reportar usuario" title="Reportar usuario">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                Reportar
+              </button>
               {friendshipStatus === 'aceptada' ? (
                 <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -193,6 +201,16 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
           ) : null}
         </div>
       </div>
+
+      {showReport && (
+        <ReportModal
+          isOpen={showReport}
+          onClose={() => setShowReport(false)}
+          contentType="usuario"
+          contentId={profile.id}
+          contentLabel={`@${profile.username}`}
+        />
+      )}
 
       <style>{`
         .profile-banner-wrapper {

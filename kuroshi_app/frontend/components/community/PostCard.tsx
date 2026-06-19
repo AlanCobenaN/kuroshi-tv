@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Post } from '@/types'
 import { RichText } from '@/components/community/RichText'
+import { ReportModal } from '@/components/community/ReportModal'
 
 function timeAgo(d: string) {
   const diff = Date.now() - new Date(d).getTime()
@@ -44,6 +45,7 @@ export function PostCard({
   showCommunity = false,
 }: PostCardProps) {
   const [imgError, setImgError] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const isHidden = post.is_deleted ?? false
 
   return (
@@ -111,7 +113,24 @@ export function PostCard({
             )}
           </div>
         )}
+        {isLoggedIn && (
+          <button onClick={() => setShowReport(true)} className="fb-mod-btn" title="Reportar" aria-label="Reportar publicación">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </button>
+        )}
       </div>
+
+      {showReport && (
+        <ReportModal
+          isOpen={showReport}
+          onClose={() => setShowReport(false)}
+          contentType="post"
+          contentId={post.id}
+          contentLabel={post.content?.slice(0, 80)}
+        />
+      )}
 
       {/* Content */}
       {post.content && (

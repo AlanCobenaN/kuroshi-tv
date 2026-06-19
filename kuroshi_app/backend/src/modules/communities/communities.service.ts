@@ -532,21 +532,47 @@ export class CommunitiesService {
     });
   }
 
-  // ── POST /communities/:slug/posts/:id/like ────────────────
+  // ── POST /communities/:slug/posts/:id/like — Toggle like ───
   async likePost(slug: string, postId: string, userId: string) {
     const post = await this.prisma.post.findUnique({
       where: { id: postId, isDeleted: false },
-      select: { id: true },
+      select: { id: true, userId: true },
     });
     if (!post) throw new NotFoundException('Post no encontrado');
 
-    const updated = await this.prisma.post.update({
-      where: { id: postId },
-      data: { likesCount: { increment: 1 } },
-      select: { id: true, likesCount: true },
+    const existing = await this.prisma.postLike.findUnique({
+      where: { postId_userId: { postId, userId } },
     });
 
-    return updated;
+    if (existing) {
+      // Unlike
+      await this.prisma.postLike.delete({ where: { id: existing.id } });
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { likesCount: { decrement: 1 } },
+      });
+      return { id: postId, liked: false, likesCount: Math.max(0, (await this.prisma.post.findUnique({ where: { id: postId }, select: { likesCount: true } }))?.likesCount ?? 0) };
+    } else {
+      // Like
+      await this.prisma.postLike.create({ data: { postId, userId } });
+      const updated = await this.prisma.post.update({
+        where: { id: postId },
+        data: { likesCount: { increment: 1 } },
+        select: { id: true, likesCount: true },
+      });
+
+      // Notificar al autor del post si no es él mismo
+      if (post.userId !== userId) {
+        const liker = await this.prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+        await this.usersService.createNotification(post.userId, 'like_post', {
+          title: '¡Like en tu publicación!',
+          body: `${liker?.username ?? 'Alguien'} le gustó tu publicación`,
+          metadata: { postId, communitySlug: slug },
+        });
+      }
+
+      return { id: postId, liked: true, likesCount: updated.likesCount };
+    }
   }
 
   // ── GET /communities/:slug/posts/:id/comments ─────────────

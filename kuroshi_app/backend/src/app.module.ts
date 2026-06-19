@@ -13,6 +13,7 @@ import { SearchModule } from './modules/search/search.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { GenresModule } from './modules/genres/genres.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 
@@ -34,6 +35,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     UploadsModule,
     AdminModule,
     GenresModule,
+    ReportsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

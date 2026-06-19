@@ -98,6 +98,7 @@ enum ReportContentType {
   comment
   episode_comment
   usuario
+  episodio
 }
 
 // ================================================================
@@ -140,7 +141,10 @@ model User {
   animeRatings        AnimeRating[]
   communityMemberships CommunityMember[]
   posts               Post[]
+  postLikes           PostLike[]
   postComments        PostComment[]
+  postCommentLikes    PostCommentLike[]
+  episodeCommentLikes EpisodeCommentLike[]
   communityChats      CommunityChat[]
   userAchievements    UserAchievement[]
   reportsSubmitted    Report[]           @relation("ReportSubmitter")
@@ -361,11 +365,25 @@ model EpisodeComment {
   isDeleted   Boolean  @default(false) @map("is_deleted")  // borrado lógico para moderación
   createdAt   DateTime @default(now()) @map("created_at")
 
-  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode           @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes   EpisodeCommentLike[]
 
   @@index([episodeId, videoMinute, videoSecond])
   @@map("episode_comments")
+}
+
+model EpisodeCommentLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  commentId String   @map("comment_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment EpisodeComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@map("episode_comment_likes")
 }
 
 model AnimeRating {
@@ -447,9 +465,36 @@ model Post {
   community Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments  PostComment[]
+  likes     PostLike[]
 
   @@index([communityId, createdAt])
   @@map("posts")
+}
+
+model PostLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("post_likes")
+}
+
+model PostCommentLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  commentId String   @map("comment_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@map("post_comment_likes")
 }
 
 model PostComment {
@@ -464,10 +509,11 @@ model PostComment {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  post     Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent   PostComment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  replies  PostComment[] @relation("CommentReplies")
+  post     Post              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   PostComment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  PostComment[]     @relation("CommentReplies")
+  likes    PostCommentLike[]
 
   @@index([postId])
   @@map("post_comments")
@@ -582,20 +628,24 @@ model PasswordResetToken {
 }
 
 model Report {
-  id          String            @id @default(uuid()) @db.Uuid
-  reporterId  String            @map("reporter_id") @db.Uuid
-  contentType ReportContentType @map("content_type")
-  contentId   String            @map("content_id") @db.Uuid   // ID del contenido reportado
-  reason      String            @db.VarChar(500)
-  status      ReportStatus      @default(pendiente)
-  reviewedById String?          @map("reviewed_by") @db.Uuid
-  reviewNote  String?           @map("review_note") @db.VarChar(500)
-  createdAt   DateTime          @default(now()) @map("created_at")
-  updatedAt   DateTime          @updatedAt @map("updated_at")
+  id            String            @id @default(uuid()) @db.Uuid
+  reporterId    String            @map("reporter_id") @db.Uuid
+  contentType   ReportContentType @map("content_type")
+  contentId     String            @map("content_id") @db.Uuid   // ID del contenido reportado
+  reasons       Json              @default("[]")                // array de motivos seleccionados
+  description   String?           @db.Text                      // descripción opcional del reportero
+  status        ReportStatus      @default(pendiente)
+  reviewedById  String?           @map("reviewed_by") @db.Uuid
+  reviewNote    String?           @map("review_note") @db.VarChar(500)
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  reporterName  String?           @map("reporter_name")         // username al momento del reporte (por si el usuario se borra)
+  contentRef    String?           @map("content_ref")           // slug o referencia legible del contenido reportado
 
   reporter   User  @relation("ReportSubmitter", fields: [reporterId], references: [id], onDelete: Cascade)
   reviewedBy User? @relation("ReportReviewer", fields: [reviewedById], references: [id])
 
   @@index([status])
+  @@index([createdAt])
   @@map("reports")
 }

@@ -327,20 +327,29 @@ export class AnimeService {
     });
     if (!comment) throw new NotFoundException('Comentario no encontrado');
 
-    const updated = await this.prisma.episodeComment.update({
-      where: { id: commentId },
-      data: { likesCount: { increment: 1 } },
-      select: { id: true, likesCount: true },
+    const existing = await this.prisma.episodeCommentLike.findUnique({
+      where: { commentId_userId: { commentId, userId } },
     });
 
-    // Emitir like al canal del episodio
-    await this.realtime.emitEpisodeCommentLiked(
-      comment.episodeId,
-      updated.id,
-      updated.likesCount,
-    );
-
-    return updated;
+    if (existing) {
+      await this.prisma.episodeCommentLike.delete({ where: { id: existing.id } });
+      const updated = await this.prisma.episodeComment.update({
+        where: { id: commentId },
+        data: { likesCount: { decrement: 1 } },
+        select: { id: true, likesCount: true },
+      });
+      await this.realtime.emitEpisodeCommentLiked(comment.episodeId, updated.id, updated.likesCount);
+      return { ...updated, liked: false };
+    } else {
+      await this.prisma.episodeCommentLike.create({ data: { commentId, userId } });
+      const updated = await this.prisma.episodeComment.update({
+        where: { id: commentId },
+        data: { likesCount: { increment: 1 } },
+        select: { id: true, likesCount: true },
+      });
+      await this.realtime.emitEpisodeCommentLiked(comment.episodeId, updated.id, updated.likesCount);
+      return { ...updated, liked: true };
+    }
   }
 
   async rateAnime(slug: string, userId: string, dto: RateAnimeDto) {

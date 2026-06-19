@@ -577,6 +577,15 @@ export const adminApi = {
     api.delete(`/admin/genres/${id}`, { token }),
 }
 
+// ─── Módulo Reportes — 1 endpoint ───────────────────────────
+
+export const reportsApi = {
+  createReport: (
+    body: { contentType: string; contentId: string; reasons: string[]; description?: string },
+    token: string
+  ) => api.post('/reports', body, { token }),
+}
+
 // ─── Módulo Uploads — 1 endpoint ─────────────────────────────
 
 // ✅ CORREGIDO: envía JSON con base64 — coincide con UploadImageDto del backend

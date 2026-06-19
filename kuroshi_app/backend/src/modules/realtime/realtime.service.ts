@@ -191,4 +191,34 @@ export class RealtimeService implements OnModuleInit {
       this.logger.error(`Error al emitir notification en user:${userId}`, err);
     }
   }
+
+  // ── Canal admin:reports — Nuevo reporte en tiempo real ────
+  async emitNewReport(report: any) {
+    if (!this.supabase) return;
+
+    try {
+      await this.supabase
+        .channel('admin:reports')
+        .send({
+          type: 'broadcast',
+          event: 'new_report',
+          payload: {
+            id: report.id,
+            content_type: report.contentType,
+            content_id: report.contentId,
+            reasons: report.reasons,
+            description: report.description,
+            content_ref: report.contentRef,
+            reporter: report.reporter
+              ? { id: report.reporter.id, username: report.reporter.username, avatar_url: report.reporter.avatarUrl }
+              : { username: report.reporterName },
+            reporter_name: report.reporterName,
+            created_at: report.createdAt,
+            status: report.status,
+          },
+        });
+    } catch (err) {
+      this.logger.error('Error al emitir new_report en admin:reports', err);
+    }
+  }
 }

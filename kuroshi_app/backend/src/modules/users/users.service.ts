@@ -961,6 +961,22 @@ export class UsersService {
       select: { status: true, manualOverride: true },
     });
 
+    // Obtener total de episodios del anime
+    const anime = await this.prisma.anime.findUnique({
+      where: { id: animeId },
+      select: {
+        totalEpisodes: true,
+        seasons: {
+          select: {
+            episodes: { select: { id: true } },
+          },
+        },
+      },
+    });
+    if (!anime) return;
+
+    const allEpisodeIds = anime.seasons.flatMap(s => s.episodes.map(e => e.id));
+
     // Si no hay entrada en la watchlist, crear una con estado "viendo"
     if (!entry) {
       await this.prisma.userWatchlist.create({
@@ -975,6 +991,21 @@ export class UsersService {
     }
 
     if (entry.manualOverride) return; // respetar decisión manual
+
+    // Verificar si completó todos los episodios
+    const completedCount = await this.prisma.userProgress.count({
+      where: { userId, episodeId: { in: allEpisodeIds }, completed: true },
+    });
+
+    if (allEpisodeIds.length > 0 && completedCount >= allEpisodeIds.length) {
+      if (entry.status !== 'completado') {
+        await this.prisma.userWatchlist.update({
+          where: { userId_animeId: { userId, animeId } },
+          data: { status: 'completado', lastWatchedAt: new Date() },
+        });
+      }
+      return;
+    }
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentProgress = await this.prisma.userProgress.findFirst({

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Anime, AnimeSummary, Episode } from '@/types'
 import { usersApi } from '@/lib/api'
+import { ReportModal } from '@/components/community/ReportModal'
 import { VideoPlayer } from '@/components/episode/VideoPlayer'
 import { EpisodeChat } from '@/components/episode/EpisodeChat'
 import { EpisodeNavigator } from '@/components/episode/EpisodeNavigator'
@@ -35,12 +36,13 @@ export function EpisodePlayerClient({
   relatedAnimes,
 }: Props) {
   const [showMobileChat, setShowMobileChat] = useState(false)
+  const [showReport, setShowReport] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn || !episode.id) return
     const token = (window as any).__kuroshi_token__ as string | undefined
     if (!token) return
-    usersApi.saveProgress({ episodeId: episode.id, lastMinute: 0, completed: true }, token).catch(() => {})
+    usersApi.saveProgress({ episodeId: episode.id, lastMinute: 0, completed: false }, token).catch(() => {})
   }, [episode.id, isLoggedIn])
 
   const animeData = anime ?? episode.anime
@@ -99,6 +101,19 @@ export function EpisodePlayerClient({
                   </p>
                 )}
               </div>
+
+              {/* Botón de reportar link caído */}
+              <button
+                className="player-report-btn"
+                onClick={() => setShowReport(true)}
+                aria-label="Reportar link caído"
+                title="Reportar link caído"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                Reportar
+              </button>
 
               {/* Botón de chat en móvil */}
               <button
@@ -166,6 +181,16 @@ export function EpisodePlayerClient({
             </section>
           )}
         </div>
+
+        {showReport && (
+          <ReportModal
+            isOpen={showReport}
+            onClose={() => setShowReport(false)}
+            contentType="episodio"
+            contentId={episode.id}
+            contentLabel={`${animeData?.title_es ?? ''} - Episodio ${episode.number}`}
+          />
+        )}
 
         {/* ── Chat del episodio — 30% ─────────────────────── */}
         <aside
@@ -389,6 +414,25 @@ export function EpisodePlayerClient({
           transition: color var(--transition-fast);
         }
         .player-related-card:hover .player-related-name { color: var(--text-primary); }
+
+        /* Botón reportar link */
+        .player-report-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.875rem;
+          font-family: var(--font-display);
+          font-size: 0.8125rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: all var(--transition-fast);
+        }
+        .player-report-btn:hover { color: var(--accent); border-color: var(--accent); }
 
         /* Botón chat móvil */
         .player-chat-toggle-mobile {
