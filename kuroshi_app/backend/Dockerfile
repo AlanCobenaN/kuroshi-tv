@@ -13,8 +13,8 @@ RUN npm ci
 FROM node:20-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache openssl
+COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
-RUN npm ci
 COPY prisma ./prisma
 RUN npx prisma generate
 COPY . .
