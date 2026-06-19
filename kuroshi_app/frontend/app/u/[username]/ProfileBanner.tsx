@@ -2,7 +2,7 @@
 // app/u/[username]/ProfileBanner.tsx
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPublicProfile } from '@/types'
 import { usersApi } from '@/lib/api'
@@ -19,11 +19,8 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
     profile.friendship_status
   )
   const [sending, setSending] = useState(false)
-  const [bannerError, setBannerError] = useState(false)
   const router = useRouter()
-  const initialBannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
-  const bannerUrl = bannerError ? null : initialBannerUrl
-  const handleBannerError = useCallback(() => setBannerError(true), [])
+  const bannerUrl = profile.favorite_anime?.banner_url ?? profile.favorite_anime?.cover_url
 
   const handleFriendRequest = async () => {
     if (sending) return
@@ -61,15 +58,11 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
       {/* Banner a sangre */}
       <div className="profile-banner">
         {bannerUrl ? (
-          <Image
+          <img
             src={bannerUrl}
             alt=""
-            fill
-            sizes="100vw"
             className="profile-banner-img"
-            priority
             aria-hidden="true"
-            onError={handleBannerError}
           />
         ) : (
           <div className="profile-banner-fallback" aria-hidden="true" />
@@ -216,6 +209,10 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
           height: 240px;
         }
         .profile-banner-img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
           object-position: center 25%;
           filter: brightness(0.5) saturate(1.2);
