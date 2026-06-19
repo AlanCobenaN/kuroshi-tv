@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { communitiesApi } from '@/lib/api'
+import { useSession } from 'next-auth/react'
+import { communitiesApi, adminApi } from '@/lib/api'
 import { PostComment } from '@/types'
 
 function timeAgo(d: string) {
@@ -28,6 +29,10 @@ const REPLY_PAGE_SIZE = 5
 const MAX_CHARS = 500
 
 export function PostComments({ slug, postId, isLoggedIn = false, accessToken, onClose }: Props) {
+  const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role
+  const isAdmin = userRole === 'owner' || userRole === 'moderador'
+
   const [flatComments, setFlatComments] = useState<PostComment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
@@ -36,6 +41,17 @@ export function PostComments({ slug, postId, isLoggedIn = false, accessToken, on
   const [visibleReplies, setVisibleReplies] = useState<Record<string, number>>({})
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const handleAdminDeleteComment = async (commentId: string) => {
+    if (!accessToken) return
+    if (!confirm('¿Eliminar este comentario permanentemente?')) return
+    try {
+      await adminApi.deleteContent('comment', commentId, accessToken)
+      setFlatComments(prev => prev.filter(c => c.id !== commentId))
+    } catch (e) {
+      console.error('Error al eliminar comentario:', e)
+    }
+  }
 
   const comments = buildTree(flatComments)
 
@@ -219,12 +235,14 @@ export function PostComments({ slug, postId, isLoggedIn = false, accessToken, on
                 postId={postId}
                 isLoggedIn={isLoggedIn}
                 accessToken={accessToken}
+                isAdmin={isAdmin}
                 visibleCount={visibleReplies[comment.id]}
                 onShowMore={showMoreReplies}
                 onReply={(id, username) => {
                   setReplyTo({ id, username })
                   inputRef.current?.focus()
                 }}
+                onAdminDelete={handleAdminDeleteComment}
               />
             ))
           )}
@@ -398,6 +416,8 @@ export function PostComments({ slug, postId, isLoggedIn = false, accessToken, on
           padding: 0.125rem 0;
         }
         .comment-action:hover { color: var(--text-secondary); }
+        .comment-action--danger { color: var(--accent); }
+        .comment-action--danger:hover { color: var(--accent-dim); opacity: 0.8; }
 
         .comment-replies {
           margin-top: 0.5rem;
@@ -432,7 +452,9 @@ function CommentRow({
   postId,
   isLoggedIn,
   accessToken,
+  isAdmin,
   onReply,
+  onAdminDelete,
   parentUsername: _parentUsernameProp,
   visibleCount,
   onShowMore,
@@ -442,7 +464,9 @@ function CommentRow({
   postId: string
   isLoggedIn?: boolean
   accessToken?: string
+  isAdmin?: boolean
   onReply: (id: string, username: string) => void
+  onAdminDelete?: (commentId: string) => void
   parentUsername?: string
   visibleCount?: number
   onShowMore?: (rootId: string) => void
@@ -484,6 +508,11 @@ function CommentRow({
               Responder
             </button>
           )}
+          {isAdmin && (
+            <button className="comment-action comment-action--danger" onClick={() => onAdminDelete?.(comment.id)}>
+              Eliminar
+            </button>
+          )}
         </div>
 
         {shown.length > 0 && (
@@ -496,7 +525,9 @@ function CommentRow({
                 postId={postId}
                 isLoggedIn={isLoggedIn}
                 accessToken={accessToken}
+                isAdmin={isAdmin}
                 onReply={onReply}
+                onAdminDelete={onAdminDelete}
               />
             ))}
             {remaining > 0 && (

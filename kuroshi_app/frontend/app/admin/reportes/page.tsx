@@ -1,8 +1,24 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { adminApi } from '@/lib/api'
 import { useSession } from 'next-auth/react'
 import { createClient } from '@supabase/supabase-js'
+
+function buildContentUrl(type: string, ref: string | null): { url: string; label: string } | null {
+  if (!ref) return null
+  if (type === 'usuario' && ref.startsWith('@')) {
+    return { url: `/u/${ref.slice(1)}`, label: ref }
+  }
+  if (type === 'post') {
+    const m = ref.match(/^Post en \/(.+)$/)
+    if (m) return { url: `/comunidades/${m[1]}`, label: ref }
+  }
+  if (type === 'episodio') {
+    return { url: '#', label: ref }
+  }
+  return null
+}
 
 const REASON_LABELS: Record<string, string> = {
   spam: 'Spam o publicidad',
@@ -133,8 +149,14 @@ export default function AdminReportsPage() {
               <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
                 {r.description ?? '-'}
               </td>
-              <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                {r.content_ref ? <code>{r.content_ref}</code> : '-'}
+              <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {(() => {
+                  const link = buildContentUrl(r.content_type, r.content_ref)
+                  if (link && link.url !== '#') {
+                    return <Link href={link.url} target="_blank" style={{ color: 'var(--accent)', textDecoration: 'none' }}>{link.label}</Link>
+                  }
+                  return r.content_ref ? <code>{r.content_ref}</code> : '-'
+                })()}
               </td>
               <td><span className={`admin-badge admin-badge--${r.status}`}>{r.status}</span></td>
               <td>{new Date(r.created_at).toLocaleDateString('es')}</td>

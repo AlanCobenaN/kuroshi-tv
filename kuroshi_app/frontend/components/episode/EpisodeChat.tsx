@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEpisodeChat } from '@/hooks/useEpisodeChat'
 import { useEpisodePresence } from '@/hooks/useEpisodePresence'
+import { adminApi } from '@/lib/api'
 import { EpisodeComment } from '@/types'
 
 interface Props {
@@ -19,6 +20,8 @@ function formatTime(minute: number, second: number): string {
 
 export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
   const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role
+  const isAdmin = userRole === 'owner' || userRole === 'moderador'
   const [inputValue, setInputValue] = useState('')
   const [inputError, setInputError] = useState('')
   const [videoMinute, setVideoMinute] = useState(0)
@@ -128,6 +131,12 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
                 comment={comment}
                 onLike={() => likeComment(comment.id)}
                 isLoggedIn={!!session}
+                isAdmin={isAdmin}
+                onAdminDelete={(id) => {
+                  if (!session?.accessToken) return
+                  if (!confirm('¿Eliminar este comentario permanentemente?')) return
+                  adminApi.deleteContent('episode_comment', id, session.accessToken).catch(console.error)
+                }}
               />
             ))}
             <div ref={messagesEndRef} aria-hidden="true" />
@@ -441,10 +450,14 @@ function ChatMessage({
   comment,
   onLike,
   isLoggedIn,
+  isAdmin,
+  onAdminDelete,
 }: {
   comment: EpisodeComment
   onLike: () => void
   isLoggedIn: boolean
+  isAdmin?: boolean
+  onAdminDelete?: (commentId: string) => void
 }) {
   return (
     <div className="chat-msg" aria-label={`${comment.user.username} en ${formatTime(comment.video_minute, comment.video_second)}: ${comment.content}`}>
@@ -483,18 +496,33 @@ function ChatMessage({
           {comment.content}
         </p>
 
-        {/* Likes */}
-        <button
-          onClick={isLoggedIn ? onLike : undefined}
-          className={`chat-msg-like ${!isLoggedIn ? 'chat-msg-like--readonly' : ''} ${comment.liked_by_me ? 'chat-msg-like--active' : ''}`}
-          aria-label={`${comment.likes_count} likes`}
-          disabled={!isLoggedIn}
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill={comment.liked_by_me ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-          {comment.likes_count > 0 && comment.likes_count}
-        </button>
+        {/* Actions */}
+        <div className="chat-msg-actions">
+          <button
+            onClick={isLoggedIn ? onLike : undefined}
+            className={`chat-msg-like ${!isLoggedIn ? 'chat-msg-like--readonly' : ''} ${comment.liked_by_me ? 'chat-msg-like--active' : ''}`}
+            aria-label={`${comment.likes_count} likes`}
+            disabled={!isLoggedIn}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill={comment.liked_by_me ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            {comment.likes_count > 0 && comment.likes_count}
+          </button>
+          {isAdmin && (
+            <button
+              onClick={() => onAdminDelete?.(comment.id)}
+              className="chat-msg-delete"
+              aria-label="Eliminar comentario"
+              title="Eliminar"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <style>{`
@@ -600,12 +628,23 @@ function ChatMessage({
           color: var(--text-muted);
           padding: 0;
           transition: color var(--transition-fast);
-          align-self: flex-start;
         }
         .chat-msg-like:hover:not(:disabled) { color: var(--accent); }
         .chat-msg-like--active { color: var(--accent); }
         .chat-msg-like--readonly { cursor: default; }
         .chat-msg-like:disabled { cursor: default; }
+        .chat-msg-actions { display: flex; align-items: center; gap: 0.5rem; align-self: flex-start; }
+        .chat-msg-delete {
+          display: flex;
+          align-items: center;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--text-muted);
+          padding: 0;
+          transition: color var(--transition-fast);
+        }
+        .chat-msg-delete:hover { color: var(--accent); }
       `}</style>
     </div>
   )
