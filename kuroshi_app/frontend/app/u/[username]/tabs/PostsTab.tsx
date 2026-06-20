@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { usersApi } from '@/lib/api'
 import { Post } from '@/types'
 import { PostCard } from '@/components/community/PostCard'
-import Link from 'next/link'
 
 interface Props {
   username: string
