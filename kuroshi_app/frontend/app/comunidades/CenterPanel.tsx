@@ -655,6 +655,20 @@ function EditPostForm({ post, onSave, onCancel }: {
 }) {
   const [content, setContent] = useState(post.content)
   const [saving, setSaving] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const wrapText = useCallback((prefix: string, suffix: string) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const selected = content.substring(start, end)
+    setContent(content.substring(0, start) + prefix + selected + suffix + content.substring(end))
+    setTimeout(() => {
+      ta.focus()
+      ta.setSelectionRange(start + prefix.length, start + prefix.length + selected.length)
+    }, 0)
+  }, [content])
 
   const handleSubmit = async () => {
     if (!content.trim()) return
@@ -665,16 +679,42 @@ function EditPostForm({ post, onSave, onCancel }: {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <textarea
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        className="cpm-textarea"
-        rows={8}
-        maxLength={5000}
-        disabled={saving}
-        style={{ padding: '0.5rem 0', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: '0.9375rem', lineHeight: 1.6, resize: 'none', minHeight: '120px', width: '100%' }}
-      />
+    <>
+      <div className="cpm-toolbar">
+        <button onClick={() => wrapText('**', '**')} className="cpm-tb-btn" title="Negrita" aria-label="Negrita">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" /></svg>
+        </button>
+        <button onClick={() => wrapText('*', '*')} className="cpm-tb-btn" title="Cursiva" aria-label="Cursiva">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" /></svg>
+        </button>
+        <button onClick={() => wrapText('***', '***')} className="cpm-tb-btn" title="Negrita + Cursiva" aria-label="Negrita y cursiva">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" /></svg>
+        </button>
+        <button onClick={() => wrapText('~~', '~~')} className="cpm-tb-btn" title="Tachado" aria-label="Tachado">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 12h12M3 6l2.5 3M21 6l-2.5 3M12 18V6" /></svg>
+        </button>
+        <button onClick={() => wrapText('__', '__')} className="cpm-tb-btn" title="Subrayado" aria-label="Subrayado">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3M4 21h16" /></svg>
+        </button>
+        <span className="cpm-tb-sep" />
+        <button onClick={() => wrapText('<small>', '</small>')} className="cpm-tb-btn" title="Pequeño" aria-label="Texto pequeño">T<sub>s</sub></button>
+        <button onClick={() => wrapText('<large>', '</large>')} className="cpm-tb-btn" title="Grande" aria-label="Texto grande">T<sup>l</sup></button>
+        <button onClick={() => wrapText('<xlarge>', '</xlarge>')} className="cpm-tb-btn" title="Extra grande" aria-label="Texto extra grande">T<sup>xl</sup></button>
+      </div>
+
+      <div className="cpm-editor">
+        <textarea
+          ref={textareaRef}
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          className="cpm-textarea"
+          rows={10}
+          maxLength={5000}
+          disabled={saving}
+          placeholder="Edita tu publicación..."
+        />
+      </div>
+
       <div className="cpm-footer">
         <span className="cpm-count">{content.length}/5000</span>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -684,7 +724,7 @@ function EditPostForm({ post, onSave, onCancel }: {
           </button>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
