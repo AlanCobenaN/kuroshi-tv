@@ -36,15 +36,15 @@ jobs:
           push: true
           tags: ghcr.io/alancobenan/kuroshi-tv-frontend:latest
 
-      # - name: Deploy to VPS
-      #   uses: appleboy/ssh-action@v1.0.3
-      #   with:
-      #     host: ${{ secrets.VPS_HOST }}
-      #     username: ${{ secrets.VPS_USER }}
-      #     key: ${{ secrets.VPS_SSH_KEY }}
-      #   script: |
-      #     cd ~/kuroshi-tv/kuroshi_app
-      #     git pull origin main
-      #     docker compose pull
-      #     docker compose up -d
-      #     docker system prune -af
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ~/kuroshi-tv/kuroshi_app
+            git pull origin main
+            docker compose pull
+            docker compose up -d
+            docker system prune -af
