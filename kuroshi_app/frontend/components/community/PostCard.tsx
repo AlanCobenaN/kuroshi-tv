@@ -21,6 +21,10 @@ function timeAgo(d: string) {
   return new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
+function formatTime(d: string) {
+  return new Date(d).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+}
+
 interface PostCardProps {
   post: Post
   onLike?: () => void
@@ -100,7 +104,12 @@ export function PostCard({
             )}
             {isHidden && <span className="fb-hidden-badge">Oculto</span>}
           </div>
-          <span className="fb-time">{timeAgo(post.created_at)}</span>
+          <span className="fb-time">
+            {timeAgo(post.created_at)}
+            {post.edited_at && new Date(post.edited_at).getTime() - new Date(post.created_at).getTime() > 60000 && (
+              <> · editado a las {formatTime(post.edited_at)}</>
+            )}
+          </span>
         </div>
         {(onHide || onDelete || onEdit) && (
           <div className="fb-mod-actions">

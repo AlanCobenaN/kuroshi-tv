@@ -324,6 +324,7 @@ export interface Post {
   comments_count: number
   liked_by_me?: boolean
   created_at: string
+  edited_at?: string
   community?: { slug: string; name: string }
 }
 

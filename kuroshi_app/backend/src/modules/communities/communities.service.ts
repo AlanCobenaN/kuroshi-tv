@@ -331,6 +331,7 @@ export class CommunitiesService {
           likesCount: true,
           isPinned: true,
           createdAt: true,
+          editedAt: true,
           user: { select: { id: true, username: true, avatarUrl: true, role: true } },
           _count: { select: { comments: true } },
         },
@@ -363,6 +364,7 @@ export class CommunitiesService {
           likesCount: true,
           isPinned: true,
           createdAt: true,
+          editedAt: true,
           user: { select: { id: true, username: true, avatarUrl: true, role: true } },
           community: { select: { slug: true, name: true } },
           _count: { select: { comments: true } },
@@ -521,13 +523,14 @@ export class CommunitiesService {
         content: dto.content,
         imageUrl: dto.imageUrl,
         linkedEpisodeId: dto.linkedEpisodeId,
+        editedAt: new Date(),
       },
       select: {
         id: true,
         content: true,
         imageUrl: true,
         linkedEpisodeId: true,
-        updatedAt: true,
+        editedAt: true,
       },
     });
   }

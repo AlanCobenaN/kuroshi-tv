@@ -461,6 +461,7 @@ model Post {
   isDeleted       Boolean  @default(false) @map("is_deleted")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
+  editedAt        DateTime? @map("edited_at")
 
   community Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)

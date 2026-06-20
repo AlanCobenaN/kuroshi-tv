@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Community, CommunityWithMembership, Post, PostComment } from '@/types'
 import { communitiesApi, uploadsApi } from '@/lib/api'
 import { PostCard } from '@/components/community/PostCard'
@@ -45,6 +46,8 @@ export function CenterPanel({ selectedSlug, isLoggedIn, userId, username, access
 /* ─── Global Feed (default) ──────────────────────────────── */
 
 function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; accessToken?: string }) {
+  const { data: session } = useSession()
+  const currentUserId = (session?.user as any)?.id
   const [posts, setPosts] = useState<Post[]>([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -60,7 +63,7 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
     if (!post?.community?.slug) return
     try {
       const res: any = await communitiesApi.updatePost(post.community.slug, postId, { content: newContent }, accessToken)
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: res.content ?? newContent } : p))
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: res.content ?? newContent, edited_at: res.edited_at } : p))
       setEditingPost(null)
     } catch {}
   }, [accessToken, posts])
@@ -154,7 +157,7 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
                   isLoggedIn={isLoggedIn}
                   showCommunity
                   onLike={post.community ? () => handleLike(post.id, post.community!.slug) : undefined}
-                  onEdit={post.community ? () => setEditingPost(post) : undefined}
+                  onEdit={post.community && currentUserId === post.user_id ? () => setEditingPost(post) : undefined}
                   isCommentsOpen={openCommentPostId === post.id}
                   onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
                 />
@@ -554,7 +557,7 @@ function CommunityFeedPanel({ slug, isMember, isLoggedIn, accessToken, userRole,
     if (!accessToken) return
     try {
       const res: any = await communitiesApi.updatePost(slug, postId, { content: newContent }, accessToken)
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: res.content ?? newContent } : p))
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: res.content ?? newContent, edited_at: res.edited_at } : p))
       setEditingPost(null)
     } catch {}
   }, [slug, accessToken])
