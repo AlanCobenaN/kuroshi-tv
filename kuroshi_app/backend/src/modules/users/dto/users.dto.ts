@@ -71,6 +71,18 @@ export class UpdateWatchlistDto {
   personalRating?: number;
 }
 
+export class CreateUserPostDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(2000)
+  content: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+}
+
 export class SaveProgressDto {
   @ApiProperty()
   @IsString()

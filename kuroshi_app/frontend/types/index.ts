@@ -301,7 +301,7 @@ export interface CommunityBanInfo {
 
 export interface Post {
   id: string
-  community_id: string
+  community_id?: string
   user_id: string
   user: {
     username: string

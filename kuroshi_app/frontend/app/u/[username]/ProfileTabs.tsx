@@ -6,6 +6,7 @@ import { WatchlistTab } from './tabs/WatchlistTab'
 import { ActivityTab } from './tabs/ActivityTab'
 import { CommunitiesTab } from './tabs/CommunitiesTab'
 import { FriendsTab } from './tabs/FriendsTab'
+import { PostsTab } from './tabs/PostsTab'
 
 interface Props {
   profile: UserPublicProfile
@@ -16,17 +17,20 @@ interface Props {
   initialTab?: TabId
 }
 
-type TabId = 'lista' | 'actividad' | 'comunidades' | 'amigos'
+type TabId = 'posts' | 'lista' | 'actividad' | 'comunidades' | 'amigos'
 
 const TABS: { id: TabId; label: string }[] = [
+  { id: 'posts',       label: 'Posts' },
   { id: 'lista',       label: 'Mi Lista' },
   { id: 'actividad',   label: 'Actividad' },
   { id: 'comunidades', label: 'Comunidades' },
   { id: 'amigos',      label: 'Amigos' },
 ]
 
+const ALL_TABS = ['posts', 'lista', 'actividad', 'comunidades', 'amigos']
+
 export function ProfileTabs({ profile, isOwnProfile, isLoggedIn, accessToken, currentUserId, initialTab }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>(initialTab && ['lista', 'actividad', 'comunidades', 'amigos'].includes(initialTab) ? initialTab : 'lista')
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab && ALL_TABS.includes(initialTab) ? initialTab : 'posts')
 
   const isPrivate   = profile.visibility === 'privado'
   const isFriendsOnly = profile.visibility === 'solo_amigos'
@@ -72,6 +76,7 @@ export function ProfileTabs({ profile, isOwnProfile, isLoggedIn, accessToken, cu
           aria-labelledby={`tab-${activeTab}`}
           className="tab-panel"
         >
+          {activeTab === 'posts'       && <PostsTab username={profile.username} isOwnProfile={isOwnProfile} accessToken={accessToken} isLoggedIn={isLoggedIn} />}
           {activeTab === 'lista'       && <WatchlistTab username={profile.username} isOwnProfile={isOwnProfile} accessToken={accessToken} />}
           {activeTab === 'actividad'   && <ActivityTab username={profile.username} />}
           {activeTab === 'comunidades' && <CommunitiesTab username={profile.username} />}

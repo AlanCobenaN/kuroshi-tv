@@ -3,6 +3,7 @@ import {
   Get,
   Put,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -19,6 +20,7 @@ import {
   SaveProgressDto,
   FriendRequestActionDto,
   GetNotificationsDto,
+  CreateUserPostDto,
 } from './dto/users.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -142,6 +144,59 @@ export class UsersController {
     @CurrentUser('id') requesterId?: string,
   ) {
     return this.usersService.getActivity(username, requesterId);
+  }
+
+  // GET /api/users/:username/posts
+  @Public()
+  @Get(':username/posts')
+  @ApiOperation({ summary: 'Posts del perfil del usuario (sin comunidad)' })
+  getUserPosts(
+    @Param('username') username: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @CurrentUser('id') requesterId?: string,
+  ) {
+    return this.usersService.getUserPosts(username, requesterId, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
+  // POST /api/users/me/posts
+  @Post('me/posts')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Crear publicación en el perfil (sin comunidad)' })
+  createUserPost(
+    @Body() dto: CreateUserPostDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.createUserPost(userId, dto);
+  }
+
+  // PATCH /api/users/me/posts/:id
+  @Patch('me/posts/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Editar publicación del perfil' })
+  updateUserPost(
+    @Param('id') postId: string,
+    @Body() dto: CreateUserPostDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.updateUserPost(userId, postId, dto);
+  }
+
+  // DELETE /api/users/me/posts/:id
+  @Delete('me/posts/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar publicación del perfil' })
+  deleteUserPost(
+    @Param('id') postId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.deleteUserPost(userId, postId);
   }
 
   // GET /api/users/:username/friends

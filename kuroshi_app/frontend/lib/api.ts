@@ -310,6 +310,24 @@ export const usersApi = {
 
   markNotificationRead: (id: string, token: string) =>
     api.put(`/users/me/notifications/${id}/read`, {}, { token }),
+
+  getUserPosts: (username: string, params?: { page?: number; limit?: number }, token?: string) => {
+    const query = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, String(v)])
+    ).toString()
+    return api.get(`/users/${username}/posts${query ? `?${query}` : ''}`, { token, cache: token ? 'no-store' : undefined, revalidate: token ? undefined : 60 })
+  },
+
+  createPost: (body: { content: string; imageUrl?: string }, token: string) =>
+    api.post('/users/me/posts', body, { token }),
+
+  updateUserPost: (postId: string, body: { content: string; imageUrl?: string }, token: string) =>
+    api.patch(`/users/me/posts/${postId}`, body, { token }),
+
+  deleteUserPost: (postId: string, token: string) =>
+    api.delete(`/users/me/posts/${postId}`, { token }),
 }
 
 // ─── Módulo Comunidades — 11 endpoints ───────────────────────

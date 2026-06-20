@@ -15,6 +15,7 @@ import {
   SaveProgressDto,
   FriendRequestActionDto,
   GetNotificationsDto,
+  CreateUserPostDto,
 } from './dto/users.dto';
 
 @Injectable()
@@ -540,9 +541,11 @@ export class UsersService {
       activity.push({
         id: `post_${p.id}`,
         type: 'post',
-        description: `Publicó en ${p.community.name}: "${p.content.substring(0, 80)}${p.content.length > 80 ? '...' : ''}"`,
-        link: `/comunidad/${p.community.slug}`,
-        meta: p.community.name,
+        description: p.community
+          ? `Publicó en ${p.community.name}: "${p.content.substring(0, 80)}${p.content.length > 80 ? '...' : ''}"`
+          : `Publicó en su perfil: "${p.content.substring(0, 80)}${p.content.length > 80 ? '...' : ''}"`,
+        link: p.community ? `/comunidad/${p.community.slug}` : undefined,
+        meta: p.community?.name ?? 'Perfil',
         createdAt: p.createdAt,
       });
     }
@@ -551,6 +554,118 @@ export class UsersService {
     activity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return { data: activity };
+  }
+
+  // ── POST /users/me/posts ──────────────────────────────────
+  async createUserPost(userId: string, dto: CreateUserPostDto) {
+    const post = await this.prisma.post.create({
+      data: {
+        communityId: null,
+        userId,
+        content: dto.content,
+        imageUrl: dto.imageUrl,
+      },
+      select: {
+        id: true,
+        userId: true,
+        content: true,
+        imageUrl: true,
+        createdAt: true,
+        user: {
+          select: { id: true, username: true, avatarUrl: true, role: true },
+        },
+      },
+    });
+    return post;
+  }
+
+  // ── GET /users/:username/posts ────────────────────────────
+  async getUserPosts(username: string, requesterId?: string, query?: { page?: number; limit?: number }) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: { id: true, visibility: true },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const isOwner = requesterId === user.id;
+    const isFriend = requesterId ? await this.areFriends(user.id, requesterId) : false;
+    const canSee =
+      isOwner ||
+      user.visibility === 'publico' ||
+      (user.visibility === 'solo_amigos' && isFriend);
+
+    if (!canSee) throw new ForbiddenException('Perfil privado');
+
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      this.prisma.post.findMany({
+        where: { userId: user.id, communityId: null, isDeleted: false },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          userId: true,
+          content: true,
+          imageUrl: true,
+          likesCount: true,
+          createdAt: true,
+          editedAt: true,
+          user: { select: { id: true, username: true, avatarUrl: true, role: true } },
+          _count: { select: { comments: true } },
+        },
+      }),
+      this.prisma.post.count({
+        where: { userId: user.id, communityId: null, isDeleted: false },
+      }),
+    ]);
+
+    return {
+      data: posts,
+      meta: { page, total, total_pages: Math.ceil(total / limit) },
+    };
+  }
+
+  // ── PATCH /users/me/posts/:id ─────────────────────────────
+  async updateUserPost(userId: string, postId: string, dto: CreateUserPostDto) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { userId: true, communityId: true },
+    });
+    if (!post || post.communityId !== null) throw new NotFoundException('Post no encontrado');
+    if (post.userId !== userId) throw new ForbiddenException('Solo puedes editar tus propios posts');
+
+    return this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        content: dto.content,
+        imageUrl: dto.imageUrl,
+        editedAt: new Date(),
+      },
+      select: {
+        id: true,
+        userId: true,
+        content: true,
+        imageUrl: true,
+        editedAt: true,
+      },
+    });
+  }
+
+  // ── DELETE /users/me/posts/:id ────────────────────────────
+  async deleteUserPost(userId: string, postId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { userId: true, communityId: true },
+    });
+    if (!post || post.communityId !== null) throw new NotFoundException('Post no encontrado');
+    if (post.userId !== userId) throw new ForbiddenException('Solo puedes eliminar tus propios posts');
+
+    await this.prisma.post.delete({ where: { id: postId } });
+    return { message: 'Post eliminado' };
   }
 
   // ── GET /users/:username/friends ──────────────────────────
