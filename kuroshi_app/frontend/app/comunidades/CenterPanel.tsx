@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
 import { Community, CommunityWithMembership, Post, PostComment } from '@/types'
 import { communitiesApi, uploadsApi } from '@/lib/api'
 import { PostCard } from '@/components/community/PostCard'
@@ -26,7 +25,7 @@ interface Props {
 
 export function CenterPanel({ selectedSlug, isLoggedIn, userId, username, accessToken, myCommunities, onRefreshMyCommunities, onDeleteCommunity }: Props) {
   if (!selectedSlug) {
-    return <GlobalFeedPanel isLoggedIn={isLoggedIn} accessToken={accessToken} />
+    return <GlobalFeedPanel isLoggedIn={isLoggedIn} accessToken={accessToken} userId={userId} />
   }
 
   return (
@@ -45,9 +44,7 @@ export function CenterPanel({ selectedSlug, isLoggedIn, userId, username, access
 
 /* ─── Global Feed (default) ──────────────────────────────── */
 
-function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; accessToken?: string }) {
-  const { data: session } = useSession()
-  const currentUserId = (session?.user as any)?.id
+function GlobalFeedPanel({ isLoggedIn, accessToken, userId }: { isLoggedIn: boolean; accessToken?: string; userId?: string }) {
   const [posts, setPosts] = useState<Post[]>([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -157,7 +154,7 @@ function GlobalFeedPanel({ isLoggedIn, accessToken }: { isLoggedIn: boolean; acc
                   isLoggedIn={isLoggedIn}
                   showCommunity
                   onLike={post.community ? () => handleLike(post.id, post.community!.slug) : undefined}
-                  onEdit={post.community && currentUserId === post.user_id ? () => setEditingPost(post) : undefined}
+                  onEdit={post.community && userId === post.user_id ? () => setEditingPost(post) : undefined}
                   isCommentsOpen={openCommentPostId === post.id}
                   onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
                 />
