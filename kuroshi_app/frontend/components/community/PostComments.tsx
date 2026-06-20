@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { communitiesApi, adminApi } from '@/lib/api'
+import { communitiesApi, adminApi, usersApi } from '@/lib/api'
 import { PostComment } from '@/types'
 
 function timeAgo(d: string) {
@@ -18,17 +18,18 @@ function timeAgo(d: string) {
 }
 
 interface Props {
-  slug: string
+  slug?: string
   postId: string
   isLoggedIn?: boolean
   accessToken?: string
   onClose: () => void
+  isProfilePost?: boolean
 }
 
 const REPLY_PAGE_SIZE = 5
 const MAX_CHARS = 500
 
-export function PostComments({ slug, postId, isLoggedIn = false, accessToken, onClose }: Props) {
+export function PostComments({ slug, postId, isLoggedIn = false, accessToken, onClose, isProfilePost = false }: Props) {
   const { data: session } = useSession()
   const userRole = (session?.user as any)?.role
   const isAdmin = userRole === 'owner' || userRole === 'moderador'
@@ -61,11 +62,13 @@ export function PostComments({ slug, postId, isLoggedIn = false, accessToken, on
 
   useEffect(() => {
     setIsLoading(true)
-    communitiesApi.getPostComments(slug, postId, accessToken)
+    isProfilePost
+      ? usersApi.getUserPostComments(postId, accessToken!)
+      : communitiesApi.getPostComments(slug!, postId, accessToken)
       .then((data: any) => setFlatComments(data as PostComment[]))
       .catch(() => setFlatComments([]))
       .finally(() => setIsLoading(false))
-  }, [slug, postId, accessToken])
+  }, [isProfilePost, slug, postId, accessToken])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -83,7 +86,9 @@ export function PostComments({ slug, postId, isLoggedIn = false, accessToken, on
     try {
       const body: any = { content: newComment.trim() }
       if (replyTo) body.parentId = replyTo.id
-      const created = await communitiesApi.createPostComment(slug, postId, body, accessToken) as PostComment
+      const created = isProfilePost
+        ? await usersApi.createUserPostComment(postId, body.content, accessToken!) as PostComment
+        : await communitiesApi.createPostComment(slug!, postId, body, accessToken) as PostComment
       setFlatComments(prev => [...prev, created])
       setNewComment('')
       setReplyTo(null)
@@ -460,7 +465,7 @@ function CommentRow({
   onShowMore,
 }: {
   comment: PostComment & { _parentUsername?: string }
-  slug: string
+  slug?: string
   postId: string
   isLoggedIn?: boolean
   accessToken?: string

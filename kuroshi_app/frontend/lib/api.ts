@@ -328,6 +328,15 @@ export const usersApi = {
 
   deleteUserPost: (postId: string, token: string) =>
     api.delete(`/users/me/posts/${postId}`, { token }),
+
+  likeUserPost: (postId: string, token: string) =>
+    api.post(`/users/me/posts/${postId}/like`, {}, { token }),
+
+  getUserPostComments: (postId: string, token: string) =>
+    api.get(`/users/me/posts/${postId}/comments`, { token }),
+
+  createUserPostComment: (postId: string, content: string, token: string) =>
+    api.post(`/users/me/posts/${postId}/comments`, { content }, { token }),
 }
 
 // ─── Módulo Comunidades — 11 endpoints ───────────────────────

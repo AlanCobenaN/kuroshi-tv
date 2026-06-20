@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { PostCard } from '@/components/community/PostCard'
 import { PostComments } from '@/components/community/PostComments'
 import { AdFeed } from '@/components/ads/AdFeed'
-import { communitiesApi } from '@/lib/api'
+import { communitiesApi, usersApi } from '@/lib/api'
 import { Post } from '@/types'
 import Link from 'next/link'
 
@@ -50,7 +50,7 @@ export function GlobalFeed({ isLoggedIn = false, accessToken }: Props) {
     finally { setIsFetching(false) }
   }, [accessToken, page, hasMore, isFetching])
 
-  const handleLike = useCallback(async (postId: string, communitySlug: string) => {
+  const handleLike = useCallback(async (postId: string, communitySlug?: string) => {
     if (!accessToken) return
     setPosts(prev => prev.map(p =>
       p.id === postId
@@ -58,7 +58,11 @@ export function GlobalFeed({ isLoggedIn = false, accessToken }: Props) {
         : p
     ))
     try {
-      await communitiesApi.likePost(communitySlug, postId, accessToken)
+      if (communitySlug) {
+        await communitiesApi.likePost(communitySlug, postId, accessToken)
+      } else {
+        await usersApi.likeUserPost(postId, accessToken)
+      }
     } catch {
       setPosts(prev => prev.map(p =>
         p.id === postId
@@ -98,7 +102,7 @@ export function GlobalFeed({ isLoggedIn = false, accessToken }: Props) {
         </div>
       ) : !posts.length ? (
         <div className="feed-empty">
-          <p>Todavía no hay publicaciones en las comunidades.</p>
+          <p>Todavía no hay publicaciones.</p>
         </div>
       ) : (
         <>
@@ -110,17 +114,18 @@ export function GlobalFeed({ isLoggedIn = false, accessToken }: Props) {
                   index={i}
                   isLoggedIn={isLoggedIn}
                   showCommunity
-                  onLike={post.community ? () => handleLike(post.id, post.community!.slug) : undefined}
+                  onLike={post.community ? () => handleLike(post.id, post.community!.slug) : () => handleLike(post.id)}
                   isCommentsOpen={openCommentPostId === post.id}
                   onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
                 />
-                {openCommentPostId === post.id && post.community && (
+                {openCommentPostId === post.id && (
                   <PostComments
-                    slug={post.community.slug}
+                    slug={post.community?.slug}
                     postId={post.id}
                     isLoggedIn={isLoggedIn}
                     accessToken={accessToken}
                     onClose={() => setOpenCommentPostId(null)}
+                    isProfilePost={!post.community}
                   />
                 )}
                 {(i + 1) % 6 === 0 && <AdFeed key={`ad-${i}`} />}

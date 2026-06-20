@@ -668,6 +668,125 @@ export class UsersService {
     return { message: 'Post eliminado' };
   }
 
+  // ── POST /users/me/posts/:id/like ───────────────────────────
+  async toggleUserPostLike(postId: string, userId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId, isDeleted: false, communityId: null },
+      select: { id: true, userId: true },
+    });
+    if (!post) throw new NotFoundException('Post no encontrado');
+
+    const existing = await this.prisma.postLike.findUnique({
+      where: { postId_userId: { postId, userId } },
+    });
+
+    if (existing) {
+      await this.prisma.postLike.delete({ where: { id: existing.id } });
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { likesCount: { decrement: 1 } },
+      });
+      return { id: postId, liked: false, likesCount: Math.max(0, (await this.prisma.post.findUnique({ where: { id: postId }, select: { likesCount: true } }))?.likesCount ?? 0) };
+    }
+
+    await this.prisma.postLike.create({ data: { postId, userId } });
+    const updated = await this.prisma.post.update({
+      where: { id: postId },
+      data: { likesCount: { increment: 1 } },
+      select: { id: true, likesCount: true },
+    });
+
+    if (post.userId !== userId) {
+      const liker = await this.prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+      await this.createNotification(post.userId, 'like_post', {
+        title: '¡Like en tu publicación!',
+        body: `${liker?.username ?? 'Alguien'} le gustó tu publicación`,
+        metadata: { postId },
+      });
+    }
+
+    return { id: postId, liked: true, likesCount: updated.likesCount };
+  }
+
+  // ── GET /users/me/posts/:id/comments ─────────────────────────
+  async getUserPostComments(postId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId, isDeleted: false },
+      select: { id: true },
+    });
+    if (!post) throw new NotFoundException('Post no encontrado');
+
+    return this.prisma.postComment.findMany({
+      where: { postId, isDeleted: false },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        postId: true,
+        content: true,
+        likesCount: true,
+        hasSpoiler: true,
+        parentId: true,
+        createdAt: true,
+        user: { select: { id: true, username: true, avatarUrl: true, role: true } },
+      },
+    });
+  }
+
+  // ── POST /users/me/posts/:id/comments ────────────────────────
+  async createUserPostComment(postId: string, userId: string, content: string) {
+    if (!content?.trim()) throw new BadRequestException('El comentario no puede estar vacío');
+
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId, isDeleted: false, communityId: null },
+      select: { id: true, userId: true },
+    });
+    if (!post) throw new NotFoundException('Post no encontrado');
+
+    const comment = await this.prisma.postComment.create({
+      data: { postId, userId, content: content.trim() },
+      select: {
+        id: true,
+        postId: true,
+        userId: true,
+        content: true,
+        likesCount: true,
+        hasSpoiler: true,
+        parentId: true,
+        createdAt: true,
+        user: { select: { id: true, username: true, avatarUrl: true, role: true } },
+      },
+    });
+
+    if (post.userId !== userId) {
+      const commenter = await this.prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+      await this.createNotification(post.userId, 'respuesta_post', {
+        title: 'Respuesta a tu publicación',
+        body: `${commenter?.username ?? 'Alguien'} respondió a tu publicación`,
+        metadata: { postId, commentId: comment.id },
+        stackKey: postId,
+      });
+    }
+
+    return comment;
+  }
+
+  // ── DELETE /users/me/posts/:id/comments/:commentId ───────────
+  async deleteUserPostComment(commentId: string, userId: string) {
+    const comment = await this.prisma.postComment.findUnique({
+      where: { id: commentId },
+      select: { userId: true, post: { select: { communityId: true } } },
+    });
+    if (!comment) throw new NotFoundException('Comentario no encontrado');
+    if (comment.post.communityId !== null) throw new NotFoundException('Comentario no encontrado');
+    if (comment.userId !== userId) throw new ForbiddenException('Solo puedes eliminar tus propios comentarios');
+
+    await this.prisma.postComment.update({
+      where: { id: commentId },
+      data: { isDeleted: true },
+    });
+    return { message: 'Comentario eliminado' };
+  }
+
   // ── GET /users/:username/friends ──────────────────────────
   async getFriends(username: string, requesterId?: string) {
     const user = await this.prisma.user.findUnique({

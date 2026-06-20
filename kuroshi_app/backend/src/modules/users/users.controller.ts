@@ -199,6 +199,52 @@ export class UsersController {
     return this.usersService.deleteUserPost(userId, postId);
   }
 
+  // POST /api/users/me/posts/:id/like
+  @Post('me/posts/:id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle like en un post de perfil' })
+  likeUserPost(
+    @Param('id') postId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.toggleUserPostLike(postId, userId);
+  }
+
+  // GET /api/users/me/posts/:id/comments
+  @Get('me/posts/:id/comments')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Comentarios de un post de perfil' })
+  getUserPostComments(@Param('id') postId: string) {
+    return this.usersService.getUserPostComments(postId);
+  }
+
+  // POST /api/users/me/posts/:id/comments
+  @Post('me/posts/:id/comments')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Comentar en un post de perfil' })
+  createUserPostComment(
+    @Param('id') postId: string,
+    @Body('content') content: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.createUserPostComment(postId, userId, content);
+  }
+
+  // DELETE /api/users/me/posts/:id/comments/:commentId
+  @Delete('me/posts/:id/comments/:commentId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar comentario de un post de perfil' })
+  deleteUserPostComment(
+    @Param('commentId') commentId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.deleteUserPostComment(commentId, userId);
+  }
+
   // GET /api/users/:username/friends
   @Public()
   @Get(':username/friends')

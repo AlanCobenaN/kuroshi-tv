@@ -352,9 +352,38 @@ export class CommunitiesService {
   async getFeed(dto: GetPostsDto, userId?: string) {
     const skip = (dto.page - 1) * dto.limit;
 
+    // Profile posts filter based on visibility
+    const profileWhere: any[] = [
+      { communityId: null, isDeleted: false, user: { visibility: 'publico' } },
+    ];
+
+    if (userId) {
+      // Own profile posts (any visibility, including privado)
+      profileWhere.push({ communityId: null, isDeleted: false, userId });
+
+      // Friends' profile posts with solo_amigos visibility
+      const friendIds = await this.getFriendIds(userId);
+      if (friendIds.length > 0) {
+        profileWhere.push({
+          communityId: null,
+          isDeleted: false,
+          userId: { in: friendIds },
+          user: { visibility: 'solo_amigos' },
+        });
+      }
+    }
+
+    const where = {
+      isDeleted: false,
+      OR: [
+        { community: { isActive: true } },
+        ...profileWhere,
+      ],
+    };
+
     const [posts, total] = await Promise.all([
       this.prisma.post.findMany({
-        where: { isDeleted: false, community: { isActive: true } },
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: dto.limit,
@@ -372,15 +401,28 @@ export class CommunitiesService {
           _count: { select: { comments: true } },
         },
       }),
-      this.prisma.post.count({
-        where: { isDeleted: false, community: { isActive: true } },
-      }),
+      this.prisma.post.count({ where }),
     ]);
 
     return {
       data: posts,
       meta: { page: dto.page, total, total_pages: Math.ceil(total / dto.limit) },
     };
+  }
+
+  private async getFriendIds(userId: string): Promise<string[]> {
+    const friendships = await this.prisma.friendship.findMany({
+      where: {
+        OR: [
+          { requesterId: userId, status: 'aceptada' },
+          { addresseeId: userId, status: 'aceptada' },
+        ],
+      },
+      select: { requesterId: true, addresseeId: true },
+    });
+    return friendships.map(f =>
+      f.requesterId === userId ? f.addresseeId : f.requesterId,
+    );
   }
 
   // ── POST /communities/:slug/posts ─────────────────────────
