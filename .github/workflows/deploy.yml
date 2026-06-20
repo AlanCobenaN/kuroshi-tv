@@ -22,17 +22,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & Push backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
-          context: ./backend
+          context: ./kuroshi_app/backend
           target: production
           push: true
           tags: ghcr.io/alancobenam/kuroshi-tv-backend:latest
 
       - name: Build & Push frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          context: ./kuroshi_app/frontend
           push: true
           tags: ghcr.io/alancobenam/kuroshi-tv-frontend:latest
 
