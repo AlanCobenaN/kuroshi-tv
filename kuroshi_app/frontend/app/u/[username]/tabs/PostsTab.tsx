@@ -25,6 +25,20 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
     }
   }
 
+  const wrapText = useCallback((prefix: string, suffix: string) => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const selected = content.substring(start, end)
+    const wrapped = prefix + selected + suffix
+    setContent(content.substring(0, start) + wrapped + content.substring(end))
+    setTimeout(() => {
+      ta.focus()
+      ta.setSelectionRange(start + prefix.length, start + prefix.length + selected.length)
+    }, 0)
+  }, [content])
+
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return
     setIsSubmitting(true)
@@ -48,6 +62,27 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
 
   return (
     <div className="pp-composer">
+      <div className="pp-composer-toolbar">
+        <button onClick={() => wrapText('**', '**')} className="pp-tb-btn" title="Negrita" aria-label="Negrita">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" /></svg>
+        </button>
+        <button onClick={() => wrapText('*', '*')} className="pp-tb-btn" title="Cursiva" aria-label="Cursiva">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" /></svg>
+        </button>
+        <button onClick={() => wrapText('***', '***')} className="pp-tb-btn" title="Negrita + Cursiva" aria-label="Negrita y cursiva">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" /></svg>
+        </button>
+        <button onClick={() => wrapText('~~', '~~')} className="pp-tb-btn" title="Tachado" aria-label="Tachado">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 12h12M3 6l2.5 3M21 6l-2.5 3M12 18V6" /></svg>
+        </button>
+        <button onClick={() => wrapText('__', '__')} className="pp-tb-btn" title="Subrayado" aria-label="Subrayado">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3M4 21h16" /></svg>
+        </button>
+        <span className="pp-tb-sep" />
+        <button onClick={() => wrapText('<small>', '</small>')} className="pp-tb-btn" title="Pequeño" aria-label="Texto pequeño">T<sub>s</sub></button>
+        <button onClick={() => wrapText('<large>', '</large>')} className="pp-tb-btn" title="Grande" aria-label="Texto grande">T<sup>l</sup></button>
+        <button onClick={() => wrapText('<xlarge>', '</xlarge>')} className="pp-tb-btn" title="Extra grande" aria-label="Texto extra grande">T<sup>xl</sup></button>
+      </div>
       <textarea
         ref={textareaRef}
         value={content}
@@ -55,7 +90,7 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
         onKeyDown={handleKeyDown}
         placeholder="¿Qué estás pensando?"
         className="pp-composer-input"
-        rows={2}
+        rows={4}
         maxLength={2000}
       />
       <div className="pp-composer-footer">
@@ -219,6 +254,18 @@ export function PostsTab({ username, isOwnProfile, accessToken, isLoggedIn }: Pr
         .pp-container { display: flex; flex-direction: column; gap: 1.5rem; }
 
         /* Composer */
+        .pp-composer-toolbar {
+          display: flex; align-items: center; gap: 0.25rem;
+          padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+        }
+        .pp-tb-btn {
+          display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+          background: transparent; border: none; border-radius: var(--radius-md);
+          color: var(--text-muted); cursor: pointer; font-family: var(--font-display);
+          font-size: 0.7rem; transition: all var(--transition-fast);
+        }
+        .pp-tb-btn:hover { background: var(--bg-overlay); color: var(--text-secondary); }
+        .pp-tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 0.25rem; }
         .pp-composer {
           background: var(--bg-surface);
           border: 1px solid var(--border);
