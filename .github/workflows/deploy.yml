@@ -35,6 +35,13 @@ jobs:
           context: ./kuroshi_app/frontend
           push: true
           tags: ghcr.io/alancobenan/kuroshi-tv-frontend:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=/backend
+            NEXT_PUBLIC_SITE_URL=https://kuroshi.lat
+            NEXT_PUBLIC_SUPABASE_URL=https://bvhrrbfxwzygfkqbavwb.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+            NEXTAUTH_URL=https://kuroshi.lat
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
