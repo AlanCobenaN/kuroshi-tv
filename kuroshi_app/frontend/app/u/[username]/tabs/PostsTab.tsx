@@ -1,9 +1,10 @@
 'use client'
 // app/u/[username]/tabs/PostsTab.tsx
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { usersApi } from '@/lib/api'
+import { usersApi, uploadsApi } from '@/lib/api'
 import { Post } from '@/types'
 import { PostCard } from '@/components/community/PostCard'
+import { TenorSearch } from '@/components/community/TenorSearch'
 
 interface Props {
   username: string
@@ -15,7 +16,11 @@ interface Props {
 function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onPost: (post: Post) => void }) {
   const [content, setContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [showTenor, setShowTenor] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const autoResize = () => {
     const el = textareaRef.current
@@ -40,24 +45,36 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
   }, [content])
 
   const handleSubmit = async () => {
-    if (!content.trim() || isSubmitting) return
+    if ((!content.trim() && !imageFile) || isSubmitting) return
     setIsSubmitting(true)
     try {
-      const res: any = await usersApi.createPost({ content: content.trim() }, accessToken)
-      onPost(res as Post)
-      setContent('')
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
+      let imageUrl: string | undefined
+      if (imageFile) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => { const r = reader.result as string; resolve(r.split(',')[1]) }
+          reader.onerror = reject
+          reader.readAsDataURL(imageFile)
+        })
+        const mimeType = imageFile.type || 'image/jpeg'
+        const res = await uploadsApi.uploadImage(base64, mimeType, accessToken)
+        imageUrl = res?.url
       }
+      const res: any = await usersApi.createPost({ content: content.trim(), imageUrl }, accessToken)
+      onPost(res as Post)
+      setContent(''); setImageFile(null); setImagePreview(null)
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch {}
     finally { setIsSubmitting(false) }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      handleSubmit()
-    }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSubmit() }
+  }
+
+  const handleTenorSelect = (url: string) => {
+    setContent(prev => prev + (prev ? '\n' : '') + url)
+    setShowTenor(false)
   }
 
   return (
@@ -82,6 +99,13 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
         <button onClick={() => wrapText('<small>', '</small>')} className="pp-tb-btn" title="Pequeño" aria-label="Texto pequeño">T<sub>s</sub></button>
         <button onClick={() => wrapText('<large>', '</large>')} className="pp-tb-btn" title="Grande" aria-label="Texto grande">T<sup>l</sup></button>
         <button onClick={() => wrapText('<xlarge>', '</xlarge>')} className="pp-tb-btn" title="Extra grande" aria-label="Texto extra grande">T<sup>xl</sup></button>
+        <span className="pp-tb-sep" />
+        <button onClick={() => fileRef.current?.click()} className="pp-tb-btn" title="Imagen" aria-label="Adjuntar imagen">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+        </button>
+        <button onClick={() => setShowTenor(!showTenor)} className={`pp-tb-btn ${showTenor ? 'pp-tb-btn--active' : ''}`} title="GIF de Tenor" aria-label="Insertar GIF de Tenor">
+          <span style={{ fontWeight: 800, fontSize: '10px' }}>GIF</span>
+        </button>
       </div>
       <textarea
         ref={textareaRef}
@@ -93,11 +117,26 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
         rows={4}
         maxLength={2000}
       />
+      {showTenor && (
+        <div className="pp-composer-tenor">
+          <TenorSearch onSelect={handleTenorSelect} onClose={() => setShowTenor(false)} />
+        </div>
+      )}
+      {imagePreview && (
+        <div className="pp-img-preview">
+          <img src={imagePreview} alt="" className="pp-img-preview-img" />
+          <button onClick={() => { setImageFile(null); setImagePreview(null) }} className="pp-img-remove">✕</button>
+        </div>
+      )}
+      <input ref={fileRef} type="file" accept="image/*" onChange={e => {
+        const f = e.target.files?.[0]
+        if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)) }
+      }} className="pp-file" />
       <div className="pp-composer-footer">
         <span className="pp-composer-count">{content.length}/2000</span>
         <button
           onClick={handleSubmit}
-          disabled={!content.trim() || isSubmitting}
+          disabled={(!content.trim() && !imageFile) || isSubmitting}
           className="pp-composer-submit"
         >
           {isSubmitting ? 'Publicando…' : 'Publicar'}
@@ -266,6 +305,12 @@ export function PostsTab({ username, isOwnProfile, accessToken, isLoggedIn }: Pr
         }
         .pp-tb-btn:hover { background: var(--bg-overlay); color: var(--text-secondary); }
         .pp-tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 0.25rem; }
+        .pp-tb-btn--active { background: var(--accent-glow); color: var(--accent); }
+        .pp-composer-tenor { padding: 0 0.75rem 0.75rem; }
+        .pp-img-preview { position: relative; margin: 0 0.75rem 0.75rem; border-radius: var(--radius-md); overflow: hidden; max-height: 200px; }
+        .pp-img-preview-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        .pp-img-remove { position: absolute; top: 0.5rem; right: 0.5rem; width: 28px; height: 28px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
+        .pp-file { display: none; }
         .pp-composer {
           background: var(--bg-surface);
           border: 1px solid var(--border);

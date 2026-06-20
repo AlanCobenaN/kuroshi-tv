@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { communitiesApi, usersApi } from '@/lib/api'
+import { communitiesApi, usersApi, uploadsApi } from '@/lib/api'
 import { CreatePostModal } from '@/app/comunidades/CreatePostModal'
+import { TenorSearch } from '@/components/community/TenorSearch'
 
 interface Props {
   accessToken?: string
@@ -13,8 +14,12 @@ interface Props {
 function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; onClose: () => void }) {
   const [content, setContent] = useState('')
   const [sending, setSending] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [showTenor, setShowTenor] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -43,12 +48,29 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
   }, [content])
 
   const handleSubmit = async () => {
-    if (!content.trim() || sending) return
+    if ((!content.trim() && !imageFile) || sending) return
     setSending(true)
     try {
-      await usersApi.createPost({ content: content.trim() }, accessToken)
+      let imageUrl: string | undefined
+      if (imageFile) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => { const r = reader.result as string; resolve(r.split(',')[1]) }
+          reader.onerror = reject
+          reader.readAsDataURL(imageFile)
+        })
+        const mimeType = imageFile.type || 'image/jpeg'
+        const res = await uploadsApi.uploadImage(base64, mimeType, accessToken)
+        imageUrl = res?.url
+      }
+      await usersApi.createPost({ content: content.trim(), imageUrl }, accessToken)
       onClose()
     } catch {} finally { setSending(false) }
+  }
+
+  const handleTenorSelect = (url: string) => {
+    setContent(prev => prev + (prev ? '\n' : '') + url)
+    setShowTenor(false)
   }
 
   return (
@@ -80,6 +102,13 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
           <button onClick={() => wrapText('<small>', '</small>')} className="hpm-tb-btn" title="Pequeño" aria-label="Texto pequeño">T<sub>s</sub></button>
           <button onClick={() => wrapText('<large>', '</large>')} className="hpm-tb-btn" title="Grande" aria-label="Texto grande">T<sup>l</sup></button>
           <button onClick={() => wrapText('<xlarge>', '</xlarge>')} className="hpm-tb-btn" title="Extra grande" aria-label="Texto extra grande">T<sup>xl</sup></button>
+          <span className="hpm-tb-sep" />
+          <button onClick={() => fileRef.current?.click()} className="hpm-tb-btn" title="Imagen" aria-label="Adjuntar imagen">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+          </button>
+          <button onClick={() => setShowTenor(!showTenor)} className={`hpm-tb-btn ${showTenor ? 'hpm-tb-btn--active' : ''}`} title="GIF de Tenor" aria-label="Insertar GIF de Tenor">
+            <span style={{ fontWeight: 800, fontSize: '10px' }}>GIF</span>
+          </button>
         </div>
         <div className="hpm-editor">
           <textarea
@@ -93,11 +122,26 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
             disabled={sending}
           />
         </div>
+        {showTenor && (
+          <div className="hpm-tenor">
+            <TenorSearch onSelect={handleTenorSelect} onClose={() => setShowTenor(false)} />
+          </div>
+        )}
+        {imagePreview && (
+          <div className="hpm-img-preview">
+            <img src={imagePreview} alt="" className="hpm-img-preview-img" />
+            <button onClick={() => { setImageFile(null); setImagePreview(null) }} className="hpm-img-remove">✕</button>
+          </div>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" onChange={e => {
+          const f = e.target.files?.[0]
+          if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)) }
+        }} className="hpm-file" />
         <div className="hpm-footer">
           <span className="hpm-count">{content.length}/2000</span>
           <button
             onClick={handleSubmit}
-            disabled={!content.trim() || sending}
+            disabled={(!content.trim() && !imageFile) || sending}
             className="hpm-submit"
           >
             {sending ? 'Publicando…' : 'Publicar'}
@@ -115,10 +159,16 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
         .hpm-toolbar { display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
         .hpm-tb-btn { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: transparent; border: none; border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; font-family: var(--font-display); font-size: 0.75rem; transition: all var(--transition-fast); }
         .hpm-tb-btn:hover { background: var(--bg-overlay); color: var(--text-secondary); }
+        .hpm-tb-btn--active { background: var(--accent-glow); color: var(--accent); }
         .hpm-tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 0.25rem; }
         .hpm-editor { padding: 0.5rem 1.25rem; }
         .hpm-textarea { width: 100%; padding: 0.5rem 0; background: transparent; border: none; outline: none; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9375rem; line-height: 1.6; resize: none; min-height: 120px; }
         .hpm-textarea::placeholder { color: var(--text-muted); }
+        .hpm-tenor { padding: 0 1.25rem 0.75rem; }
+        .hpm-img-preview { position: relative; margin: 0 1.25rem 0.75rem; border-radius: var(--radius-md); overflow: hidden; max-height: 200px; }
+        .hpm-img-preview-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        .hpm-img-remove { position: absolute; top: 0.5rem; right: 0.5rem; width: 28px; height: 28px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
+        .hpm-file { display: none; }
         .hpm-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); }
         .hpm-count { font-size: 0.75rem; color: var(--text-muted); }
         .hpm-submit { padding: 0.5rem 1.5rem; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 0.875rem; font-weight: 700; border: none; border-radius: var(--radius-md); cursor: pointer; transition: background var(--transition-fast); }

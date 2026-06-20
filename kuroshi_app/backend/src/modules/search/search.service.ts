@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SearchDto } from './dto/search.dto';
 
@@ -124,6 +124,40 @@ export class SearchService {
         total: totalUsers,
       },
       meta,
+    };
+  }
+
+  // ── GET /search/tenor ─────────────────────────────────────
+  async searchTenor(q: string, limit = 12) {
+    const apiKey = process.env.TENOR_API_KEY;
+    if (!apiKey) {
+      throw new ServiceUnavailableException(
+        'Búsqueda de GIFs no disponible: falta configurar TENOR_API_KEY',
+      );
+    }
+
+    const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${apiKey}&client_key=kuroshi&limit=${limit}&media_filter=gif,tinygif`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new ServiceUnavailableException(
+        `Tenor API error: ${res.status} — ${text.slice(0, 200)}`,
+      );
+    }
+
+    const data: any = await res.json();
+
+    return {
+      data: (data.results ?? []).map((r: any) => ({
+        id: r.id,
+        title: r.content_description ?? '',
+        url: r.itemurl ?? '',
+        gif: r.media_format?.gif?.url ?? r.media[0]?.gif?.url ?? '',
+        preview: r.media_format?.tinygif?.url ?? r.media[0]?.tinygif?.url ?? '',
+        width: r.media[0]?.gif?.dims?.[0] ?? 200,
+        height: r.media[0]?.gif?.dims?.[1] ?? 200,
+      })),
     };
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { communitiesApi, uploadsApi } from '@/lib/api'
+import { TenorSearch } from '@/components/community/TenorSearch'
 
 interface Props {
   selectedSlug: string | null
@@ -14,8 +15,6 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
   const [content, setContent] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [tenorUrl, setTenorUrl] = useState('')
-  const [tenorPreview, setTenorPreview] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [targetSlug, setTargetSlug] = useState(selectedSlug || '')
   const [showTenor, setShowTenor] = useState(false)
@@ -54,26 +53,13 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
     }, 0)
   }, [content])
 
-  const handleTenorInsert = () => {
-    const url = tenorUrl.trim()
-    if (!url) return
+  const handleTenorSelect = (url: string) => {
     setContent(prev => prev + (prev ? '\n' : '') + url)
-    setTenorUrl('')
-    setTenorPreview(null)
     setShowTenor(false)
   }
 
-  const detectTenorPreview = (url: string) => {
-    const match = url.match(/tenor\.com\/view\/([\w-]+)/)
-    if (match) {
-      setTenorPreview(`https://tenor.com/view/${match[1]}`)
-    } else {
-      setTenorPreview(url.match(/\.(gif|mp4|webm)(\?|$)/i) ? url : null)
-    }
-  }
-
   const handleSubmit = async () => {
-    if (!content.trim() && !imageFile && !tenorPreview) return
+    if (!content.trim() && !imageFile) return
     setSending(true)
     try {
       let imageUrl: string | undefined
@@ -187,25 +173,7 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
         {/* Tenor / Image section */}
         {showTenor && (
           <div className="cpm-tenor">
-            <div className="cpm-tenor-row">
-              <input
-                type="text"
-                value={tenorUrl}
-                onChange={e => {
-                  setTenorUrl(e.target.value)
-                  detectTenorPreview(e.target.value)
-                }}
-                placeholder="Pega enlace de GIF de Tenor o URL de imagen..."
-                className="cpm-input"
-              />
-              <button onClick={handleTenorInsert} className="cpm-tenor-add" disabled={!tenorUrl.trim()}>Insertar</button>
-            </div>
-            {tenorPreview && (
-              <div className="cpm-tenor-preview">
-                <iframe src={tenorPreview} className="cpm-tenor-iframe" title="Vista previa GIF" />
-                <button onClick={() => { setTenorUrl(''); setTenorPreview(null) }} className="cpm-tenor-remove">✕</button>
-              </div>
-            )}
+            <TenorSearch onSelect={handleTenorSelect} onClose={() => setShowTenor(false)} />
           </div>
         )}
 
@@ -225,7 +193,7 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
         {/* Footer */}
         <div className="cpm-footer">
           <span className="cpm-count">{content.length}/2000</span>
-          <button onClick={handleSubmit} disabled={sending || (!content.trim() && !imageFile && !tenorPreview)} className="cpm-submit">
+          <button onClick={handleSubmit} disabled={sending || (!content.trim() && !imageFile)} className="cpm-submit">
             {sending ? 'Publicando...' : 'Publicar'}
           </button>
         </div>
@@ -330,24 +298,7 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
         }
         .cpm-textarea::placeholder { color: var(--text-muted); }
 
-        .cpm-tenor { padding: 0 1.25rem 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
-        .cpm-tenor-row { display: flex; gap: 0.5rem; }
-        .cpm-tenor-add {
-          padding: 0.4rem 0.75rem;
-          background: var(--accent);
-          color: #fff;
-          font-family: var(--font-display);
-          font-size: 0.75rem;
-          font-weight: 600;
-          border: none;
-          border-radius: var(--radius-md);
-          cursor: pointer;
-          white-space: nowrap;
-        }
-        .cpm-tenor-add:disabled { opacity: 0.5; cursor: not-allowed; }
-        .cpm-tenor-preview { position: relative; max-height: 150px; overflow: hidden; border-radius: var(--radius-md); }
-        .cpm-tenor-iframe { width: 100%; height: 150px; border: none; }
-        .cpm-tenor-remove { position: absolute; top: 0.375rem; right: 0.375rem; width: 24px; height: 24px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 0.625rem; display: flex; align-items: center; justify-content: center; }
+        .cpm-tenor { padding: 0 1.25rem 0.75rem; }
 
         .cpm-img-preview { position: relative; margin: 0 1.25rem 0.75rem; border-radius: var(--radius-md); overflow: hidden; max-height: 200px; }
         .cpm-img-preview-img { width: 100%; height: 200px; object-fit: cover; display: block; }
