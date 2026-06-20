@@ -215,6 +215,51 @@ function GlobalFeedPanel({ isLoggedIn, accessToken, userId }: { isLoggedIn: bool
         @keyframes spin { to { transform: rotate(360deg); } }
         .feed-sentinel { height: 1px; }
         .feed-end-text { text-align: center; font-size: 0.8125rem; color: var(--text-muted); padding: 1rem; margin: 0; }
+        .cpm-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex;
+          align-items: center; justify-content: center; z-index: 200; padding: 1rem;
+        }
+        .cpm-modal {
+          background: var(--bg-surface); border: 1px solid var(--border);
+          border-radius: var(--radius-xl); width: 100%; max-width: 720px;
+          max-height: 90dvh; overflow-y: auto; box-shadow: var(--shadow-lg);
+        }
+        .cpm-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+        }
+        .cpm-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-primary); }
+        .cpm-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 50%; display: flex; }
+        .cpm-close:hover { color: var(--text-primary); }
+        .cpm-toolbar {
+          display: flex; align-items: center; gap: 0.25rem;
+          padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+        }
+        .cpm-tb-btn {
+          display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+          background: transparent; border: none; border-radius: var(--radius-md);
+          color: var(--text-muted); cursor: pointer; font-family: var(--font-display);
+          font-size: 0.75rem; transition: all var(--transition-fast);
+        }
+        .cpm-tb-btn:hover { background: var(--bg-overlay); color: var(--text-secondary); }
+        .cpm-tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 0.25rem; }
+        .cpm-editor { padding: 0.5rem 1.25rem; }
+        .cpm-textarea {
+          width: 100%; padding: 0.5rem 0; background: transparent; border: none;
+          outline: none; color: var(--text-primary); font-family: var(--font-body);
+          font-size: 0.9375rem; line-height: 1.6; resize: none; min-height: 120px;
+        }
+        .cpm-textarea::placeholder { color: var(--text-muted); }
+        .cpm-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); }
+        .cpm-count { font-size: 0.75rem; color: var(--text-muted); }
+        .cpm-submit {
+          padding: 0.5rem 1.5rem; background: var(--accent); color: #fff;
+          font-family: var(--font-display); font-size: 0.875rem; font-weight: 700;
+          border: none; border-radius: var(--radius-md); cursor: pointer;
+          transition: background var(--transition-fast);
+        }
+        .cpm-submit:hover:not(:disabled) { background: var(--accent-dim); }
+        .cpm-submit:disabled { background: var(--bg-overlay); color: var(--text-muted); cursor: not-allowed; }
       `}</style>
     </div>
   )
