@@ -27,14 +27,14 @@ jobs:
           context: ./kuroshi_app/backend
           target: production
           push: true
-          tags: ghcr.io/alancobenam/kuroshi-tv-backend:latest
+          tags: ghcr.io/alancobenan/kuroshi-tv-backend:latest
 
       - name: Build & Push frontend
         uses: docker/build-push-action@v6
         with:
           context: ./kuroshi_app/frontend
           push: true
-          tags: ghcr.io/alancobenam/kuroshi-tv-frontend:latest
+          tags: ghcr.io/alancobenan/kuroshi-tv-frontend:latest
 
       # - name: Deploy to VPS
       #   uses: appleboy/ssh-action@v1.0.3
