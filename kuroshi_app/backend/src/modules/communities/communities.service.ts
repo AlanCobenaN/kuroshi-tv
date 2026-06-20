@@ -326,6 +326,7 @@ export class CommunitiesService {
         take: dto.limit,
         select: {
           id: true,
+          userId: true,
           content: true,
           imageUrl: true,
           likesCount: true,
@@ -359,6 +360,7 @@ export class CommunitiesService {
         take: dto.limit,
         select: {
           id: true,
+          userId: true,
           content: true,
           imageUrl: true,
           likesCount: true,
@@ -527,6 +529,7 @@ export class CommunitiesService {
       },
       select: {
         id: true,
+        userId: true,
         content: true,
         imageUrl: true,
         linkedEpisodeId: true,
