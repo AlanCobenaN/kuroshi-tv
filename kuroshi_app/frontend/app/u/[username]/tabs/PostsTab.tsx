@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { usersApi, uploadsApi } from '@/lib/api'
 import { Post } from '@/types'
 import { PostCard } from '@/components/community/PostCard'
-import { TenorSearch } from '@/components/community/TenorSearch'
+import { GifSearch } from '@/components/community/GifSearch'
 
 interface Props {
   username: string
@@ -18,7 +18,7 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [showTenor, setShowTenor] = useState(false)
+  const [showGifSearch, setShowGifSearch] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -72,9 +72,9 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSubmit() }
   }
 
-  const handleTenorSelect = (url: string) => {
+  const handleGifSelect = (url: string) => {
     setContent(prev => prev + (prev ? '\n' : '') + url)
-    setShowTenor(false)
+    setShowGifSearch(false)
   }
 
   return (
@@ -103,7 +103,7 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
         <button onClick={() => fileRef.current?.click()} className="pp-tb-btn" title="Imagen" aria-label="Adjuntar imagen">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
         </button>
-        <button onClick={() => setShowTenor(!showTenor)} className={`pp-tb-btn ${showTenor ? 'pp-tb-btn--active' : ''}`} title="GIF de Tenor" aria-label="Insertar GIF de Tenor">
+        <button onClick={() => setShowGifSearch(!showGifSearch)} className={`pp-tb-btn ${showGifSearch ? 'pp-tb-btn--active' : ''}`} title="GIF" aria-label="Insertar GIF">
           <span style={{ fontWeight: 800, fontSize: '10px' }}>GIF</span>
         </button>
       </div>
@@ -117,9 +117,9 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
         rows={4}
         maxLength={2000}
       />
-      {showTenor && (
-        <div className="pp-composer-tenor">
-          <TenorSearch onSelect={handleTenorSelect} onClose={() => setShowTenor(false)} />
+      {showGifSearch && (
+        <div className="pp-composer-giphy">
+          <GifSearch onSelect={handleGifSelect} onClose={() => setShowGifSearch(false)} />
         </div>
       )}
       {imagePreview && (
@@ -306,7 +306,7 @@ export function PostsTab({ username, isOwnProfile, accessToken, isLoggedIn }: Pr
         .pp-tb-btn:hover { background: var(--bg-overlay); color: var(--text-secondary); }
         .pp-tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 0.25rem; }
         .pp-tb-btn--active { background: var(--accent-glow); color: var(--accent); }
-        .pp-composer-tenor { padding: 0 0.75rem 0.75rem; }
+        .pp-composer-giphy { padding: 0 0.75rem 0.75rem; }
         .pp-img-preview { position: relative; margin: 0 0.75rem 0.75rem; border-radius: var(--radius-md); overflow: hidden; max-height: 200px; }
         .pp-img-preview-img { width: 100%; height: 200px; object-fit: cover; display: block; }
         .pp-img-remove { position: absolute; top: 0.5rem; right: 0.5rem; width: 28px; height: 28px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }

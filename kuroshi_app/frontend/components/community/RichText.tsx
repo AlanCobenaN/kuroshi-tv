@@ -13,19 +13,6 @@ export function RichText({ content, className }: Props) {
   return (
     <div className={className ?? 'rich-text'}>
       {segments.map((seg, i) => {
-        if (seg.type === 'tenor') {
-          return (
-            <div key={i} className="rich-tenor">
-              <iframe
-                src={`https://tenor.com/embed/${seg.id}`}
-                className="rich-tenor-frame"
-                title="Tenor GIF"
-                loading="lazy"
-                allowFullScreen
-              />
-            </div>
-          )
-        }
         if (seg.type === 'image') {
           return (
             <img key={i} src={seg.url!} alt="" className="rich-image" loading="lazy" />
@@ -62,8 +49,6 @@ export function RichText({ content, className }: Props) {
         .rich-small { font-size: 0.8125rem; color: var(--text-muted); }
         .rich-large { font-size: 1.25rem; font-weight: 600; }
         .rich-xlarge { font-size: 1.5rem; font-weight: 700; }
-        .rich-tenor { margin: 0.5rem 0; max-width: 400px; border-radius: var(--radius-md); overflow: hidden; }
-        .rich-tenor-frame { width: 100%; height: 200px; border: none; border-radius: var(--radius-md); }
         .rich-image { max-width: 100%; max-height: 300px; border-radius: var(--radius-md); margin: 0.5rem 0; display: block; }
       `}</style>
     </div>
@@ -78,7 +63,6 @@ type Segment =
   | { type: 'strikethrough'; text: string }
   | { type: 'underline'; text: string }
   | { type: 'size'; text: string; size: 'small' | 'large' | 'xlarge' }
-  | { type: 'tenor'; id: string }
   | { type: 'image'; url: string }
 
 function parseRichText(input: string): Segment[] {
@@ -86,14 +70,6 @@ function parseRichText(input: string): Segment[] {
   let remaining = input
 
   while (remaining.length > 0) {
-    // Tenor embed
-    const tenorMatch = remaining.match(/^https?:\/\/(?:www\.)?tenor\.com\/view\/([\w-]+)/i)
-    if (tenorMatch) {
-      segments.push({ type: 'tenor', id: tenorMatch[1] })
-      remaining = remaining.slice(tenorMatch[0].length)
-      continue
-    }
-
     // Image/GIF URL
     const imgMatch = remaining.match(/^https?:\/\/[^\s]+\.(gif|webp|png|jpe?g|mp4)(\?[^\s]*)?/i)
     if (imgMatch) {

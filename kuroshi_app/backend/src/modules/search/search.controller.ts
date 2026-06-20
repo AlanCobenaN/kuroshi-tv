@@ -17,13 +17,13 @@ export class SearchController {
     return this.searchService.search(dto);
   }
 
-  // GET /api/search/tenor?q=keyword
+  // GET /api/search/gifs?q=keyword
   @Public()
-  @Get('tenor')
-  @ApiOperation({ summary: 'Buscar GIFs en Tenor. Requiere TENOR_API_KEY en .env' })
+  @Get('gifs')
+  @ApiOperation({ summary: 'Buscar GIFs en GIPHY. Requiere GIPHY_API_KEY en .env' })
   @ApiQuery({ name: 'q', required: true })
   @ApiQuery({ name: 'limit', required: false })
-  searchTenor(@Query('q') q: string, @Query('limit') limit?: string) {
-    return this.searchService.searchTenor(q, limit ? parseInt(limit, 10) : 12);
+  searchGifs(@Query('q') q: string, @Query('limit') limit?: string) {
+    return this.searchService.searchGifs(q, limit ? parseInt(limit, 10) : 12);
   }
 }

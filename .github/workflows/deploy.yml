@@ -52,6 +52,7 @@ jobs:
           script: |
             cd ~/kuroshi-tv/kuroshi_app
             git pull origin main
+            echo "GIPHY_API_KEY=${{ secrets.GIPHY_API_KEY }}" >> ./backend/.env
             docker compose pull
             docker compose up -d
             docker system prune -af

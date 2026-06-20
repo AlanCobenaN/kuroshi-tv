@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { communitiesApi, usersApi, uploadsApi } from '@/lib/api'
 import { CreatePostModal } from '@/app/comunidades/CreatePostModal'
-import { TenorSearch } from '@/components/community/TenorSearch'
+import { GifSearch } from '@/components/community/GifSearch'
 
 interface Props {
   accessToken?: string
@@ -16,7 +16,7 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
   const [sending, setSending] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [showTenor, setShowTenor] = useState(false)
+  const [showGifSearch, setShowGifSearch] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -68,9 +68,9 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
     } catch {} finally { setSending(false) }
   }
 
-  const handleTenorSelect = (url: string) => {
+  const handleGifSelect = (url: string) => {
     setContent(prev => prev + (prev ? '\n' : '') + url)
-    setShowTenor(false)
+    setShowGifSearch(false)
   }
 
   return (
@@ -106,7 +106,7 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
           <button onClick={() => fileRef.current?.click()} className="hpm-tb-btn" title="Imagen" aria-label="Adjuntar imagen">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
           </button>
-          <button onClick={() => setShowTenor(!showTenor)} className={`hpm-tb-btn ${showTenor ? 'hpm-tb-btn--active' : ''}`} title="GIF de Tenor" aria-label="Insertar GIF de Tenor">
+          <button onClick={() => setShowGifSearch(!showGifSearch)} className={`hpm-tb-btn ${showGifSearch ? 'hpm-tb-btn--active' : ''}`} title="GIF" aria-label="Insertar GIF">
             <span style={{ fontWeight: 800, fontSize: '10px' }}>GIF</span>
           </button>
         </div>
@@ -122,9 +122,9 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
             disabled={sending}
           />
         </div>
-        {showTenor && (
-          <div className="hpm-tenor">
-            <TenorSearch onSelect={handleTenorSelect} onClose={() => setShowTenor(false)} />
+        {showGifSearch && (
+          <div className="hpm-giphy">
+            <GifSearch onSelect={handleGifSelect} onClose={() => setShowGifSearch(false)} />
           </div>
         )}
         {imagePreview && (
@@ -164,7 +164,7 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
         .hpm-editor { padding: 0.5rem 1.25rem; }
         .hpm-textarea { width: 100%; padding: 0.5rem 0; background: transparent; border: none; outline: none; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9375rem; line-height: 1.6; resize: none; min-height: 120px; }
         .hpm-textarea::placeholder { color: var(--text-muted); }
-        .hpm-tenor { padding: 0 1.25rem 0.75rem; }
+        .hpm-giphy { padding: 0 1.25rem 0.75rem; }
         .hpm-img-preview { position: relative; margin: 0 1.25rem 0.75rem; border-radius: var(--radius-md); overflow: hidden; max-height: 200px; }
         .hpm-img-preview-img { width: 100%; height: 200px; object-fit: cover; display: block; }
         .hpm-img-remove { position: absolute; top: 0.5rem; right: 0.5rem; width: 28px; height: 28px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }

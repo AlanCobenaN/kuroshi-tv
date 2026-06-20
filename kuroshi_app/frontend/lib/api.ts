@@ -469,8 +469,8 @@ export const searchApi = {
       `/search?q=${encodeURIComponent(q)}&page=${page}`,
       { revalidate: 60 }
     ),
-  tenor: (q: string, limit = 12) =>
-    api.get(`/search/tenor?q=${encodeURIComponent(q)}&limit=${limit}`),
+  gifs: (q: string, limit = 12) =>
+    api.get(`/search/gifs?q=${encodeURIComponent(q)}&limit=${limit}`),
 }
 
 // ─── Módulo Admin — Todos los endpoints ─────────────────────

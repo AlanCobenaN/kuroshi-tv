@@ -127,36 +127,36 @@ export class SearchService {
     };
   }
 
-  // ── GET /search/tenor ─────────────────────────────────────
-  async searchTenor(q: string, limit = 12) {
-    const apiKey = process.env.TENOR_API_KEY;
+  // ── GET /search/gifs ──────────────────────────────────────
+  async searchGifs(q: string, limit = 12) {
+    const apiKey = process.env.GIPHY_API_KEY;
     if (!apiKey) {
       throw new ServiceUnavailableException(
-        'Búsqueda de GIFs no disponible: falta configurar TENOR_API_KEY',
+        'Búsqueda de GIFs no disponible: falta configurar GIPHY_API_KEY en .env',
       );
     }
 
-    const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${apiKey}&client_key=kuroshi&limit=${limit}&media_filter=gif,tinygif`;
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(q)}&limit=${limit}`;
 
     const res = await fetch(url);
     if (!res.ok) {
       const text = await res.text();
       throw new ServiceUnavailableException(
-        `Tenor API error: ${res.status} — ${text.slice(0, 200)}`,
+        `GIPHY API error: ${res.status} — ${text.slice(0, 200)}`,
       );
     }
 
     const data: any = await res.json();
 
     return {
-      data: (data.results ?? []).map((r: any) => ({
+      data: (data.data ?? []).map((r: any) => ({
         id: r.id,
-        title: r.content_description ?? '',
-        url: r.itemurl ?? '',
-        gif: r.media_format?.gif?.url ?? r.media[0]?.gif?.url ?? '',
-        preview: r.media_format?.tinygif?.url ?? r.media[0]?.tinygif?.url ?? '',
-        width: r.media[0]?.gif?.dims?.[0] ?? 200,
-        height: r.media[0]?.gif?.dims?.[1] ?? 200,
+        title: r.title ?? '',
+        url: r.url ?? '',
+        gif: r.images?.original?.url ?? '',
+        preview: r.images?.fixed_height_small?.url ?? '',
+        width: r.images?.original?.width ?? 200,
+        height: r.images?.original?.height ?? 200,
       })),
     };
   }

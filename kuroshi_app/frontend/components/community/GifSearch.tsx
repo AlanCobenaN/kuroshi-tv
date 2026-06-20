@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { searchApi } from '@/lib/api'
 
-interface TenorGif {
+interface GifData {
   id: string
   title: string
   gif: string
@@ -17,9 +17,9 @@ interface Props {
   onClose: () => void
 }
 
-export function TenorSearch({ onSelect, onClose }: Props) {
+export function GifSearch({ onSelect, onClose }: Props) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<TenorGif[]>([])
+  const [results, setResults] = useState<GifData[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -34,7 +34,7 @@ export function TenorSearch({ onSelect, onClose }: Props) {
     setIsSearching(true)
     setError('')
     try {
-      const data: any = await searchApi.tenor(q.trim())
+      const data: any = await searchApi.gifs(q.trim())
       setResults(data?.data ?? [])
       if (!data?.data?.length && !isSearching) setError('Sin resultados')
     } catch {
@@ -64,7 +64,7 @@ export function TenorSearch({ onSelect, onClose }: Props) {
             value={query}
             onChange={e => handleInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Buscar GIFs en Tenor..."
+            placeholder="Buscar GIFs..."
             className="ts-input"
           />
           <button onClick={onClose} className="ts-close-btn" aria-label="Cerrar">✕</button>
