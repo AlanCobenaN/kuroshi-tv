@@ -70,7 +70,9 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
         const newPost = await postsApi.sharePost(data.post.id, body, accessToken) as Post
         if (onShared) onShared(newPost)
       } else {
-        const shareContent = [content.trim(), data.url].filter(Boolean).join('\n\n')
+        const typePrefix = data.type === 'anime' ? 'Anime' : 'Episodio'
+        const shareLines = [content.trim(), `${typePrefix}: ${data.title}`, data.url].filter(Boolean)
+        const shareContent = shareLines.join('\n\n')
         if (shareTarget === 'community' && selectedCommunity) {
           await communitiesApi.createPost(selectedCommunity, { content: shareContent }, accessToken)
         } else {

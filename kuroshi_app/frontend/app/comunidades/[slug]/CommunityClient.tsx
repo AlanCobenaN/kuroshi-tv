@@ -46,19 +46,14 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
 
   return (
     <div className="comm-page">
-      {/* Banner */}
-      <div className="comm-banner">
-        {community.banner_url ? (
+      {/* Banner + Header */}
+      <div className="comm-banner-wrap">
+        {community.banner_url && (
           <Image src={community.banner_url} alt="" fill sizes="100vw" className="comm-banner-img" priority aria-hidden="true" />
-        ) : (
-          <div className="comm-banner-fallback" aria-hidden="true" />
         )}
         <div className="comm-banner-grad" aria-hidden="true" />
-      </div>
-
-      {/* Header de la comunidad */}
-      <div className="container">
-        <div className="comm-header">
+        <div className="container">
+          <div className="comm-header">
           <div className="comm-header-left">
             <div className="comm-avatar-wrapper">
               {community.avatar_url ? (
@@ -143,6 +138,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
           ))}
         </div>
       </div>
+      </div>{/* end comm-banner-wrap */}
 
       {/* Contenido del tab con anuncios laterales */}
       <CommunitiesWithAds>
@@ -192,25 +188,33 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
       <style>{`
         .comm-page { min-height: 100dvh; padding-bottom: 4rem; }
 
-        .comm-banner {
+        .comm-banner-wrap {
           position: relative;
-          z-index: 0;
-          height: 180px;
+          min-height: 240px;
           margin-top: calc(var(--total-nav) * -1);
           padding-top: var(--total-nav);
+          display: flex;
+          align-items: flex-end;
           overflow: hidden;
         }
         .comm-banner-img { object-fit: cover; object-position: center; filter: brightness(0.45); }
-        .comm-banner-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-overlay)); }
-        .comm-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-base) 0%, rgba(10,10,15,0.6) 40%, transparent 100%); }
+        .comm-banner-grad {
+          position: absolute; inset: 0;
+          background: linear-gradient(to top, var(--bg-base) 0%, rgba(10,10,15,0.6) 40%, transparent 100%);
+          z-index: 1;
+        }
+        .comm-banner-wrap .container {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+        }
 
         .comm-header {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          margin-top: -36px;
-          padding-bottom: 1.25rem;
+          padding: 1.5rem 0 1.25rem;
           flex-wrap: wrap;
         }
         .comm-header-left { display: flex; align-items: flex-end; gap: 1rem; }

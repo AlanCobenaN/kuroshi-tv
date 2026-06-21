@@ -15,6 +15,16 @@ interface Props {
   accessToken?: string
 }
 
+function normalizePost(p: any): Post {
+  return {
+    ...p,
+    user: {
+      ...p.user,
+      followers_count: p.user?.followersCount ?? p.user?.followers_count ?? 0,
+    },
+  }
+}
+
 export function CommunityFeed({ community, isMember, isLoggedIn, accessToken }: Props) {
   const [posts, setPosts]           = useState<Post[]>([])
   const [page, setPage]             = useState(1)
@@ -29,7 +39,7 @@ export function CommunityFeed({ community, isMember, isLoggedIn, accessToken }: 
     setIsLoading(true)
     communitiesApi.getPosts(community.slug, 1, accessToken)
       .then((data: any) => {
-        const items: Post[] = Array.isArray(data) ? data : data.data ?? []
+        const items: Post[] = (Array.isArray(data) ? data : data.data ?? []).map(normalizePost)
         const meta = data.meta
         setPosts(items)
         setHasMore(meta ? meta.page < meta.total_pages : items.length === 20)
@@ -45,7 +55,7 @@ export function CommunityFeed({ community, isMember, isLoggedIn, accessToken }: 
     const nextPage = page + 1
     try {
       const data: any = await communitiesApi.getPosts(community.slug, nextPage, accessToken)
-      const items: Post[] = Array.isArray(data) ? data : data.data ?? []
+      const items: Post[] = (Array.isArray(data) ? data : data.data ?? []).map(normalizePost)
       const meta = data.meta
       setPosts(prev => [...prev, ...items])
       setPage(nextPage)

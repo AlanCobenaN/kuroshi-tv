@@ -18,6 +18,13 @@ export function RichText({ content, className }: Props) {
             <img key={i} src={seg.url!} alt="" className="rich-image" loading="lazy" />
           )
         }
+        if (seg.type === 'link') {
+          return (
+            <a key={i} href={seg.url} target="_blank" rel="noopener noreferrer" className="rich-link">
+              {seg.text ?? seg.url}
+            </a>
+          )
+        }
         if (seg.type === 'bolditalic') {
           return <strong key={i} className="rich-bold"><em>{seg.text}</em></strong>
         }
@@ -42,6 +49,8 @@ export function RichText({ content, className }: Props) {
 
       <style>{`
         .rich-text { white-space: pre-wrap; word-wrap: break-word; line-height: 1.65; }
+        .rich-link { color: var(--accent); text-decoration: underline; word-break: break-all; }
+        .rich-link:hover { color: var(--accent-dim); }
         .rich-bold { font-weight: 700; }
         .rich-italic { font-style: italic; }
         .rich-del { text-decoration: line-through; }
@@ -64,6 +73,7 @@ type Segment =
   | { type: 'underline'; text: string }
   | { type: 'size'; text: string; size: 'small' | 'large' | 'xlarge' }
   | { type: 'image'; url: string }
+  | { type: 'link'; url: string; text?: string }
 
 function parseRichText(input: string): Segment[] {
   const segments: Segment[] = []
@@ -123,6 +133,14 @@ function parseRichText(input: string): Segment[] {
     if (underMatch) {
       segments.push({ type: 'underline', text: underMatch[1] })
       remaining = remaining.slice(underMatch[0].length)
+      continue
+    }
+
+    // Non-image URL → clickable link
+    const linkMatch = remaining.match(/^https?:\/\/[^\s]+/)
+    if (linkMatch && !imgMatch) {
+      segments.push({ type: 'link', url: linkMatch[0] })
+      remaining = remaining.slice(linkMatch[0].length)
       continue
     }
 
