@@ -57,6 +57,9 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
     created_at: profile.createdAt ?? profile.created_at,
     friendship_status: profile.friendship_status ?? undefined,
     friendship_id: profile.friendship_id ?? undefined,
+    is_following: profile.isFollowing ?? profile.is_following ?? false,
+    followers_count: profile.followersCount ?? profile.followers_count ?? 0,
+    following_count: profile.followingCount ?? profile.following_count ?? 0,
     favorite_anime: profile.favorite_anime
       ? {
           id:       profile.favorite_anime.id,

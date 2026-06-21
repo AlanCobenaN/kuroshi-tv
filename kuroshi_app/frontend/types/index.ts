@@ -311,6 +311,7 @@ export interface Post {
     avatar_url?: string
     role: UserRole
     community_role?: CommunityRole
+    followers_count?: number
   }
   content: string
   image_url?: string
@@ -333,8 +334,10 @@ export interface Post {
       username: string
       avatar_url?: string
       role: UserRole
+      followers_count?: number
     }
     community?: { slug: string; name: string }
+    user_followers_count?: number
   }
   is_pinned: boolean
   is_deleted?: boolean

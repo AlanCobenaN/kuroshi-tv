@@ -433,38 +433,23 @@ export class CommunitiesService {
     } as const;
 
     // ── Algorithm ───────────────────────────────────────────
-    // 1) Announcements: posts from the "Anuncios" community (pinned)
-    // 2) Followed users: posts from users the requester follows, ordered by author's followersCount desc
-    // 3) Rest: all other visible posts ordered by createdAt desc
+    // 1) Followed users: posts from users the requester follows, ordered by author's followersCount desc
+    // 2) Rest: all other visible posts ordered by createdAt desc
+    // Announcements are interleaved naturally by date (no special pinning)
 
-    let announcements: any[] = [];
     let followedPosts: any[] = [];
     let restPosts: any[] = [];
 
-    // 1) Fetch announcements (from any community named "Anuncios")
-    announcements = await this.prisma.post.findMany({
-      where: {
-        ...baseWhere,
-        community: { name: { contains: 'anuncios', mode: 'insensitive' } },
-      },
-      orderBy: { createdAt: 'desc' },
-      select: selectFields,
-    });
-
-    // 2) Fetch followed users posts
     let followingIds: string[] = [];
     if (userId) {
       followingIds = await this.usersService.getFollowingIds(userId);
     }
 
     if (followingIds.length > 0) {
-      // Get all posts from followed users
       const followedRaw = await this.prisma.post.findMany({
         where: {
           ...baseWhere,
           userId: { in: followingIds },
-          // exclude posts already in announcements
-          id: { notIn: announcements.map(a => a.id) },
         },
         select: selectFields,
       });
@@ -478,11 +463,8 @@ export class CommunitiesService {
       });
     }
 
-    // 3) Fetch rest (excluding announcements and followed posts)
-    const excludeIds = [
-      ...announcements.map(a => a.id),
-      ...followedPosts.map(p => p.id),
-    ];
+    // 3) Fetch rest (excluding followed posts)
+    const excludeIds = followedPosts.map(p => p.id);
     restPosts = await this.prisma.post.findMany({
       where: {
         ...baseWhere,
@@ -492,8 +474,8 @@ export class CommunitiesService {
       select: selectFields,
     });
 
-    // Combine in order: announcements → followed → rest
-    const allPosts = [...announcements, ...followedPosts, ...restPosts];
+    // Combine: followed (by followers desc) → rest (by date desc)
+    const allPosts = [...followedPosts, ...restPosts];
 
     // Apply pagination
     const pagedPosts = allPosts.slice(skip, skip + limit);

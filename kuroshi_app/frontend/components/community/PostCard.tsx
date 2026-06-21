@@ -101,6 +101,11 @@ export function PostCard({
             <Link href={`/u/${post.user.username}`} className="fb-name">
               {post.user.username}
             </Link>
+            {post.user.followers_count != null && post.user.followers_count > 0 && (
+              <span className="fb-followers-count">
+                {post.user.followers_count} seguidores
+              </span>
+            )}
             {showCommunity && post.community && (
               <Link href={`/comunidades/${post.community.slug}`} className="fb-community">
                 {post.community.name}
@@ -385,6 +390,11 @@ export function PostCard({
           text-decoration: none;
         }
         .fb-name:hover { text-decoration: underline; }
+        .fb-followers-count {
+          font-size: 0.6875rem;
+          color: var(--text-muted);
+          font-weight: 500;
+        }
         .fb-community {
           font-size: 0.6875rem;
           font-weight: 600;

@@ -154,6 +154,17 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
             Se unió desde {joinLabel}
           </p>
 
+          {/* Seguidores */}
+          <div className="profile-follow-stats">
+            <span className="profile-follow-stat">
+              <strong>{Number(profile.followers_count ?? 0).toLocaleString('es')}</strong> seguidores
+            </span>
+            <span className="profile-follow-sep" aria-hidden="true">·</span>
+            <span className="profile-follow-stat">
+              <strong>{Number(profile.following_count ?? 0).toLocaleString('es')}</strong> siguiendo
+            </span>
+          </div>
+
           {profile.rank && (
             <div className="profile-xp-bar" aria-label={`XP: ${profile.xp}`}>
               <div className="profile-xp-label">
@@ -371,6 +382,17 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
           border-radius: var(--radius-full);
           border: 1px solid;
         }
+        .profile-follow-stats {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          font-size: 0.8125rem;
+          color: var(--text-muted);
+          margin-top: 0.25rem;
+        }
+        .profile-follow-stat strong { color: var(--text-primary); font-weight: 600; }
+        .profile-follow-sep { color: var(--border); }
+
         .profile-bio {
           font-size: 0.9375rem;
           color: var(--text-secondary);

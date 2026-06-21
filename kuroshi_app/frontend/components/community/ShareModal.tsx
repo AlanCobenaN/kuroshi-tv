@@ -193,13 +193,9 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
           <div className="share-copy-section">
             <div className="share-copy-label">O copia el enlace:</div>
             <div className="share-copy-row">
-              <input
-                type="text"
-                value={data.url}
-                readOnly
-                className="share-copy-input"
-                onClick={e => (e.target as HTMLInputElement).select()}
-              />
+              <a href={data.url} target="_blank" rel="noopener noreferrer" className="share-copy-link">
+                {data.url}
+              </a>
               <button onClick={handleCopyLink} className={`share-copy-btn ${copied ? 'share-copy-btn--copied' : ''}`}>
                 {copied ? (
                   <>
@@ -238,7 +234,7 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
         .share-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.7);
           display: flex; align-items: center; justify-content: center;
-          z-index: 300; padding: 1rem;
+          z-index: 9999; padding: 1rem;
         }
         .share-modal {
           background: var(--bg-surface); border: 1px solid var(--border);
@@ -323,12 +319,14 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
         .share-copy-section { display: flex; flex-direction: column; gap: 0.375rem; }
         .share-copy-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
         .share-copy-row { display: flex; gap: 0.5rem; }
-        .share-copy-input {
+        .share-copy-link {
           flex: 1; padding: 0.5rem 0.75rem; background: var(--bg-overlay);
           border: 1px solid var(--border); border-radius: var(--radius-md);
-          color: var(--text-muted); font-family: var(--font-body);
-          font-size: 0.75rem; outline: none; cursor: text;
+          color: var(--accent); font-family: var(--font-body);
+          font-size: 0.75rem; text-decoration: underline; word-break: break-all;
+          display: flex; align-items: center;
         }
+        .share-copy-link:hover { color: var(--accent-dim); }
         .share-copy-btn {
           display: flex; align-items: center; gap: 0.375rem;
           padding: 0.5rem 0.875rem; background: var(--bg-overlay);
