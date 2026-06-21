@@ -1,7 +1,7 @@
 'use client'
 // app/u/[username]/tabs/PostsTab.tsx
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { usersApi, uploadsApi } from '@/lib/api'
+import { usersApi, uploadsApi, postsApi } from '@/lib/api'
 import { Post } from '@/types'
 import { PostCard } from '@/components/community/PostCard'
 import { GifSearch } from '@/components/community/GifSearch'
@@ -11,6 +11,14 @@ interface Props {
   isOwnProfile: boolean
   accessToken?: string
   isLoggedIn: boolean
+}
+
+const MAX_GIFS = 4
+
+function countGifs(text: string) {
+  const imageUrlRegex = /https?:\/\/[^\s'"]+\.(?:gif|png|jpg|jpeg|webp)(?:\?[^\s'"]*)?/gi
+  const matches = text.match(imageUrlRegex)
+  return matches ? matches.length : 0
 }
 
 function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onPost: (post: Post) => void }) {
@@ -46,6 +54,10 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
 
   const handleSubmit = async () => {
     if ((!content.trim() && !imageFile) || isSubmitting) return
+    if (countGifs(content) > MAX_GIFS) {
+      alert(`Máximo ${MAX_GIFS} GIFs por publicación.`)
+      return
+    }
     setIsSubmitting(true)
     try {
       let imageUrl: string | undefined
@@ -214,6 +226,20 @@ export function PostsTab({ username, isOwnProfile, accessToken, isLoggedIn }: Pr
     } catch {}
   }
 
+  const handleLike = async (post: Post) => {
+    if (!accessToken) return
+    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !p.liked_by_me, likes_count: p.liked_by_me ? Math.max(0, p.likes_count - 1) : p.likes_count + 1 } : p))
+    try {
+      await usersApi.likeUserPost(post.id, accessToken)
+    } catch {
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: post.liked_by_me, likes_count: post.likes_count } : p))
+    }
+  }
+
+  const handleShare = (newPost: Post) => {
+    setPosts(prev => [newPost, ...prev])
+  }
+
   if (isLoading) {
     return (
       <div className="pp-skeleton-list">
@@ -246,8 +272,10 @@ export function PostsTab({ username, isOwnProfile, accessToken, isLoggedIn }: Pr
                 post={post}
                 index={i}
                 isLoggedIn={isLoggedIn}
+                onLike={() => handleLike(post)}
                 onEdit={isOwnProfile ? () => { setEditingPostId(post.id); setEditContent(post.content) } : undefined}
                 onDelete={isOwnProfile ? () => handleDelete(post.id) : undefined}
+                onShare={handleShare}
               />
               {editingPostId === post.id && (
                 <div className="pp-edit-box">

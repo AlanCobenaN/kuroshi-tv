@@ -117,6 +117,7 @@ export function GlobalFeed({ isLoggedIn = false, accessToken }: Props) {
                   onLike={post.community ? () => handleLike(post.id, post.community!.slug) : () => handleLike(post.id)}
                   isCommentsOpen={openCommentPostId === post.id}
                   onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
+                  onShare={(newPost: Post) => setPosts(prev => [newPost, ...prev])}
                 />
                 {openCommentPostId === post.id && (
                   <PostComments

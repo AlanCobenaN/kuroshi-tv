@@ -11,6 +11,14 @@ interface Props {
   communities?: { slug: string; name: string }[]
 }
 
+const MAX_GIFS = 4
+
+function countGifs(text: string) {
+  const imageUrlRegex = /https?:\/\/[^\s'"]+\.(?:gif|png|jpg|jpeg|webp)(?:\?[^\s'"]*)?/gi
+  const matches = text.match(imageUrlRegex)
+  return matches ? matches.length : 0
+}
+
 export function CreatePostModal({ selectedSlug, accessToken, onClose, communities }: Props) {
   const [content, setContent] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -60,6 +68,10 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
 
   const handleSubmit = async () => {
     if (!content.trim() && !imageFile) return
+    if (countGifs(content) > MAX_GIFS) {
+      alert(`Máximo ${MAX_GIFS} GIFs por publicación.`)
+      return
+    }
     setSending(true)
     try {
       let imageUrl: string | undefined

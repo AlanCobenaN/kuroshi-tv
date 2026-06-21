@@ -8,6 +8,7 @@ import { Post } from '@/types'
 import { adminApi } from '@/lib/api'
 import { RichText } from '@/components/community/RichText'
 import { ReportModal } from '@/components/community/ReportModal'
+import { ShareModal } from '@/components/community/ShareModal'
 
 function timeAgo(d: string) {
   const diff = Date.now() - new Date(d).getTime()
@@ -32,6 +33,7 @@ interface PostCardProps {
   onHide?: () => void
   onDelete?: () => void
   onEdit?: () => void
+  onShare?: (newPost: Post) => void
   isCommentsOpen?: boolean
   isLoggedIn?: boolean
   index?: number
@@ -45,6 +47,7 @@ export function PostCard({
   onHide,
   onDelete,
   onEdit,
+  onShare,
   isCommentsOpen = false,
   isLoggedIn = false,
   index = 0,
@@ -52,6 +55,7 @@ export function PostCard({
 }: PostCardProps) {
   const [imgError, setImgError] = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const { data: session } = useSession()
   const userRole = (session?.user as any)?.role
   const isAdmin = userRole === 'owner' || userRole === 'moderador'
@@ -167,6 +171,16 @@ export function PostCard({
         />
       )}
 
+      {showShare && (
+        <ShareModal
+          post={post}
+          accessToken={(session as any)?.accessToken ?? ''}
+          isLoggedIn={isLoggedIn}
+          onClose={() => setShowShare(false)}
+          onShared={onShare}
+        />
+      )}
+
       {/* Content */}
       {post.content && (
         <div className="fb-body">
@@ -203,6 +217,43 @@ export function PostCard({
               <span className="fb-episode-num">Episodio {post.linked_episode.episode_number}</span>
             </div>
           </Link>
+        </div>
+      )}
+
+      {/* Shared post */}
+      {post.shared_post && (
+        <div className="fb-shared-wrap">
+          <div className="fb-shared-card">
+            <div className="fb-shared-header">
+              <div className="fb-shared-avatar">
+                {post.shared_post.user.avatar_url ? (
+                  <img src={post.shared_post.user.avatar_url} alt="" className="fb-shared-avatar-img" />
+                ) : (
+                  <div className="fb-shared-avatar-fallback">
+                    {post.shared_post.user.username[0].toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="fb-shared-meta">
+                <Link href={`/u/${post.shared_post.user.username}`} className="fb-shared-name">
+                  {post.shared_post.user.username}
+                </Link>
+                {post.shared_post.community && (
+                  <Link href={`/comunidades/${post.shared_post.community.slug}`} className="fb-shared-community">
+                    {post.shared_post.community.name}
+                  </Link>
+                )}
+              </div>
+            </div>
+            <div className="fb-shared-body">
+              <RichText content={post.shared_post.content} className="fb-text" />
+            </div>
+            {post.shared_post.image_url && (
+              <div className="fb-shared-image-wrap">
+                <img src={post.shared_post.image_url} alt="" className="fb-shared-image" loading="lazy" />
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -247,6 +298,21 @@ export function PostCard({
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span>{post.comments_count}</span>
+        </button>
+
+        <button
+          onClick={() => setShowShare(true)}
+          className="fb-action"
+          aria-label="Compartir"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          <span>Compartir</span>
         </button>
       </div>
 
@@ -468,6 +534,74 @@ export function PostCard({
         .fb-action + .fb-action { border-left: 1px solid var(--border); }
         .fb-action--active { color: var(--accent); }
         .fb-action--active:hover { color: var(--accent-dim); }
+
+        .fb-shared-wrap {
+          padding: 0 1.25rem 0.625rem;
+        }
+        .fb-shared-card {
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          background: var(--bg-overlay);
+          overflow: hidden;
+        }
+        .fb-shared-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.625rem 0.75rem;
+        }
+        .fb-shared-avatar { flex-shrink: 0; }
+        .fb-shared-avatar-img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+        .fb-shared-avatar-fallback {
+          width: 22px; height: 22px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+          color: #fff;
+          font-family: var(--font-display);
+          font-size: 0.5rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .fb-shared-meta {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          min-width: 0;
+        }
+        .fb-shared-name {
+          font-family: var(--font-display);
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          text-decoration: none;
+        }
+        .fb-shared-name:hover { text-decoration: underline; }
+        .fb-shared-community {
+          font-size: 0.625rem;
+          font-weight: 600;
+          color: var(--accent);
+          background: var(--bg-elevated);
+          padding: 0.05rem 0.375rem;
+          border-radius: var(--radius-full);
+          text-decoration: none;
+        }
+        .fb-shared-community:hover { text-decoration: underline; }
+        .fb-shared-body {
+          padding: 0 0.75rem 0.625rem;
+          font-size: 0.875rem;
+          color: var(--text-secondary);
+        }
+        .fb-shared-body .rich-image { max-height: 80px; }
+        .fb-shared-image-wrap {
+          border-top: 1px solid var(--border);
+          display: flex;
+          justify-content: center;
+          padding: 0.375rem;
+          background: var(--bg-surface);
+        }
+        .fb-shared-image { max-width: 100%; max-height: 200px; width: auto; height: auto; display: block; object-fit: contain; border-radius: var(--radius-sm); }
       `}</style>
     </article>
   )

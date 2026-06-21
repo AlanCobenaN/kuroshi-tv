@@ -157,6 +157,7 @@ function GlobalFeedPanel({ isLoggedIn, accessToken, userId }: { isLoggedIn: bool
                   onEdit={post.community && userId === post.user_id ? () => setEditingPost(post) : undefined}
                   isCommentsOpen={openCommentPostId === post.id}
                   onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
+                  onShare={(newPost: Post) => setPosts(prev => [newPost, ...prev])}
                 />
                 {openCommentPostId === post.id && post.community && (
                   <PostComments
@@ -644,6 +645,7 @@ function CommunityFeedPanel({ slug, isMember, isLoggedIn, accessToken, userRole,
                 onDelete={userRole === 'creador' ? () => handleDelete(post.id) : undefined}
                 isCommentsOpen={openCommentPostId === post.id}
                 onToggleComments={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)}
+                onShare={(newPost: Post) => setPosts(prev => [newPost, ...prev])}
               />
               {openCommentPostId === post.id && (
                 <PostComments
@@ -816,6 +818,14 @@ function EditPostForm({ post, onSave, onCancel }: {
 
 /* ─── Quick Post Composer ────────────────────────────────── */
 
+const MAX_GIFS = 4
+
+function countGifs(text: string) {
+  const imageUrlRegex = /https?:\/\/[^\s'"]+\.(?:gif|png|jpg|jpeg|webp)(?:\?[^\s'"]*)?/gi
+  const matches = text.match(imageUrlRegex)
+  return matches ? matches.length : 0
+}
+
 function QuickPostComposer({ slug, accessToken, onPost }: {
   slug: string
   accessToken: string
@@ -829,6 +839,10 @@ function QuickPostComposer({ slug, accessToken, onPost }: {
 
   const handleSubmit = async () => {
     if (!content.trim() && !imageFile) return
+    if (countGifs(content) > MAX_GIFS) {
+      alert(`Máximo ${MAX_GIFS} GIFs por publicación.`)
+      return
+    }
     setSending(true)
     try {
       let imageUrl: string | undefined

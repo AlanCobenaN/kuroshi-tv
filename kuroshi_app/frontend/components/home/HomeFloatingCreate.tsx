@@ -11,6 +11,14 @@ interface Props {
   accessToken?: string
 }
 
+const MAX_GIFS = 4
+
+function countGifs(text: string) {
+  const imageUrlRegex = /https?:\/\/[^\s'"]+\.(?:gif|png|jpg|jpeg|webp)(?:\?[^\s'"]*)?/gi
+  const matches = text.match(imageUrlRegex)
+  return matches ? matches.length : 0
+}
+
 function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; onClose: () => void }) {
   const [content, setContent] = useState('')
   const [sending, setSending] = useState(false)
@@ -49,6 +57,10 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
 
   const handleSubmit = async () => {
     if ((!content.trim() && !imageFile) || sending) return
+    if (countGifs(content) > MAX_GIFS) {
+      alert(`Máximo ${MAX_GIFS} GIFs por publicación.`)
+      return
+    }
     setSending(true)
     try {
       let imageUrl: string | undefined

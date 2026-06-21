@@ -318,6 +318,21 @@ export interface Post {
     anime_title: string
     thumbnail_url?: string
   }
+  shared_post_id?: string
+  shared_text?: string
+  shared_post?: {
+    id: string
+    content: string
+    image_url?: string
+    likes_count: number
+    created_at: string
+    user: {
+      username: string
+      avatar_url?: string
+      role: UserRole
+    }
+    community?: { slug: string; name: string }
+  }
   is_pinned: boolean
   is_deleted?: boolean
   likes_count: number

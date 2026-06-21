@@ -18,6 +18,15 @@ import {
   CreateUserPostDto,
 } from './dto/users.dto';
 
+const GIF_URL_RE = /https?:\/\/[^\s]+\.(gif|webp|png|jpe?g|mp4)(\?[^\s]*)?/gi;
+
+function validateMaxGifs(content: string, max = 4) {
+  const gifCount = (content.match(GIF_URL_RE) || []).length;
+  if (gifCount > max) {
+    throw new BadRequestException(`Máximo ${max} GIFs por publicación`);
+  }
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -558,6 +567,8 @@ export class UsersService {
 
   // ── POST /users/me/posts ──────────────────────────────────
   async createUserPost(userId: string, dto: CreateUserPostDto) {
+    validateMaxGifs(dto.content);
+
     const post = await this.prisma.post.create({
       data: {
         communityId: null,
@@ -600,28 +611,49 @@ export class UsersService {
     const limit = query?.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const [posts, total] = await Promise.all([
-      this.prisma.post.findMany({
-        where: { userId: user.id, communityId: null, isDeleted: false },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        select: {
-          id: true,
-          userId: true,
-          content: true,
-          imageUrl: true,
-          likesCount: true,
-          createdAt: true,
-          editedAt: true,
-          user: { select: { id: true, username: true, avatarUrl: true, role: true } },
-          _count: { select: { comments: true } },
+    let posts = await this.prisma.post.findMany({
+      where: { userId: user.id, communityId: null, isDeleted: false },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        userId: true,
+        content: true,
+        imageUrl: true,
+        likesCount: true,
+        createdAt: true,
+        editedAt: true,
+        sharedPostId: true,
+        sharedText: true,
+        user: { select: { id: true, username: true, avatarUrl: true, role: true } },
+        sharedPost: {
+          select: {
+            id: true,
+            content: true,
+            imageUrl: true,
+            likesCount: true,
+            createdAt: true,
+            user: { select: { id: true, username: true, avatarUrl: true, role: true } },
+            community: { select: { slug: true, name: true } },
+          },
         },
-      }),
-      this.prisma.post.count({
-        where: { userId: user.id, communityId: null, isDeleted: false },
-      }),
-    ]);
+        _count: { select: { comments: true } },
+      },
+    });
+
+    if (requesterId) {
+      const userLikes = await this.prisma.postLike.findMany({
+        where: { userId: requesterId, postId: { in: posts.map(p => p.id) } },
+        select: { postId: true },
+      });
+      const likedIds = new Set(userLikes.map(l => l.postId));
+      posts = posts.map(p => ({ ...p, liked_by_me: likedIds.has(p.id) }));
+    }
+
+    const total = await this.prisma.post.count({
+      where: { userId: user.id, communityId: null, isDeleted: false },
+    });
 
     return {
       data: posts,
@@ -686,7 +718,8 @@ export class UsersService {
         where: { id: postId },
         data: { likesCount: { decrement: 1 } },
       });
-      return { id: postId, liked: false, likesCount: Math.max(0, (await this.prisma.post.findUnique({ where: { id: postId }, select: { likesCount: true } }))?.likesCount ?? 0) };
+      const likesCount = Math.max(0, (await this.prisma.post.findUnique({ where: { id: postId }, select: { likesCount: true } }))?.likesCount ?? 0);
+      return { id: postId, liked: false, likesCount, liked_by_me: false };
     }
 
     await this.prisma.postLike.create({ data: { postId, userId } });
@@ -705,7 +738,7 @@ export class UsersService {
       });
     }
 
-    return { id: postId, liked: true, likesCount: updated.likesCount };
+    return { id: postId, liked: true, likesCount: updated.likesCount, liked_by_me: true };
   }
 
   // ── GET /users/me/posts/:id/comments ─────────────────────────

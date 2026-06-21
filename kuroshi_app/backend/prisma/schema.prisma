@@ -456,6 +456,8 @@ model Post {
   content         String    @db.Text
   imageUrl        String?   @map("image_url")               // URL de Imgur
   linkedEpisodeId String?   @map("linked_episode_id") @db.Uuid
+  sharedPostId    String?   @map("shared_post_id") @db.Uuid
+  sharedText      String?   @map("shared_text") @db.Text
   likesCount      Int       @default(0) @map("likes_count")
   isPinned        Boolean   @default(false) @map("is_pinned")
   isDeleted       Boolean   @default(false) @map("is_deleted")
@@ -463,10 +465,12 @@ model Post {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   editedAt        DateTime? @map("edited_at")
 
-  community Community?   @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments  PostComment[]
   likes     PostLike[]
+  sharedPost  Post?  @relation("PostShares", fields: [sharedPostId], references: [id])
+  shares      Post[] @relation("PostShares")
 
   @@index([communityId, createdAt])
   @@map("posts")

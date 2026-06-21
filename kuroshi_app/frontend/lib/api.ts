@@ -621,6 +621,16 @@ export const reportsApi = {
   ) => api.post('/reports', body, { token }),
 }
 
+// ─── Módulo Posts (compartir, previsualizar) ──────────────────
+
+export const postsApi = {
+  getById: (id: string, token?: string) =>
+    api.get(`/posts/${id}`, { token, cache: 'no-store' }),
+
+  sharePost: (postId: string, body: { content?: string; communitySlug?: string }, token: string) =>
+    api.post(`/posts/${postId}/share`, body, { token }),
+}
+
 // ─── Módulo Uploads — 1 endpoint ─────────────────────────────
 
 // ✅ CORREGIDO: envía JSON con base64 — coincide con UploadImageDto del backend
