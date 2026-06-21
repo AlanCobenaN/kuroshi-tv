@@ -54,6 +54,8 @@ export class UsersService {
             coverUrl: true, bannerUrl: true, malRating: true, status: true,
           },
         },
+        followersCount: true,
+        followingCount: true,
         _count: {
           select: {
             communityMemberships: true,
@@ -139,6 +141,12 @@ export class UsersService {
       }
     }
 
+    // Estado de follow
+    let isFollowing = false;
+    if (requesterId && requesterId !== user.id) {
+      isFollowing = await this.isFollowing(requesterId, user.id);
+    }
+
     return {
       ...user,
       episodesWatched: progressStats._count.id,
@@ -146,6 +154,9 @@ export class UsersService {
       friendsCount,
       friendshipStatus,
       friendshipId,
+      followersCount: (user as any).followersCount ?? 0,
+      followingCount: (user as any).followingCount ?? 0,
+      isFollowing,
       isPrivate: false,
     };
   }
@@ -1119,6 +1130,146 @@ export class UsersService {
     await this.prisma.friendship.delete({ where: { id: friendshipId } });
 
     return { message: 'Amigo eliminado' };
+  }
+
+  // ── POST /users/:username/follow ─────────────────────────
+  async followUser(followerId: string, targetUsername: string) {
+    const target = await this.prisma.user.findUnique({
+      where: { username: targetUsername, isActive: true },
+      select: { id: true, username: true },
+    });
+    if (!target) throw new NotFoundException('Usuario no encontrado');
+    if (followerId === target.id) {
+      throw new BadRequestException('No puedes seguirte a ti mismo');
+    }
+
+    const existing = await this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId: target.id } },
+    });
+    if (existing) throw new ConflictException('Ya sigues a este usuario');
+
+    await this.prisma.$transaction([
+      this.prisma.follow.create({
+        data: { followerId, followingId: target.id },
+      }),
+      this.prisma.user.update({
+        where: { id: followerId },
+        data: { followingCount: { increment: 1 } },
+      }),
+      this.prisma.user.update({
+        where: { id: target.id },
+        data: { followersCount: { increment: 1 } },
+      }),
+    ]);
+
+    return { message: `Ahora sigues a @${target.username}` };
+  }
+
+  // ── DELETE /users/:username/unfollow ───────────────────────
+  async unfollowUser(followerId: string, targetUsername: string) {
+    const target = await this.prisma.user.findUnique({
+      where: { username: targetUsername, isActive: true },
+      select: { id: true },
+    });
+    if (!target) throw new NotFoundException('Usuario no encontrado');
+
+    const existing = await this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId: target.id } },
+    });
+    if (!existing) throw new BadRequestException('No sigues a este usuario');
+
+    await this.prisma.$transaction([
+      this.prisma.follow.delete({
+        where: { followerId_followingId: { followerId, followingId: target.id } },
+      }),
+      this.prisma.user.update({
+        where: { id: followerId },
+        data: { followingCount: { decrement: 1 } },
+      }),
+      this.prisma.user.update({
+        where: { id: target.id },
+        data: { followersCount: { decrement: 1 } },
+      }),
+    ]);
+
+    return { message: 'Dejaste de seguir a este usuario' };
+  }
+
+  // ── GET /users/:username/followers ─────────────────────────
+  async getFollowers(username: string, requesterId?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username, isActive: true },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const follows = await this.prisma.follow.findMany({
+      where: { followingId: user.id },
+      select: {
+        followerId: true,
+        createdAt: true,
+        follower: {
+          select: { id: true, username: true, avatarUrl: true, bio: true, followersCount: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return follows.map(f => ({
+      id: f.follower.id,
+      username: f.follower.username,
+      avatar_url: f.follower.avatarUrl,
+      bio: f.follower.bio,
+      followers_count: f.follower.followersCount,
+      followed_at: f.createdAt,
+    }));
+  }
+
+  // ── GET /users/:username/following ─────────────────────────
+  async getFollowing(username: string, requesterId?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username, isActive: true },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const follows = await this.prisma.follow.findMany({
+      where: { followerId: user.id },
+      select: {
+        followingId: true,
+        createdAt: true,
+        following: {
+          select: { id: true, username: true, avatarUrl: true, bio: true, followersCount: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return follows.map(f => ({
+      id: f.following.id,
+      username: f.following.username,
+      avatar_url: f.following.avatarUrl,
+      bio: f.following.bio,
+      followers_count: f.following.followersCount,
+      followed_at: f.createdAt,
+    }));
+  }
+
+  // ── Helper: check if user follows another ─────────────────
+  private async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const follow = await this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+    return !!follow;
+  }
+
+  // ── Helper: get IDs of users that a user follows ────────────
+  async getFollowingIds(userId: string): Promise<string[]> {
+    const follows = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+    return follows.map(f => f.followingId);
   }
 
   // ── GET /users/me/friend-requests ─────────────────────────

@@ -105,6 +105,12 @@ export class FriendRequestActionDto {
   action: 'aceptada' | 'rechazada';
 }
 
+export class FollowDto {
+  @ApiProperty()
+  @IsString()
+  targetUsername: string;
+}
+
 export class GetNotificationsDto {
   @ApiPropertyOptional()
   @IsOptional()

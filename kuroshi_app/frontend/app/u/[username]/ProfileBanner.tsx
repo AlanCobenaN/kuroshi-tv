@@ -19,6 +19,8 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
   const [friendshipStatus, setFriendshipStatus] = useState<string | null | undefined>(
     profile.friendship_status
   )
+  const [isFollowing, setIsFollowing] = useState(profile.is_following ?? false)
+  const [followSending, setFollowSending] = useState(false)
   const [sending, setSending] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const router = useRouter()
@@ -40,6 +42,26 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
       console.error('[ProfileBanner] Error al enviar solicitud:', err)
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleFollowToggle = async () => {
+    if (followSending) return
+    const token = (window as any).__kuroshi_token__ as string | undefined
+    if (!token) return
+    setFollowSending(true)
+    try {
+      if (isFollowing) {
+        await usersApi.unfollowUser(profile.username, token)
+        setIsFollowing(false)
+      } else {
+        await usersApi.followUser(profile.username, token)
+        setIsFollowing(true)
+      }
+    } catch (err) {
+      console.error('[ProfileBanner] Error al seguir/dejar de seguir:', err)
+    } finally {
+      setFollowSending(false)
     }
   }
 
@@ -168,6 +190,18 @@ export function ProfileBanner({ profile, isOwnProfile, isLoggedIn }: Props) {
                   <line x1="4" y1="22" x2="4" y2="15" />
                 </svg>
                 Reportar
+              </button>
+              <button
+                onClick={handleFollowToggle}
+                disabled={followSending}
+                className={`profile-action-btn ${isFollowing ? 'profile-action-btn--ghost' : 'profile-action-btn--primary'}`}
+                aria-label={isFollowing ? 'Dejar de seguir' : 'Seguir'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" />
+                </svg>
+                {isFollowing ? 'Siguiendo' : 'Seguir'}
               </button>
               {friendshipStatus === 'aceptada' ? (
                 <span className="profile-action-btn profile-action-btn--sent" style={{ cursor: 'default' }}>

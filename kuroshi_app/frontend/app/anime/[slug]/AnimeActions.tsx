@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { Anime, WatchStatus } from '@/types'
 import { usersApi, animeApi } from '@/lib/api'
+import { ShareModal, ShareableData } from '@/components/community/ShareModal'
 
 interface Props {
   anime: Anime
@@ -30,6 +31,21 @@ export function AnimeActions({ anime, isLoggedIn, favoriteAnimeId }: Props) {
   const [showStatuses, setShowStatuses] = useState(false)
   const [userRating, setUserRating]     = useState<number>(0)
   const [ratingHover, setRatingHover]   = useState<number>(0)
+
+  // Share modal
+  const [showShare, setShowShare] = useState(false)
+
+  const shareData: ShareableData = {
+    type: 'anime',
+    id: anime.id,
+    title: anime.title_es || anime.title_jp || '',
+    subtitle: anime.seasons?.[0]?.episodes?.length
+      ? `${anime.seasons[0].episodes.length} episodios`
+      : undefined,
+    description: anime.synopsis?.slice(0, 200) ?? '',
+    imageUrl: anime.cover_url,
+    url: typeof window !== 'undefined' ? `${window.location.origin}/anime/${anime.slug}` : '',
+  }
 
   // Favorito
   const [isFavorite, setIsFavorite] = useState(anime.id === favoriteAnimeId)
@@ -106,14 +122,13 @@ export function AnimeActions({ anime, isLoggedIn, favoriteAnimeId }: Props) {
     <div className="anime-actions">
       {/* Cover */}
       <div className="anime-cover-wrapper">
-        <Image
-          src={anime.cover_url}
-          alt={anime.title_es}
-          fill
-          sizes="220px"
-          className="anime-cover-img"
-          priority
-        />
+          <Image
+            src={anime.cover_url}
+            alt={anime.title_es}
+            fill
+            sizes="220px"
+            className="anime-cover-img"
+          />
       </div>
 
       {/* Botones de reproducción */}
@@ -236,6 +251,31 @@ export function AnimeActions({ anime, isLoggedIn, favoriteAnimeId }: Props) {
             <p className="anime-favorite-hint">Este anime es tu favorito</p>
           )}
         </div>
+      )}
+
+      {/* Compartir */}
+      {isLoggedIn && (
+        <>
+          <button
+            onClick={() => setShowShare(true)}
+            className="action-btn action-btn--ghost"
+            aria-label="Compartir este anime"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            Compartir
+          </button>
+          {showShare && session?.accessToken && (
+            <ShareModal
+              data={shareData}
+              accessToken={session.accessToken}
+              isLoggedIn={isLoggedIn}
+              onClose={() => setShowShare(false)}
+            />
+          )}
+        </>
       )}
 
       {/* Rating de Kuroshi — solo si está logueado */}

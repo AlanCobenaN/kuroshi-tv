@@ -304,6 +304,52 @@ export class UsersController {
     return this.usersService.removeFriend(userId, friendshipId);
   }
 
+  // POST /api/users/:username/follow
+  @Post(':username/follow')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Seguir a un usuario' })
+  followUser(
+    @Param('username') targetUsername: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.followUser(userId, targetUsername);
+  }
+
+  // DELETE /api/users/:username/follow
+  @Delete(':username/follow')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Dejar de seguir a un usuario' })
+  unfollowUser(
+    @Param('username') targetUsername: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.unfollowUser(userId, targetUsername);
+  }
+
+  // GET /api/users/:username/followers
+  @Public()
+  @Get(':username/followers')
+  @ApiOperation({ summary: 'Lista de seguidores de un usuario' })
+  getFollowers(
+    @Param('username') username: string,
+    @CurrentUser('id') requesterId?: string,
+  ) {
+    return this.usersService.getFollowers(username, requesterId);
+  }
+
+  // GET /api/users/:username/following
+  @Public()
+  @Get(':username/following')
+  @ApiOperation({ summary: 'Usuarios que sigue un usuario' })
+  getFollowing(
+    @Param('username') username: string,
+    @CurrentUser('id') requesterId?: string,
+  ) {
+    return this.usersService.getFollowing(username, requesterId);
+  }
+
   // GET /api/users/me/friend-requests
   @Get('me/friend-requests')
   @UseGuards(JwtAuthGuard)

@@ -46,9 +46,16 @@ export class ReportsService {
       case 'post': {
         const post = await this.prisma.post.findUnique({
           where: { id: dto.contentId },
-          select: { community: { select: { slug: true } } },
+          select: {
+            community: { select: { slug: true } },
+            user: { select: { username: true } },
+          },
         });
-        if (post) contentRef = `Post en /${post.community.slug}`;
+        if (post) {
+          contentRef = post.community
+            ? `Post en /${post.community.slug}`
+            : `Post de @${post.user.username}`;
+        }
         break;
       }
       case 'episodio': {

@@ -293,6 +293,18 @@ export const usersApi = {
   removeFriend: (friendshipId: string, token: string) =>
     api.delete(`/users/me/friend/${friendshipId}`, { token }),
 
+  followUser: (username: string, token: string) =>
+    api.post(`/users/${username}/follow`, {}, { token }),
+
+  unfollowUser: (username: string, token: string) =>
+    api.delete(`/users/${username}/follow`, { token }),
+
+  getFollowers: (username: string, token?: string) =>
+    api.get(`/users/${username}/followers`, { token }),
+
+  getFollowing: (username: string, token?: string) =>
+    api.get(`/users/${username}/following`, { token }),
+
   getNotifications: (params: { type?: string; page?: number }, token: string) => {
     const query = new URLSearchParams(
       Object.entries(params)

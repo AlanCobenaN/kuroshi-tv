@@ -62,6 +62,9 @@ export interface UserPublicProfile {
   created_at: string
   friendship_status?: 'pendiente' | 'aceptada' | 'rechazada' | 'bloqueada'
   friendship_id?: string
+  followers_count?: number
+  following_count?: number
+  is_following?: boolean
   stats: {
     episodes_watched: number
     hours_watched: number

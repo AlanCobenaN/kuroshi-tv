@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Anime, AnimeSummary, Episode } from '@/types'
 import { animeApi, usersApi } from '@/lib/api'
 import { ReportModal } from '@/components/community/ReportModal'
+import { ShareModal, ShareableData } from '@/components/community/ShareModal'
 import { VideoPlayer } from '@/components/episode/VideoPlayer'
 import { EpisodeChat } from '@/components/episode/EpisodeChat'
 import { EpisodeNavigator } from '@/components/episode/EpisodeNavigator'
@@ -37,6 +38,7 @@ export function EpisodePlayerClient({
 }: Props) {
   const [showMobileChat, setShowMobileChat] = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const [showShare, setShowShare] = useState(false)
 
   useEffect(() => {
     animeApi.trackView(animeSlug, episode.number).catch(() => {})
@@ -122,6 +124,20 @@ export function EpisodePlayerClient({
                 Reportar
               </button>
 
+              {/* Botón compartir episodio */}
+              <button
+                className="player-report-btn"
+                onClick={() => setShowShare(true)}
+                aria-label="Compartir este episodio"
+                title="Compartir"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                Compartir
+              </button>
+
               {/* Botón de chat en móvil */}
               <button
                 className="player-chat-toggle-mobile"
@@ -196,6 +212,23 @@ export function EpisodePlayerClient({
             contentType="episodio"
             contentId={episode.id}
             contentLabel={`${animeData?.title_es ?? ''} - Episodio ${episode.number}`}
+          />
+        )}
+
+        {showShare && (
+          <ShareModal
+            data={{
+              type: 'episodio',
+              id: episode.id,
+              title: `${animeData?.title_es ?? ''} - Episodio ${episode.number}`,
+              subtitle: episode.title ?? undefined,
+              description: animeData?.synopsis?.slice(0, 200) ?? '',
+              imageUrl: animeData?.cover_url,
+              url: typeof window !== 'undefined' ? window.location.href : '',
+            }}
+            accessToken={((window as any).__kuroshi_token__ as string) ?? ''}
+            isLoggedIn={isLoggedIn}
+            onClose={() => setShowShare(false)}
           />
         )}
 

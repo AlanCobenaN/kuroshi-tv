@@ -48,6 +48,9 @@ const REASON_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: 'spoiler', label: 'Spoiler sin marcar' },
     { value: 'otro', label: 'Otro' },
   ],
+  otro: [
+    { value: 'otro', label: 'Otro' },
+  ],
 }
 
 export function ReportModal({ isOpen, onClose, contentType, contentId, contentLabel }: Props) {

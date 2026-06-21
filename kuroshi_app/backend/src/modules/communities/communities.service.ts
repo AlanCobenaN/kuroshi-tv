@@ -375,7 +375,9 @@ export class CommunitiesService {
 
   // ── GET /communities/feed ──────────────────────────────────
   async getFeed(dto: GetPostsDto, userId?: string) {
-    const skip = (dto.page - 1) * dto.limit;
+    const limit = dto.limit;
+    const page = dto.page;
+    const skip = (page - 1) * limit;
 
     // Profile posts filter based on visibility
     const profileWhere: any[] = [
@@ -383,10 +385,7 @@ export class CommunitiesService {
     ];
 
     if (userId) {
-      // Own profile posts (any visibility, including privado)
       profileWhere.push({ communityId: null, isDeleted: false, userId });
-
-      // Friends' profile posts with solo_amigos visibility
       const friendIds = await this.getFriendIds(userId);
       if (friendIds.length > 0) {
         profileWhere.push({
@@ -398,7 +397,7 @@ export class CommunitiesService {
       }
     }
 
-    const where = {
+    const baseWhere = {
       isDeleted: false,
       OR: [
         { community: { isActive: true } },
@@ -406,48 +405,110 @@ export class CommunitiesService {
       ],
     };
 
-    let posts = await this.prisma.post.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: dto.limit,
-      select: {
-        id: true,
-        userId: true,
-        content: true,
-        imageUrl: true,
-        likesCount: true,
-        isPinned: true,
-        createdAt: true,
-        editedAt: true,
-        sharedPostId: true,
-        sharedText: true,
-        user: { select: { id: true, username: true, avatarUrl: true, role: true } },
-        community: { select: { slug: true, name: true } },
-        sharedPost: {
-          select: {
-            id: true,
-            content: true,
-            imageUrl: true,
-            likesCount: true,
-            createdAt: true,
-            user: { select: { id: true, username: true, avatarUrl: true, role: true } },
-            community: { select: { slug: true, name: true } },
-          },
+    const selectFields = {
+      id: true,
+      userId: true,
+      content: true,
+      imageUrl: true,
+      likesCount: true,
+      isPinned: true,
+      createdAt: true,
+      editedAt: true,
+      sharedPostId: true,
+      sharedText: true,
+      user: { select: { id: true, username: true, avatarUrl: true, role: true, followersCount: true } },
+      community: { select: { slug: true, name: true } },
+      sharedPost: {
+        select: {
+          id: true,
+          content: true,
+          imageUrl: true,
+          likesCount: true,
+          createdAt: true,
+          user: { select: { id: true, username: true, avatarUrl: true, role: true } },
+          community: { select: { slug: true, name: true } },
         },
-        _count: { select: { comments: true } },
       },
+      _count: { select: { comments: true } },
+    } as const;
+
+    // ── Algorithm ───────────────────────────────────────────
+    // 1) Announcements: posts from the "Anuncios" community (pinned)
+    // 2) Followed users: posts from users the requester follows, ordered by author's followersCount desc
+    // 3) Rest: all other visible posts ordered by createdAt desc
+
+    let announcements: any[] = [];
+    let followedPosts: any[] = [];
+    let restPosts: any[] = [];
+
+    // 1) Fetch announcements (from any community named "Anuncios")
+    announcements = await this.prisma.post.findMany({
+      where: {
+        ...baseWhere,
+        community: { name: { contains: 'anuncios', mode: 'insensitive' } },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: selectFields,
     });
 
+    // 2) Fetch followed users posts
+    let followingIds: string[] = [];
     if (userId) {
-      posts = await this.attachLikedByMe(posts, userId);
+      followingIds = await this.usersService.getFollowingIds(userId);
     }
 
-    const total = await this.prisma.post.count({ where });
+    if (followingIds.length > 0) {
+      // Get all posts from followed users
+      const followedRaw = await this.prisma.post.findMany({
+        where: {
+          ...baseWhere,
+          userId: { in: followingIds },
+          // exclude posts already in announcements
+          id: { notIn: announcements.map(a => a.id) },
+        },
+        select: selectFields,
+      });
+
+      // Sort by author's followersCount desc, then by createdAt desc
+      followedPosts = followedRaw.sort((a, b) => {
+        const aFollowers = (a.user as any).followersCount ?? 0;
+        const bFollowers = (b.user as any).followersCount ?? 0;
+        if (bFollowers !== aFollowers) return bFollowers - aFollowers;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
+
+    // 3) Fetch rest (excluding announcements and followed posts)
+    const excludeIds = [
+      ...announcements.map(a => a.id),
+      ...followedPosts.map(p => p.id),
+    ];
+    restPosts = await this.prisma.post.findMany({
+      where: {
+        ...baseWhere,
+        id: { notIn: excludeIds },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: selectFields,
+    });
+
+    // Combine in order: announcements → followed → rest
+    const allPosts = [...announcements, ...followedPosts, ...restPosts];
+
+    // Apply pagination
+    const pagedPosts = allPosts.slice(skip, skip + limit);
+
+    // Attach liked_by_me if user is authenticated
+    let resultPosts = pagedPosts;
+    if (userId) {
+      resultPosts = await this.attachLikedByMe(pagedPosts, userId);
+    }
+
+    const total = allPosts.length;
 
     return {
-      data: posts,
-      meta: { page: dto.page, total, total_pages: Math.ceil(total / dto.limit) },
+      data: resultPosts,
+      meta: { page, total, total_pages: Math.ceil(total / limit) },
     };
   }
 
