@@ -61,10 +61,10 @@ export function PostComments({ slug, postId, isLoggedIn = false, accessToken, on
   }
 
   useEffect(() => {
-    setIsLoading(true)
-    isProfilePost
+    setIsLoading(true);
+    (isProfilePost
       ? usersApi.getUserPostComments(postId, accessToken!)
-      : communitiesApi.getPostComments(slug!, postId, accessToken)
+      : communitiesApi.getPostComments(slug!, postId, accessToken))
       .then((data: any) => setFlatComments(data as PostComment[]))
       .catch(() => setFlatComments([]))
       .finally(() => setIsLoading(false))

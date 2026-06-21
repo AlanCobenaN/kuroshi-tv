@@ -53,7 +53,7 @@ export function AiringCarousel({ animes }: Props) {
                       fill
                       sizes="140px"
                       className="airing-img"
-                      priority={i < 6}
+                      priority={i < 3}
                     />
                     {hasNewToday && (
                       <span className="airing-new-badge">

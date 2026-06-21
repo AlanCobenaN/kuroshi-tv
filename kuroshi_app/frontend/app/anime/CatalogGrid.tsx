@@ -76,7 +76,7 @@ export function CatalogGrid({ animes, meta, currentPage, currentFilters }: Props
           <li key={anime.id} className="animate-fade-in">
             <AnimeCard
               anime={anime}
-              priority={i < 10}
+              priority={i < 4}
             />
           </li>
         ))}
