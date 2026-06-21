@@ -1146,7 +1146,7 @@ export class UsersService {
     const existing = await this.prisma.follow.findUnique({
       where: { followerId_followingId: { followerId, followingId: target.id } },
     });
-    if (existing) throw new ConflictException('Ya sigues a este usuario');
+    if (existing) return { message: `Ya sigues a @${target.username}` };
 
     await this.prisma.$transaction([
       this.prisma.follow.create({
@@ -1176,7 +1176,7 @@ export class UsersService {
     const existing = await this.prisma.follow.findUnique({
       where: { followerId_followingId: { followerId, followingId: target.id } },
     });
-    if (!existing) throw new BadRequestException('No sigues a este usuario');
+    if (!existing) return { message: 'No sigues a este usuario' };
 
     await this.prisma.$transaction([
       this.prisma.follow.delete({
