@@ -5,15 +5,27 @@ import { Post, CommunityWithMembership } from '@/types'
 import { postsApi, communitiesApi, usersApi } from '@/lib/api'
 import { RichText } from './RichText'
 
+export interface ShareableData {
+  type: 'post' | 'anime' | 'episodio'
+  id: string
+  title: string
+  subtitle?: string
+  description: string
+  imageUrl?: string
+  avatarUrl?: string
+  url: string
+  post?: Post
+}
+
 interface ShareModalProps {
-  post: Post
+  data: ShareableData
   accessToken: string
   isLoggedIn: boolean
   onClose: () => void
   onShared?: (newPost: Post) => void
 }
 
-export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }: ShareModalProps) {
+export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }: ShareModalProps) {
   const [content, setContent] = useState('')
   const [shareTarget, setShareTarget] = useState<'profile' | 'community'>('profile')
   const [myCommunities, setMyCommunities] = useState<CommunityWithMembership[]>([])
@@ -21,8 +33,6 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
   const [isSharing, setIsSharing] = useState(false)
   const [copied, setCopied] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
-
-  const postUrl = `${window.location.origin}/post/${post.id}`
 
   useEffect(() => {
     if (!accessToken) return
@@ -41,7 +51,7 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(postUrl)
+      await navigator.clipboard.writeText(data.url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {}
@@ -51,13 +61,22 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
     if (!accessToken || isSharing) return
     setIsSharing(true)
     try {
-      const body: { content?: string; communitySlug?: string } = {}
-      if (content.trim()) body.content = content.trim()
-      if (shareTarget === 'community' && selectedCommunity) {
-        body.communitySlug = selectedCommunity
+      if (data.type === 'post' && data.post) {
+        const body: { content?: string; communitySlug?: string } = {}
+        if (content.trim()) body.content = content.trim()
+        if (shareTarget === 'community' && selectedCommunity) {
+          body.communitySlug = selectedCommunity
+        }
+        const newPost = await postsApi.sharePost(data.post.id, body, accessToken) as Post
+        if (onShared) onShared(newPost)
+      } else {
+        const shareContent = [content.trim(), data.url].filter(Boolean).join('\n\n')
+        if (shareTarget === 'community' && selectedCommunity) {
+          await communitiesApi.createPost(selectedCommunity, { content: shareContent }, accessToken)
+        } else {
+          await usersApi.createPost({ content: shareContent }, accessToken)
+        }
       }
-      const newPost = await postsApi.sharePost(post.id, body, accessToken) as Post
-      if (onShared) onShared(newPost)
       onClose()
     } catch (e) {
       console.error('Error al compartir:', e)
@@ -66,13 +85,13 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
     }
   }
 
-  const authorDisplay = post.user?.username ?? 'Usuario'
+  const typeLabel = data.type === 'anime' ? 'anime' : data.type === 'episodio' ? 'episodio' : 'publicación'
 
   return (
     <div className="share-overlay">
-      <div ref={modalRef} className="share-modal" role="dialog" aria-modal="true" aria-label="Compartir publicación">
+      <div ref={modalRef} className="share-modal" role="dialog" aria-modal="true" aria-label={`Compartir ${typeLabel}`}>
         <div className="share-header">
-          <h2 className="share-title">Compartir publicación</h2>
+          <h2 className="share-title">Compartir {typeLabel}</h2>
           <button onClick={onClose} className="share-close" aria-label="Cerrar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
@@ -80,26 +99,39 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
 
         <div className="share-body">
           <div className="share-preview">
-            <div className="share-preview-header">
-              <div className="share-preview-avatar">
-                {post.user?.avatar_url ? (
-                  <img src={post.user.avatar_url} alt="" className="share-preview-avatar-img" />
-                ) : (
-                  <div className="share-preview-avatar-fallback">{authorDisplay[0]}</div>
+            {data.type === 'post' ? (
+              <>
+                <div className="share-preview-header">
+                  <div className="share-preview-avatar">
+                    {data.avatarUrl ? (
+                      <img src={data.avatarUrl} alt="" className="share-preview-avatar-img" />
+                    ) : (
+                      <div className="share-preview-avatar-fallback">{data.title[0]}</div>
+                    )}
+                  </div>
+                  <div className="share-preview-meta">
+                    <span className="share-preview-name">{data.title}</span>
+                    {data.subtitle && <span className="share-preview-community">{data.subtitle}</span>}
+                  </div>
+                </div>
+                <div className="share-preview-content">
+                  <RichText content={data.description.slice(0, 300)} />
+                </div>
+                {data.imageUrl && <img src={data.imageUrl} alt="" className="share-preview-image" />}
+              </>
+            ) : (
+              <div className="share-anime-preview">
+                {data.imageUrl && (
+                  <div className="share-anime-preview-img-wrap">
+                    <img src={data.imageUrl} alt="" className="share-anime-preview-img" />
+                  </div>
                 )}
+                <div className="share-anime-preview-body">
+                  <div className="share-anime-preview-title">{data.title}</div>
+                  {data.subtitle && <div className="share-anime-preview-subtitle">{data.subtitle}</div>}
+                  {data.description && <div className="share-anime-preview-desc">{data.description.slice(0, 200)}</div>}
+                </div>
               </div>
-              <div className="share-preview-meta">
-                <span className="share-preview-name">{authorDisplay}</span>
-                {post.community && (
-                  <span className="share-preview-community">{post.community.name}</span>
-                )}
-              </div>
-            </div>
-            <div className="share-preview-content">
-              {post.content && <RichText content={post.content.slice(0, 300)} />}
-            </div>
-            {post.image_url && (
-              <img src={post.image_url} alt="" className="share-preview-image" />
             )}
           </div>
 
@@ -163,7 +195,7 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
             <div className="share-copy-row">
               <input
                 type="text"
-                value={postUrl}
+                value={data.url}
                 readOnly
                 className="share-copy-input"
                 onClick={e => (e.target as HTMLInputElement).select()}
@@ -227,7 +259,7 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
         .share-preview {
           background: var(--bg-overlay); border: 1px solid var(--border);
           border-radius: var(--radius-lg); padding: 0.75rem;
-          max-height: 200px; overflow: hidden; position: relative;
+          max-height: 240px; overflow: hidden; position: relative;
         }
         .share-preview::after {
           content: ''; position: absolute; bottom: 0; left: 0; right: 0;
@@ -248,6 +280,14 @@ export function ShareModal({ post, accessToken, isLoggedIn, onClose, onShared }:
         .share-preview-content { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
         .share-preview-content .rich-image { max-height: 60px; }
         .share-preview-image { max-height: 80px; width: auto; border-radius: var(--radius-sm); margin-top: 0.375rem; }
+
+        .share-anime-preview { display: flex; gap: 0.75rem; }
+        .share-anime-preview-img-wrap { flex-shrink: 0; }
+        .share-anime-preview-img { width: 80px; height: 112px; object-fit: cover; border-radius: var(--radius-md); }
+        .share-anime-preview-body { min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+        .share-anime-preview-title { font-family: var(--font-display); font-size: 0.875rem; font-weight: 700; color: var(--text-primary); }
+        .share-anime-preview-subtitle { font-size: 0.75rem; color: var(--text-muted); }
+        .share-anime-preview-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; }
 
         .share-input-wrap { }
         .share-textarea {

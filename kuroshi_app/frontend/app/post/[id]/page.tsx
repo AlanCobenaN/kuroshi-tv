@@ -18,6 +18,33 @@ async function getPost(id: string) {
   }
 }
 
+const IMAGE_URL_RE = /https?:\/\/[^\s'"]+\.(?:gif|png|jpg|jpeg|webp)(?:\?[^\s'"]*)?/gi
+
+function extractImages(text: string): string[] {
+  return text.match(IMAGE_URL_RE) ?? []
+}
+
+function renderContent(text: string) {
+  const images = extractImages(text)
+  const textWithoutUrls = text.replace(IMAGE_URL_RE, '').trim()
+  const lines = textWithoutUrls.split('\n').filter(Boolean)
+
+  return (
+    <>
+      {lines.length > 0 && (
+        <p className="post-card-text">{lines.join('\n')}</p>
+      )}
+      {images.length > 0 && (
+        <div className="post-card-images">
+          {images.map((url, i) => (
+            <img key={i} src={url} alt="" className="post-card-image-item" loading="lazy" />
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const post = await getPost(id)
@@ -30,28 +57,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${authorName} en Kuroshi`
 
   const cleanContent = (post.content ?? '').replace(/[*_~#`\[\]]/g, '').slice(0, 200)
-  const description = post.shared_text
+  const contentDesc = post.shared_text
     ? `${post.shared_text.slice(0, 200)}`
     : cleanContent || 'Mira esta publicación en Kuroshi'
 
-  const image = post.image_url ?? post.user?.avatar_url ?? undefined
+  const images = extractImages(post.content ?? '')
+  const ogImage = post.image_url ?? images[0] ?? post.user?.avatar_url ?? undefined
 
   return {
     title,
-    description,
+    description: contentDesc,
     openGraph: {
       title,
-      description,
+      description: contentDesc,
       url: postUrl,
       type: 'article',
       siteName: 'Kuroshi',
-      images: image ? [{ url: image, width: 1200, height: 630 }] : [],
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title,
-      description,
-      images: image ? [image] : [],
+      description: contentDesc,
+      images: ogImage ? [ogImage] : [],
     },
   }
 }
@@ -78,7 +106,6 @@ export default async function PostPage({ params }: Props) {
   }
 
   const author = post.user?.username ?? 'Usuario'
-  const content = post.content ?? ''
 
   return (
     <div className="post-redirect">
@@ -101,7 +128,7 @@ export default async function PostPage({ params }: Props) {
           </div>
         </div>
         <div className="post-card-body">
-          <p className="post-card-text">{content}</p>
+          {renderContent(post.content ?? '')}
         </div>
         {post.image_url && (
           <div className="post-card-image-wrap">
@@ -125,8 +152,10 @@ export default async function PostPage({ params }: Props) {
         .post-card-name { font-family: var(--font-display); font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
         .post-card-name:hover { text-decoration: underline; }
         .post-card-community { font-size: 0.6875rem; font-weight: 600; color: var(--accent); background: var(--bg-overlay); padding: 0.125rem 0.5rem; border-radius: var(--radius-full); border: 1px solid var(--border); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-        .post-card-body { padding: 0 1.25rem 0.75rem; }
+        .post-card-body { padding: 0 1.25rem 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
         .post-card-text { margin: 0; font-size: 0.9375rem; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+        .post-card-images { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+        .post-card-image-item { max-height: 120px; max-width: 100%; width: auto; border-radius: var(--radius-md); object-fit: contain; }
         .post-card-image-wrap { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; justify-content: center; background: var(--bg-overlay); padding: 0.5rem; }
         .post-card-image { max-width: 100%; max-height: 400px; width: auto; height: auto; display: block; object-fit: contain; border-radius: var(--radius-md); }
         .post-card-actions { display: flex; gap: 0.5rem; padding: 0.75rem 1.25rem; justify-content: flex-end; }

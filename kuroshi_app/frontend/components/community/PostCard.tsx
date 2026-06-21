@@ -8,7 +8,7 @@ import { Post } from '@/types'
 import { adminApi } from '@/lib/api'
 import { RichText } from '@/components/community/RichText'
 import { ReportModal } from '@/components/community/ReportModal'
-import { ShareModal } from '@/components/community/ShareModal'
+import { ShareModal, type ShareableData } from '@/components/community/ShareModal'
 
 function timeAgo(d: string) {
   const diff = Date.now() - new Date(d).getTime()
@@ -173,7 +173,17 @@ export function PostCard({
 
       {showShare && (
         <ShareModal
-          post={post}
+          data={{
+            type: 'post',
+            id: post.id,
+            title: post.user.username,
+            subtitle: post.community?.name,
+            description: post.content ?? '',
+            imageUrl: post.image_url,
+            avatarUrl: post.user.avatar_url,
+            url: `${window.location.origin}/post/${post.id}`,
+            post,
+          }}
           accessToken={(session as any)?.accessToken ?? ''}
           isLoggedIn={isLoggedIn}
           onClose={() => setShowShare(false)}
