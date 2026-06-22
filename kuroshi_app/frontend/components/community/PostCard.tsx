@@ -196,23 +196,30 @@ export function PostCard({
         />
       )}
 
-      {/* Content */}
-      {post.content && (
-        <div className="fb-body">
-          <RichText content={post.content} className="fb-text" />
+      {/* Content + Image — anime/episode card layout when both present */}
+      {post.content && post.image_url ? (
+        <div className="fb-media-card">
+          <div className="fb-media-card-img-wrap">
+            <img src={post.image_url} alt="" className="fb-media-card-img" loading="lazy" />
+          </div>
+          <div className="fb-media-card-body">
+            <RichText content={post.content} className="fb-text" />
+          </div>
         </div>
-      )}
+      ) : (
+        <>
+          {post.content && (
+            <div className="fb-body">
+              <RichText content={post.content} className="fb-text" />
+            </div>
+          )}
 
-      {/* Image */}
-      {post.image_url && (
-        <div className="fb-image-wrap">
-          <img
-            src={post.image_url}
-            alt=""
-            className="fb-image"
-            loading="lazy"
-          />
-        </div>
+          {post.image_url && (
+            <div className="fb-image-wrap">
+              <img src={post.image_url} alt="" className="fb-image" loading="lazy" />
+            </div>
+          )}
+        </>
       )}
 
       {/* Linked episode */}
@@ -622,6 +629,43 @@ export function PostCard({
           background: var(--bg-surface);
         }
         .fb-shared-image { max-width: 100%; max-height: 200px; width: auto; height: auto; display: block; object-fit: contain; border-radius: var(--radius-sm); }
+
+        .fb-media-card {
+          display: flex;
+          gap: 0.75rem;
+          padding: 0.75rem 1.25rem;
+          align-items: flex-start;
+        }
+        .fb-media-card-img-wrap {
+          flex-shrink: 0;
+          width: 100px;
+          border-radius: var(--radius-md);
+          overflow: hidden;
+        }
+        .fb-media-card-img {
+          width: 100px;
+          height: 140px;
+          object-fit: cover;
+          display: block;
+          border-radius: var(--radius-md);
+        }
+        .fb-media-card-body {
+          min-width: 0;
+          flex: 1;
+          padding-top: 0.125rem;
+        }
+        .fb-media-card-body .fb-text {
+          font-size: 0.875rem;
+        }
+        .fb-media-card-body .fb-text a {
+          color: var(--accent);
+          font-family: var(--font-display);
+          font-weight: 700;
+          text-decoration: none;
+        }
+        .fb-media-card-body .fb-text a:hover {
+          text-decoration: underline;
+        }
       `}</style>
     </article>
   )

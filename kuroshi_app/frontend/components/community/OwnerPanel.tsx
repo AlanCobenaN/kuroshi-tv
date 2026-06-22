@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CommunityMemberInfo, JoinRequest } from '@/types'
-import { communitiesApi, uploadsApi } from '@/lib/api'
+import { communitiesApi, uploadsApi, animeApi } from '@/lib/api'
 
 interface Props {
   slug: string
@@ -65,6 +65,54 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
   const [msg, setMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null)
   const [delConfirm, setDelConfirm] = useState(false)
 
+  // Anime banner search
+  const [animeSearch, setAnimeSearch] = useState('')
+  const [animeResults, setAnimeResults] = useState<{ slug: string; title: string; cover_url: string; banner_url?: string }[]>([])
+  const [animeSearching, setAnimeSearching] = useState(false)
+  const [selectedAnime, setSelectedAnime] = useState<{ slug: string; title: string; banner_url?: string; cover_url: string } | null>(null)
+  const [showAnimeResults, setShowAnimeResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  // Avatar validation
+  const [avatarError, setAvatarError] = useState('')
+
+  // Debounced anime search
+  useEffect(() => {
+    if (!animeSearch.trim()) { setAnimeResults([]); return }
+    setAnimeSearching(true)
+    const timer = setTimeout(async () => {
+      try {
+        const res: any = await animeApi.getCatalog({ search: animeSearch.trim(), limit: 8 })
+        const list = Array.isArray(res) ? res : res?.data ?? []
+        setAnimeResults(list.map((a: any) => ({
+          slug: a.slug,
+          title: a.title_es ?? a.title_jp ?? a.slug,
+          cover_url: a.cover_url ?? '',
+          banner_url: a.banner_url,
+        })))
+      } catch { setAnimeResults([]) }
+      setAnimeSearching(false)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [animeSearch])
+
+  // Close search results on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowAnimeResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const handleSelectAnime = (a: { slug: string; title: string; banner_url?: string; cover_url: string }) => {
+    setSelectedAnime(a)
+    setAnimeSearch(a.title)
+    setShowAnimeResults(false)
+  }
+
   const showMsg = (type: 'ok' | 'error', text: string) => {
     setMsg({ type, text })
     setTimeout(() => setMsg(null), 4000)
@@ -82,6 +130,22 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
     return res?.url ?? null
   }
 
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setAvatarFile(file)
+    setAvatarError('')
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      setAvatarError('Formato no soportado. Usa JPG, PNG, GIF o WebP.')
+      setAvatarFile(null)
+      return
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setAvatarError('La imagen no puede superar 3MB.')
+      setAvatarFile(null)
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -97,9 +161,13 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
         const url = await uploadFile(avatarFile)
         if (url) body.avatarUrl = url
       }
+      if (selectedAnime) {
+        body.bannerUrl = selectedAnime.banner_url || selectedAnime.cover_url
+      }
       if (Object.keys(body).length > 0) {
         await communitiesApi.updateCommunity(slug, body, accessToken)
         showMsg('ok', 'Cambios guardados')
+        if (selectedAnime) setSelectedAnime(null)
         onUpdated()
       }
     } catch (e: any) {
@@ -147,14 +215,54 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
         <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="op-checkbox" />
       </label>
 
+      {/* Anime banner search */}
+      <div className="op-field" ref={searchRef}>
+        <span className="op-label">
+          Banner desde anime
+          {selectedAnime && <span className="op-pending"> ({selectedAnime.title})</span>}
+        </span>
+        <div className="op-search-wrap">
+          <input
+            value={animeSearch}
+            onChange={e => { setAnimeSearch(e.target.value); setShowAnimeResults(true); setSelectedAnime(null) }}
+            onFocus={() => animeSearch.trim() && setShowAnimeResults(true)}
+            placeholder="Buscar anime para usar su banner..."
+            className="op-input"
+          />
+          {animeSearching && <span className="op-search-spinner" />}
+        </div>
+        {showAnimeResults && animeResults.length > 0 && (
+          <div className="op-search-results">
+            {animeResults.map(a => (
+              <button
+                key={a.slug}
+                onMouseDown={() => handleSelectAnime(a)}
+                className="op-search-result"
+              >
+                <img src={a.cover_url} alt="" className="op-search-result-img" />
+                <span>{a.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {selectedAnime && selectedAnime.banner_url && (
+          <div className="op-banner-preview">
+            <img src={selectedAnime.banner_url} alt="" />
+          </div>
+        )}
+      </div>
+
       <label className="op-field">
         <span className="op-label">Banner {bannerFile && <span className="op-pending">(pendiente)</span>}</span>
-        <input type="file" accept="image/*" onChange={e => setBannerFile(e.target.files?.[0] ?? null)} className="op-file" />
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={e => setBannerFile(e.target.files?.[0] ?? null)} className="op-file" />
       </label>
 
       <label className="op-field">
-        <span className="op-label">Avatar {avatarFile && <span className="op-pending">(pendiente)</span>}</span>
-        <input type="file" accept="image/*" onChange={e => setAvatarFile(e.target.files?.[0] ?? null)} className="op-file" />
+        <span className="op-label">
+          Avatar {avatarFile && <span className="op-pending">(pendiente)</span>}
+        </span>
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={handleAvatarSelect} className="op-file" />
+        {avatarError && <span className="op-field-error">{avatarError}</span>}
       </label>
 
       <div className="op-actions">
@@ -181,7 +289,7 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
         .op-msg { padding: 0.5rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8125rem; font-weight: 600; }
         .op-msg--ok { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
         .op-msg--error { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
-        .op-field { display: flex; flex-direction: column; gap: 0.375rem; }
+        .op-field { display: flex; flex-direction: column; gap: 0.375rem; position: relative; }
         .op-field--row { flex-direction: row; align-items: center; gap: 0.5rem; }
         .op-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
         .op-input, .op-textarea { padding: 0.5rem 0.75rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font-body); font-size: 0.8125rem; outline: none; }
@@ -190,6 +298,7 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
         .op-checkbox { width: 18px; height: 18px; accent-color: var(--accent); }
         .op-file { font-size: 0.75rem; color: var(--text-muted); }
         .op-pending { color: #f59e0b; font-size: 0.625rem; }
+        .op-field-error { font-size: 0.7rem; color: var(--accent); }
         .op-actions { display: flex; gap: 0.5rem; }
         .op-btn { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 600; border: none; border-radius: var(--radius-md); cursor: pointer; padding: 0.5rem 1rem; transition: all var(--transition-fast); }
         .op-btn-primary { background: var(--accent); color: #fff; }
@@ -205,6 +314,31 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
         .op-danger { display: flex; flex-direction: column; gap: 0.5rem; }
         .op-del-confirm { display: flex; align-items: center; gap: 0.5rem; }
         .op-del-text { font-size: 0.8125rem; color: var(--text-muted); }
+
+        .op-search-wrap { position: relative; }
+        .op-search-spinner {
+          position: absolute; right: 0.625rem; top: 50%; transform: translateY(-50%);
+          width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent);
+          border-radius: 50%; animation: op-spin 0.5s linear infinite;
+        }
+        @keyframes op-spin { to { transform: translateY(-50%) rotate(360deg); } }
+        .op-search-results {
+          position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+          background: var(--bg-elevated); border: 1px solid var(--border);
+          border-radius: var(--radius-md); max-height: 240px; overflow-y: auto;
+          box-shadow: var(--shadow-lg); margin-top: 0.25rem;
+        }
+        .op-search-result {
+          display: flex; align-items: center; gap: 0.5rem; width: 100%;
+          padding: 0.5rem 0.75rem; background: transparent; border: none;
+          color: var(--text-primary); font-family: var(--font-body);
+          font-size: 0.8125rem; cursor: pointer; text-align: left;
+          transition: background var(--transition-fast);
+        }
+        .op-search-result:hover { background: var(--bg-hover); }
+        .op-search-result-img { width: 28px; height: 40px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
+        .op-banner-preview { margin-top: 0.25rem; border-radius: var(--radius-md); overflow: hidden; max-height: 120px; }
+        .op-banner-preview img { width: 100%; height: 100%; object-fit: cover; }
       `}</style>
     </div>
   )

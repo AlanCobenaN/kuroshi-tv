@@ -47,10 +47,10 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
   return (
     <div className="comm-page">
       {/* Banner + Header */}
-      <div className="comm-banner-wrap">
-        {community.banner_url && (
-          <Image src={community.banner_url} alt="" fill sizes="100vw" className="comm-banner-img" priority aria-hidden="true" />
-        )}
+      <div
+        className="comm-banner-wrap"
+        style={community.banner_url ? { backgroundImage: `url(${community.banner_url})` } : undefined}
+      >
         <div className="comm-banner-grad" aria-hidden="true" />
         <div className="container">
           <div className="comm-header">
@@ -190,22 +190,31 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
 
         .comm-banner-wrap {
           position: relative;
-          min-height: 240px;
+          min-height: 260px;
           margin-top: calc(var(--total-nav) * -1);
           padding-top: var(--total-nav);
           display: flex;
           align-items: flex-end;
           overflow: hidden;
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          box-shadow: inset 0 -4px 12px rgba(0,0,0,0.15);
         }
-        .comm-banner-img { object-fit: cover; object-position: center; filter: brightness(0.45); }
+        .comm-banner-wrap::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: rgba(0,0,0,0.6);
+          z-index: 1;
+        }
         .comm-banner-grad {
           position: absolute; inset: 0;
-          background: linear-gradient(to top, var(--bg-base) 0%, rgba(10,10,15,0.6) 40%, transparent 100%);
-          z-index: 1;
+          background: linear-gradient(to top, rgba(0,0,0,0.85) 20%, rgba(0,0,0,0.3) 50%, transparent 75%);
+          z-index: 2;
         }
         .comm-banner-wrap .container {
           position: relative;
-          z-index: 2;
+          z-index: 3;
           width: 100%;
         }
 
@@ -266,23 +275,66 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
         .comm-progress-track { height: 6px; background: var(--bg-overlay); border-radius: var(--radius-full); overflow: hidden; }
         .comm-progress-fill { height: 100%; background: linear-gradient(to right, var(--amber), var(--accent)); border-radius: var(--radius-full); transition: width 0.8s ease; }
 
-        .comm-tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; margin-bottom: 1.5rem; }
-        .comm-tabs::-webkit-scrollbar { display: none; }
-        .comm-tab { position: relative; padding: 0.75rem 1.25rem; font-family: var(--font-display); font-size: 0.875rem; font-weight: 600; color: var(--text-muted); background: transparent; border: none; cursor: pointer; white-space: nowrap; transition: color var(--transition-fast); }
-        .comm-tab:hover { color: var(--text-secondary); }
-        .comm-tab--active { color: var(--text-primary); }
-        .comm-tab--active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: var(--radius-full); }
-
-        .comm-content { }
+        .comm-content {
+          animation: fade-in-fast 0.25s ease;
+        }
 
         .comm-feed-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start; }
         .comm-feed-sidebar { position: sticky; top: calc(var(--total-nav) + 1rem); }
-        .comm-chat-wrapper { max-width: 800px; height: 600px; margin: 0 auto; }
+        .comm-chat-wrapper { max-width: 800px; height: 600px; margin: 0 auto; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border); background: var(--bg-surface); }
         .comm-members-section { max-width: 680px; }
 
         @media (max-width: 900px) {
           .comm-feed-layout { grid-template-columns: 1fr; }
           .comm-feed-sidebar { position: static; }
+        }
+
+        .comm-banner-wrap .comm-name {
+          color: #fff;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .comm-banner-wrap .comm-members {
+          color: rgba(255,255,255,0.7);
+          text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+        .comm-banner-wrap .comm-official {
+          border-color: rgba(96,165,250,0.4);
+        }
+
+        .comm-avatar-wrapper {
+          filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+
+        .comm-tabs {
+          display: flex;
+          background: rgba(0,0,0,0.15);
+          border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+          padding: 0 0.5rem;
+          backdrop-filter: blur(8px);
+          overflow-x: auto;
+          scrollbar-width: none;
+          margin-bottom: 1.5rem;
+        }
+        .comm-tabs::-webkit-scrollbar { display: none; }
+        .comm-tab {
+          padding: 0.75rem 1.25rem;
+          font-family: var(--font-display);
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: rgba(255,255,255,0.6);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: color var(--transition-fast), background var(--transition-fast);
+          border-radius: var(--radius-md) var(--radius-md) 0 0;
+        }
+        .comm-tab:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.05); }
+        .comm-tab--active { color: #fff; }
+        .comm-tab--active::after {
+          content: '';
+          position: absolute; bottom: -1px; left: 0.75rem; right: 0.75rem;
+          height: 2px; background: var(--accent); border-radius: var(--radius-full);
         }
       `}</style>
     </div>

@@ -71,12 +71,19 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
         if (onShared) onShared(newPost)
       } else {
         const typePrefix = data.type === 'anime' ? 'Anime' : 'Episodio'
-        const shareLines = [content.trim(), `${typePrefix}: ${data.title}`, data.url].filter(Boolean)
+        const shareLines = [
+          content.trim(),
+          `**[${typePrefix}: ${data.title}](${data.url})**`,
+          data.subtitle || '',
+          data.description || '',
+        ].filter(Boolean)
         const shareContent = shareLines.join('\n\n')
+        const postBody: { content: string; imageUrl?: string } = { content: shareContent }
+        if (data.imageUrl) postBody.imageUrl = data.imageUrl
         if (shareTarget === 'community' && selectedCommunity) {
-          await communitiesApi.createPost(selectedCommunity, { content: shareContent }, accessToken)
+          await communitiesApi.createPost(selectedCommunity, postBody, accessToken)
         } else {
-          await usersApi.createPost({ content: shareContent }, accessToken)
+          await usersApi.createPost(postBody, accessToken)
         }
       }
       onClose()
