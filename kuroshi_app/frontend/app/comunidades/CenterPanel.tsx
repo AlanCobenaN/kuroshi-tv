@@ -434,7 +434,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
       <style>{`
         .center-loading { flex: 1; padding: 2rem; }
 
-        .cv-banner { position: relative; height: 120px; overflow: hidden; flex-shrink: 0; }
+        .cv-banner { position: relative; z-index: 0; height: 120px; overflow: hidden; flex-shrink: 0; }
         .cv-banner--has-bg::before {
           content: '';
           position: absolute; inset: 0;
@@ -447,6 +447,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
         .cv-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-base) 0%, transparent 100%); }
 
         .cv-header {
+          position: relative; z-index: 1;
           display: flex;
           align-items: center;
           gap: 0.875rem;
