@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { SnakeCaseInterceptor } from './common/interceptors/snake-case.interceptor';
@@ -33,6 +34,10 @@ async function bootstrap() {
   app.useGlobalInterceptors(new SnakeCaseInterceptor());
 
   // ── CORS ──────────────────────────────────────────────────
+  // ── Body parser: 10 MB para subida de imágenes ──────────
+  app.use(bodyParser.json({ limit: '10mb' }));
+  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL ?? 'http://localhost:3000',

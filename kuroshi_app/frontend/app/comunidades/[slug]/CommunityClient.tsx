@@ -46,10 +46,12 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
   return (
     <div className="comm-page">
       {/* Banner + Header */}
-      <div
-        className="comm-banner-wrap"
-        style={community.banner_url ? { backgroundImage: `url(${community.banner_url})` } : undefined}
-      >
+      <div className="comm-banner-wrap">
+        {community.banner_url ? (
+          <img src={community.banner_url} alt="" className="comm-banner-img" aria-hidden="true" />
+        ) : (
+          <div className="comm-banner-fallback" aria-hidden="true" />
+        )}
         <div className="comm-banner-grad" aria-hidden="true" />
         <div className="container">
           <div className="comm-header">
@@ -195,10 +197,19 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
           display: flex;
           align-items: flex-end;
           overflow: hidden;
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
           box-shadow: inset 0 -4px 12px rgba(0,0,0,0.15);
+          z-index: 0;
+        }
+        .comm-banner-img {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%;
+          object-fit: cover;
+          object-position: center;
+          z-index: 0;
+        }
+        .comm-banner-fallback {
+          position: absolute; inset: 0;
+          background: var(--bg-elevated);
           z-index: 0;
         }
         .comm-banner-wrap::before {
