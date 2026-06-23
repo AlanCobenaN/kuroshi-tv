@@ -126,10 +126,15 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
     try {
       let avatarUrl = ''
       if (avatarFile) {
-        const formData = new FormData()
-        formData.append('file', avatarFile)
-        const uploadResult = await uploadsApi.upload(formData)
-        avatarUrl = typeof uploadResult === 'string' ? uploadResult : (uploadResult?.url ?? '')
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve((reader.result as string).split(',')[1])
+          reader.onerror = reject
+          reader.readAsDataURL(avatarFile)
+        })
+        const mimeType = avatarFile.type
+        const uploadResult = await uploadsApi.uploadImage(base64, mimeType, accessToken)
+        avatarUrl = uploadResult?.url ?? ''
       }
       const body: Record<string, unknown> = {}
       if (name !== communityName) body.name = name
