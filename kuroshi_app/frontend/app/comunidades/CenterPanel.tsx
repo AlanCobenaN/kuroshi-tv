@@ -342,7 +342,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
       {/* Community Banner */}
       <div className="cv-banner">
         {community.banner_url ? (
-          <Image src={community.banner_url} alt="" fill sizes="100vw" className="cv-banner-img" priority />
+          <img src={community.banner_url} alt="" className="cv-banner-img" />
         ) : (
           <div className="cv-banner-fallback" />
         )}
@@ -436,7 +436,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
         .center-loading { flex: 1; padding: 2rem; }
 
         .cv-banner { position: relative; height: 120px; overflow: hidden; flex-shrink: 0; }
-        .cv-banner-img { object-fit: cover; filter: brightness(0.4); }
+        .cv-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.4); }
         .cv-banner-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-overlay)); }
         .cv-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-base) 0%, transparent 100%); }
 
