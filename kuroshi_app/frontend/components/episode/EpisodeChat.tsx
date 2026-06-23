@@ -28,6 +28,7 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
   const [videoSecond, setVideoSecond] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const showTimePicker = inputValue.trim().length > 0
 
   const { viewerCount } = useEpisodePresence({
     episodeId,
@@ -125,10 +126,11 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
           </div>
         ) : (
           <>
-            {visibleComments.map(comment => (
+            {visibleComments.map((comment, i) => (
               <ChatMessage
                 key={comment.id}
                 comment={comment}
+                index={i}
                 onLike={() => likeComment(comment.id)}
                 isLoggedIn={!!session}
                 isAdmin={isAdmin}
@@ -148,10 +150,75 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
       <div className="chat-input-area">
         {session ? (
           <>
-            <div className="chat-time-picker">
+            <div className="chat-input-row-avatar">
+              <div className="chat-input-avatar" aria-hidden="true">
+                {(session.user as any)?.avatar_url ? (
+                  <Image
+                    src={(session.user as any).avatar_url}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="chat-input-avatar-img"
+                  />
+                ) : (
+                  <span className="chat-input-avatar-fallback">
+                    {((session.user as any)?.username ?? '?')[0].toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="chat-input-col">
+                <div className={`chat-input-wrapper ${inputError ? 'chat-input-wrapper--error' : ''}`}>
+                  <textarea
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={e => {
+                      setInputValue(e.target.value)
+                      if (inputError) setInputError('')
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Escribe un comentario... (Enter para enviar)`}
+                    className="chat-textarea"
+                    maxLength={200}
+                    rows={2}
+                    aria-label="Escribe un comentario"
+                    disabled={isSending}
+                  />
+                  <div className="chat-input-footer">
+                    <span className={`chat-char-count ${inputValue.length > 180 ? 'chat-char-count--warn' : ''}`}>
+                      {inputValue.length}/200
+                    </span>
+                    <button
+                      onClick={handleSend}
+                      disabled={!inputValue.trim() || isSending}
+                      className="chat-send-btn"
+                      aria-label="Enviar comentario"
+                    >
+                      {isSending ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ animation: 'spin 0.8s linear infinite' }}>
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeDashoffset="10" strokeLinecap="round"/>
+                          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                        </svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {inputError && (
+              <p className="chat-input-error" role="alert">{inputError}</p>
+            )}
+
+            <div className={`chat-time-picker ${showTimePicker ? 'chat-time-picker--visible' : ''}`}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
+              <span className="chat-time-label">Marca de tiempo:</span>
+              <span className="chat-time-hint">(minuto:segundo)</span>
               <input
                 type="number"
                 min={0}
@@ -159,6 +226,7 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
                 onChange={handleMinuteChange}
                 className="chat-time-input"
                 aria-label="Minuto"
+                placeholder="00"
               />
               <span className="chat-time-sep">:</span>
               <input
@@ -169,54 +237,9 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
                 onChange={handleSecondChange}
                 className="chat-time-input chat-time-input--sec"
                 aria-label="Segundo"
+                placeholder="00"
               />
             </div>
-
-            <div className={`chat-input-wrapper ${inputError ? 'chat-input-wrapper--error' : ''}`}>
-              <textarea
-                ref={inputRef}
-                value={inputValue}
-                onChange={e => {
-                  setInputValue(e.target.value)
-                  if (inputError) setInputError('')
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={`Escribe un comentario... (Enter para enviar)`}
-                className="chat-textarea"
-                maxLength={200}
-                rows={2}
-                aria-label="Escribe un comentario"
-                disabled={isSending}
-              />
-              <div className="chat-input-footer">
-                <span className={`chat-char-count ${inputValue.length > 180 ? 'chat-char-count--warn' : ''}`}>
-                  {inputValue.length}/200
-                </span>
-                <button
-                  onClick={handleSend}
-                  disabled={!inputValue.trim() || isSending}
-                  className="chat-send-btn"
-                  aria-label="Enviar comentario"
-                >
-                  {isSending ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ animation: 'spin 0.8s linear infinite' }}>
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeDashoffset="10" strokeLinecap="round"/>
-                      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-            {inputError && (
-              <p className="chat-input-error" role="alert">{inputError}</p>
-            )}
-            <p className="chat-input-hint">
-              Coloca el minuto y segundo exacto del video al que quieres atribuir tu comentario
-            </p>
           </>
         ) : (
           <div className="chat-login-prompt">
@@ -315,11 +338,49 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
           background: var(--bg-surface);
         }
 
+        .chat-input-row-avatar {
+          display: flex;
+          gap: 0.5rem;
+          align-items: flex-start;
+        }
+        .chat-input-col { flex: 1; min-width: 0; }
+        .chat-input-avatar { flex-shrink: 0; padding-top: 0.25rem; }
+        .chat-input-avatar-img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+        .chat-input-avatar-fallback {
+          width: 28px; height: 28px; border-radius: 50%;
+          background: var(--accent); color: #fff;
+          font-family: var(--font-display); font-size: 0.6875rem; font-weight: 700;
+          display: flex; align-items: center; justify-content: center;
+        }
+
         .chat-time-picker {
           display: flex;
           align-items: center;
-          gap: 0.3rem;
+          gap: 0.35rem;
           color: var(--text-muted);
+          max-height: 0;
+          opacity: 0;
+          overflow: hidden;
+          transition: max-height 0.35s ease, opacity 0.35s ease, margin 0.35s ease;
+          margin: 0;
+        }
+        .chat-time-picker--visible {
+          max-height: 30px;
+          opacity: 1;
+          margin: 0.25rem 0 0;
+        }
+        .chat-time-label {
+          font-family: var(--font-display);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          white-space: nowrap;
+        }
+        .chat-time-hint {
+          font-family: var(--font-body);
+          font-size: 0.625rem;
+          color: var(--text-muted);
+          margin-right: 0.25rem;
         }
         .chat-time-input {
           width: 3ch;
@@ -418,12 +479,6 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
           margin: 0;
         }
 
-        .chat-input-hint {
-          font-size: 0.6875rem;
-          color: var(--text-muted);
-          margin: 0;
-        }
-
         .chat-login-prompt {
           text-align: center;
           padding: 0.5rem;
@@ -448,19 +503,21 @@ export function EpisodeChat({ animeSlug, episodeNumber, episodeId }: Props) {
 
 function ChatMessage({
   comment,
+  index = 0,
   onLike,
   isLoggedIn,
   isAdmin,
   onAdminDelete,
 }: {
   comment: EpisodeComment
+  index?: number
   onLike: () => void
   isLoggedIn: boolean
   isAdmin?: boolean
   onAdminDelete?: (commentId: string) => void
 }) {
   return (
-    <div className="chat-msg" aria-label={`${comment.user.username} en ${formatTime(comment.video_minute, comment.video_second)}: ${comment.content}`}>
+    <div className="chat-msg" style={{ animationDelay: `${index * 0.06}s` }} aria-label={`${comment.user.username} en ${formatTime(comment.video_minute, comment.video_second)}: ${comment.content}`}>
       {/* Timestamp */}
       <div className="chat-msg-time" aria-hidden="true">
         {formatTime(comment.video_minute, comment.video_second)}
@@ -531,7 +588,12 @@ function ChatMessage({
           gap: 0.5rem;
           padding: 0.5rem 0.5rem 0.5rem 0;
           border-radius: var(--radius-md);
-          animation: fade-in-fast 0.2s ease;
+          animation: chat-fade-up 0.35s ease both;
+        }
+
+        @keyframes chat-fade-up {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .chat-msg-time {

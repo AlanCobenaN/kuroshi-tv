@@ -426,9 +426,6 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
             accessToken={accessToken}
             communityName={community.name}
             communityDescription={community.description}
-            communityBannerUrl={community.banner_url}
-            communityAvatarUrl={community.avatar_url}
-            communityIsPrivate={(community as any).is_private}
             onCommunityUpdated={refreshCommunity}
             onDelete={() => onDeleteCommunity(slug)}
           />

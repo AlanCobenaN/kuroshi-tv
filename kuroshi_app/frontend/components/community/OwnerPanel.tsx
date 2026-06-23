@@ -2,23 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CommunityMemberInfo, JoinRequest } from '@/types'
-import { communitiesApi, uploadsApi, animeApi } from '@/lib/api'
+import { communitiesApi, animeApi } from '@/lib/api'
 
 interface Props {
   slug: string
   accessToken: string
   communityName: string
   communityDescription?: string
-  communityBannerUrl?: string
-  communityAvatarUrl?: string
-  communityIsPrivate?: boolean
   onCommunityUpdated: () => void
   onDelete?: () => void
 }
 
 export function OwnerPanel({
   slug, accessToken, communityName, communityDescription,
-  communityBannerUrl, communityAvatarUrl, communityIsPrivate,
   onCommunityUpdated, onDelete,
 }: Props) {
   const [tab, setTab] = useState<'settings' | 'moderators' | 'bans' | 'requests'>('settings')
@@ -33,7 +29,7 @@ export function OwnerPanel({
         <button onClick={() => setTab('requests')} className={`op-tab ${tab === 'requests' ? 'op-tab--active' : ''}`}>Solicitudes</button>
       </div>
 
-      {tab === 'settings' && <SettingsTab slug={slug} accessToken={accessToken} communityName={communityName} communityDescription={communityDescription} communityBannerUrl={communityBannerUrl} communityAvatarUrl={communityAvatarUrl} communityIsPrivate={communityIsPrivate} onUpdated={onCommunityUpdated} onDelete={onDelete} />}
+      {tab === 'settings' && <SettingsTab slug={slug} accessToken={accessToken} communityName={communityName} communityDescription={communityDescription} onUpdated={onCommunityUpdated} onDelete={onDelete} />}
       {tab === 'moderators' && <ModeratorsTab slug={slug} accessToken={accessToken} />}
       {tab === 'bans' && <BansTab slug={slug} accessToken={accessToken} />}
       {tab === 'requests' && <RequestsTab slug={slug} accessToken={accessToken} />}
@@ -52,15 +48,11 @@ export function OwnerPanel({
 
 /* ─── Settings Tab ─────────────────────────────────────── */
 
-function SettingsTab({ slug, accessToken, communityName, communityDescription, communityBannerUrl, communityAvatarUrl, communityIsPrivate, onUpdated, onDelete }: {
-  slug: string; accessToken: string; communityName: string; communityDescription?: string;
-  communityBannerUrl?: string; communityAvatarUrl?: string; communityIsPrivate?: boolean; onUpdated: () => void; onDelete?: () => void
+function SettingsTab({ slug, accessToken, communityName, communityDescription, onUpdated, onDelete }: {
+  slug: string; accessToken: string; communityName: string; communityDescription?: string; onUpdated: () => void; onDelete?: () => void
 }) {
   const [name, setName] = useState(communityName)
   const [description, setDescription] = useState(communityDescription ?? '')
-  const [isPrivate, setIsPrivate] = useState(communityIsPrivate ?? false)
-  const [bannerFile, setBannerFile] = useState<File | null>(null)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null)
   const [delConfirm, setDelConfirm] = useState(false)
@@ -72,9 +64,6 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
   const [selectedAnime, setSelectedAnime] = useState<{ slug: string; title: string; banner_url?: string; cover_url: string } | null>(null)
   const [showAnimeResults, setShowAnimeResults] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-
-  // Avatar validation
-  const [avatarError, setAvatarError] = useState('')
 
   // Debounced anime search
   useEffect(() => {
@@ -118,49 +107,12 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
     setTimeout(() => setMsg(null), 4000)
   }
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => { const r = reader.result as string; resolve(r.split(',')[1]) }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-    const mimeType = file.type || 'image/jpeg'
-    const res = await uploadsApi.uploadImage(base64, mimeType, accessToken)
-    return res?.url ?? null
-  }
-
-  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null
-    setAvatarFile(file)
-    setAvatarError('')
-    if (!file) return
-    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-      setAvatarError('Formato no soportado. Usa JPG, PNG, GIF o WebP.')
-      setAvatarFile(null)
-      return
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setAvatarError('La imagen no puede superar 3MB.')
-      setAvatarFile(null)
-    }
-  }
-
   const handleSave = async () => {
     setSaving(true)
     try {
       const body: Record<string, unknown> = {}
       if (name !== communityName) body.name = name
       if (description !== (communityDescription ?? '')) body.description = description
-      if (isPrivate !== !!communityIsPrivate) body.isPrivate = isPrivate
-      if (bannerFile) {
-        const url = await uploadFile(bannerFile)
-        if (url) body.bannerUrl = url
-      }
-      if (avatarFile) {
-        const url = await uploadFile(avatarFile)
-        if (url) body.avatarUrl = url
-      }
       if (selectedAnime) {
         body.bannerUrl = selectedAnime.banner_url || selectedAnime.cover_url
       }
@@ -210,11 +162,6 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
         <textarea value={description} onChange={e => setDescription(e.target.value)} className="op-textarea" rows={3} maxLength={500} />
       </label>
 
-      <label className="op-field op-field--row">
-        <span className="op-label">Comunidad privada</span>
-        <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="op-checkbox" />
-      </label>
-
       {/* Anime banner search */}
       <div className="op-field" ref={searchRef}>
         <span className="op-label">
@@ -251,19 +198,6 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, c
           </div>
         )}
       </div>
-
-      <label className="op-field">
-        <span className="op-label">Banner {bannerFile && <span className="op-pending">(pendiente)</span>}</span>
-        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={e => setBannerFile(e.target.files?.[0] ?? null)} className="op-file" />
-      </label>
-
-      <label className="op-field">
-        <span className="op-label">
-          Avatar {avatarFile && <span className="op-pending">(pendiente)</span>}
-        </span>
-        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={handleAvatarSelect} className="op-file" />
-        {avatarError && <span className="op-field-error">{avatarError}</span>}
-      </label>
 
       <div className="op-actions">
         <button onClick={handleSave} disabled={saving} className="op-btn op-btn-primary">{saving ? 'Guardando...' : 'Guardar cambios'}</button>

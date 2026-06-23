@@ -200,6 +200,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
           background-position: center;
           background-repeat: no-repeat;
           box-shadow: inset 0 -4px 12px rgba(0,0,0,0.15);
+          z-index: 0;
         }
         .comm-banner-wrap::before {
           content: '';
@@ -277,6 +278,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
 
         .comm-content {
           animation: fade-in-fast 0.25s ease;
+          padding: 1.5rem 0;
         }
 
         .comm-feed-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start; }

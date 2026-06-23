@@ -30,7 +30,7 @@ export interface Theme {
 export const themes: Theme[] = [
   {
     id: 'kuroshi',
-    name: 'Kuroshi',
+    name: 'Rubí',
     colors: {
       '--bg-base': '#0a0a0f',
       '--bg-surface': '#111118',
@@ -150,7 +150,7 @@ export const themes: Theme[] = [
   },
   {
     id: 'ember',
-    name: 'Ember',
+    name: 'Kuroshi',
     colors: {
       '--bg-base': '#0e0a08',
       '--bg-surface': '#16100c',
@@ -267,8 +267,8 @@ export function saveThemeId(id: string) {
 
 export function loadThemeId(): string {
   try {
-    return localStorage.getItem(STORAGE_KEY) ?? 'kuroshi'
+    return localStorage.getItem(STORAGE_KEY) ?? 'ember'
   } catch {
-    return 'kuroshi'
+    return 'ember'
   }
 }

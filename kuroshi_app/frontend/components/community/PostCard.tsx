@@ -198,14 +198,25 @@ export function PostCard({
 
       {/* Content + Image — anime/episode card layout when both present */}
       {post.content && post.image_url ? (
-        <div className="fb-media-card">
-          <div className="fb-media-card-img-wrap">
-            <img src={post.image_url} alt="" className="fb-media-card-img" loading="lazy" />
-          </div>
-          <div className="fb-media-card-body">
-            <RichText content={post.content} className="fb-text" />
-          </div>
-        </div>
+        (() => {
+          const shareUrlMatch = post.content.match(/\]\(((?:https?:\/\/)?[^\s)]+)\)/)
+          const shareUrl = shareUrlMatch?.[1]
+          const cardContent = (
+            <div className="fb-media-card">
+              <div className="fb-media-card-img-wrap">
+                <img src={post.image_url} alt="" className="fb-media-card-img" loading="lazy" />
+              </div>
+              <div className="fb-media-card-body">
+                <RichText content={post.content} className="fb-text" />
+              </div>
+            </div>
+          )
+          return shareUrl ? (
+            <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="fb-media-card-link">
+              {cardContent}
+            </a>
+          ) : cardContent
+        })()
       ) : (
         <>
           {post.content && (
@@ -630,6 +641,14 @@ export function PostCard({
         }
         .fb-shared-image { max-width: 100%; max-height: 200px; width: auto; height: auto; display: block; object-fit: contain; border-radius: var(--radius-sm); }
 
+        .fb-media-card-link {
+          display: block;
+          text-decoration: none;
+          transition: background var(--transition-fast);
+        }
+        .fb-media-card-link:hover {
+          background: var(--bg-hover);
+        }
         .fb-media-card {
           display: flex;
           gap: 0.75rem;
