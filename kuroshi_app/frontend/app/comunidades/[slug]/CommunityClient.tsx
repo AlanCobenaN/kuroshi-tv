@@ -1,6 +1,5 @@
 'use client'
 import { useState, useTransition, useEffect, useCallback } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { CommunitiesWithAds } from '@/components/ads/CommunitiesWithAds'
 import { Community, CommunityMemberInfo } from '@/types'
@@ -57,7 +56,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
           <div className="comm-header-left">
             <div className="comm-avatar-wrapper">
               {community.avatar_url ? (
-                <Image src={community.avatar_url} alt={community.name} width={72} height={72} className="comm-avatar" />
+                <img src={community.avatar_url} alt={community.name} className="comm-avatar" />
               ) : (
                 <div className="comm-avatar-fallback">{community.name[0]}</div>
               )}
@@ -542,7 +541,7 @@ function MemberRowWithRole({ member, online }: { member: CommunityMemberInfo; on
     <Link href={`/u/${member.username}`} className="mr-wrap">
       <div className="mr-avatar-wrap">
         {member.avatar_url ? (
-          <Image src={member.avatar_url} alt="" width={36} height={36} className="mr-avatar" />
+          <img src={member.avatar_url} alt="" className="mr-avatar" />
         ) : (
           <div className="mr-avatar-fallback">{member.username[0].toUpperCase()}</div>
         )}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CommunityMemberInfo, JoinRequest } from '@/types'
-import { communitiesApi, animeApi } from '@/lib/api'
+import { communitiesApi, uploadsApi, animeApi } from '@/lib/api'
 
 interface Props {
   slug: string
@@ -85,6 +85,20 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
     return () => clearTimeout(timer)
   }, [animeSearch])
 
+  // Avatar upload
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarError, setAvatarError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAvatarError('')
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { setAvatarError('Solo imágenes'); return }
+    if (file.size > 5 * 1024 * 1024) { setAvatarError('Máximo 5 MB'); return }
+    setAvatarFile(file)
+  }
+
   // Close search results on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -110,15 +124,24 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
   const handleSave = async () => {
     setSaving(true)
     try {
+      let avatarUrl = ''
+      if (avatarFile) {
+        const formData = new FormData()
+        formData.append('file', avatarFile)
+        const uploadResult = await uploadsApi.upload(formData)
+        avatarUrl = typeof uploadResult === 'string' ? uploadResult : (uploadResult?.url ?? '')
+      }
       const body: Record<string, unknown> = {}
       if (name !== communityName) body.name = name
       if (description !== (communityDescription ?? '')) body.description = description
+      if (avatarUrl) body.avatarUrl = avatarUrl
       if (selectedAnime) {
         body.bannerUrl = selectedAnime.banner_url || selectedAnime.cover_url
       }
       if (Object.keys(body).length > 0) {
         await communitiesApi.updateCommunity(slug, body, accessToken)
         showMsg('ok', 'Cambios guardados')
+        if (avatarFile) { setAvatarFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }
         if (selectedAnime) setSelectedAnime(null)
         onUpdated()
       }
@@ -161,6 +184,16 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
         <span className="op-label">Descripción</span>
         <textarea value={description} onChange={e => setDescription(e.target.value)} className="op-textarea" rows={3} maxLength={500} />
       </label>
+
+      {/* Avatar upload */}
+      <div className="op-field">
+        <span className="op-label">Avatar / Logo</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarSelect} className="op-input" style={{ flex: 1 }} />
+          {avatarFile && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{avatarFile.name}</span>}
+        </div>
+        {avatarError && <span className="op-error">{avatarError}</span>}
+      </div>
 
       {/* Anime banner search */}
       <div className="op-field" ref={searchRef}>

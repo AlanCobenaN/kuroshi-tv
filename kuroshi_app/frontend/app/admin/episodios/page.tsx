@@ -331,6 +331,10 @@ export default function AdminEpisodesPage() {
                 </div>
               ))}
               <div className="server-add-form">
+                <div style={{ display: 'flex', gap: '0.375rem', marginBottom: '0.5rem' }}>
+                  <button type="button" onClick={() => setServerName('SeekStreaming')} className="preset-chip">SeekStreaming</button>
+                  <button type="button" onClick={() => setServerName('Player4ME')} className="preset-chip">Player4ME</button>
+                </div>
                 <input type="text" value={serverName} onChange={e => setServerName(e.target.value)} placeholder="Nombre del servidor (ej: Streamtape)" className="input" />
                 <input type="text" value={serverUrl} onChange={e => setServerUrl(e.target.value)} placeholder="URL del embed" className="input" style={{ marginTop: '0.5rem' }} />
                 <button onClick={addServer} disabled={!serverName.trim() || !serverUrl.trim()} className="btn-primary" style={{ marginTop: '0.5rem', width: '100%' }}>Añadir servidor</button>
@@ -369,6 +373,8 @@ export default function AdminEpisodesPage() {
         .server-item { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.625rem; background: var(--bg-elevated); border-radius: var(--radius-md); }
         .server-item-info { display: flex; flex-direction: column; gap: 0.125rem; flex: 1; min-width: 0; }
         .server-add-form { display: flex; flex-direction: column; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+        .preset-chip { font-family: var(--font-display); font-size: 0.6875rem; font-weight: 600; padding: 0.25rem 0.625rem; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast); }
+        .preset-chip:hover { background: var(--accent); color: #000; border-color: var(--accent); }
       `}</style>
     </div>
   )
