@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Headers de seguridad
+  // Headers de seguridad + caching
   async headers() {
     return [
       {
@@ -47,8 +47,33 @@ const nextConfig: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          // Deshabilitar APIs sensibles del navegador para evitar prompts de permiso
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), notifications=(), push=(), midi=(), sync-xhr=(), accelerometer=(), gyroscope=(), magnetometer=(), ambient-light-sensor=(), bluetooth=(), usb=(), serial=(), payment=(), autoplay=(self), fullscreen=(self), picture-in-picture=(self)' },
+        ],
+      },
+      // Cache estáticos largos (fonts, images, svg)
+      {
+        source: '/fonts/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/og-default.svg',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
+      {
+        source: '/manifest.json',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
+        ],
+      },
+      // sw.js (Monetag service worker) — no cachear
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
         ],
       },
     ]

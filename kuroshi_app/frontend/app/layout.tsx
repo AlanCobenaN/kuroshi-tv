@@ -139,8 +139,12 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="preconnect" href="https://quge5.com" />
         <link rel="dns-prefetch" href="https://quge5.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="preconnect" href="https://i.imgur.com" />
+        <link rel="dns-prefetch" href="https://i.imgur.com" />
+        <link rel="preconnect" href="https://cdn.myanimelist.net" />
+        <link rel="dns-prefetch" href="https://cdn.myanimelist.net" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="alternate" hrefLang="es" href={BASE_URL} />
         <link rel="alternate" hrefLang="es-MX" href={BASE_URL} />
         <link rel="alternate" hrefLang="es-AR" href={BASE_URL} />
