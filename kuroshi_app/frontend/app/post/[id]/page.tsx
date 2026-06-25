@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ArticleJsonLd } from '@/components/seo/ArticleJsonLd'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -81,6 +82,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: contentDesc,
       images: ogImage ? [ogImage] : [],
     },
+    alternates: {
+      canonical: `/post/${id}`,
+    },
   }
 }
 
@@ -106,8 +110,22 @@ export default async function PostPage({ params }: Props) {
   }
 
   const author = post.user?.username ?? 'Usuario'
+  const authorUrl = post.user?.username ? `/u/${post.user.username}` : undefined
+  const postUrl = `${SITE_URL}/post/${id}`
+  const images = extractImages(post.content ?? '')
+  const ogImage = post.image_url ?? images[0] ?? post.user?.avatar_url ?? undefined
 
   return (
+    <>
+      <ArticleJsonLd
+        title={`${author} en Kuroshi`}
+        description={(post.content ?? '').replace(/[*_~#`\[\]]/g, '').slice(0, 500)}
+        url={postUrl}
+        image={ogImage}
+        datePublished={post.created_at}
+        authorName={author}
+        authorUrl={authorUrl}
+      />
     <div className="post-redirect">
       <div className="post-card">
         <div className="post-card-header">
@@ -165,5 +183,6 @@ export default async function PostPage({ params }: Props) {
         .post-card-btn--primary:hover { background: var(--accent-dim); color: #fff; }
       `}</style>
     </div>
+    </>
   )
 }

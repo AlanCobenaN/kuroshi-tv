@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Contacto',
   description: 'Ponte en contacto con el equipo de Kuroshi.lat.',
+  alternates: { canonical: '/contacto' },
 }
 
 export default function ContactoPage() {

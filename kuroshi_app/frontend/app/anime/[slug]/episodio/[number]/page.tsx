@@ -7,6 +7,10 @@ import { animeApi } from '@/lib/api'
 import { Anime, AnimeSummary, Episode } from '@/types'
 import { EpisodePlayerClient } from './EpisodePlayerClient'
 import { Footer } from '@/components/layout/Footer'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
+import { EpisodeJsonLd } from '@/components/seo/EpisodeJsonLd'
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
 
 interface Props {
   params: Promise<{ slug: string; number: string }>
@@ -19,9 +23,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const episode = await animeApi.getEpisode(slug, epNum) as Episode & { anime?: Anime }
     const animeTitle = episode.anime?.title_es ?? slug
+    const title = `${animeTitle} — Episodio ${epNum}${episode.title ? ': ' + episode.title : ''}`
+    const description = episode.synopsis ?? `Ver episodio ${epNum} de ${animeTitle} en Kuroshi.tv`
     return {
-      title: `${animeTitle} — Episodio ${epNum}${episode.title ? ': ' + episode.title : ''}`,
-      description: episode.synopsis ?? `Ver episodio ${epNum} de ${animeTitle} en Kuroshi.tv`,
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `${BASE_URL}/anime/${slug}/episodio/${epNum}`,
+        type: 'video.episode',
+        siteName: 'Kuroshi.lat',
+        images: [{ url: episode.thumbnail_url ?? episode.anime?.banner_url ?? episode.anime?.cover_url ?? '/og-default.svg', width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [episode.thumbnail_url ?? episode.anime?.banner_url ?? episode.anime?.cover_url ?? '/og-default.svg'],
+      },
+      alternates: {
+        canonical: `/anime/${slug}/episodio/${epNum}`,
+      },
     }
   } catch {
     return { title: `Episodio ${epNum}` }
@@ -77,6 +100,13 @@ export default async function EpisodePlayerPage({ params }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd items={[
+        { name: 'Inicio', item: BASE_URL },
+        { name: 'Anime', item: `${BASE_URL}/anime` },
+        { name: anime?.title_es ?? slug, item: `${BASE_URL}/anime/${slug}` },
+        { name: `Episodio ${epNum}`, item: `${BASE_URL}/anime/${slug}/episodio/${epNum}` },
+      ]} />
+      <EpisodeJsonLd episode={episode} anime={anime} />
       <EpisodePlayerClient
         animeSlug={slug}
         anime={anime}

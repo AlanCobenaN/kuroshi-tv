@@ -23,6 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: `${user.username} — Perfil`,
       description: user.bio ?? `Perfil de ${user.username} en Kuroshi.tv`,
+      openGraph: {
+        title: `${user.username} — Perfil de Kuroshi.lat`,
+        description: user.bio?.slice(0, 200) ?? `Perfil de ${user.username} en Kuroshi.tv`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'}/u/${username}`,
+        images: user.avatar_url ? [{ url: user.avatar_url }] : [],
+      },
+      alternates: { canonical: `/u/${username}` },
     }
   } catch {
     return { title: 'Perfil de usuario' }

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Política de Privacidad',
-  description: 'Política de privacidad y protección de datos de Kuroshi.lat.',
+  description: 'Política de privacidad de Kuroshi.lat. Conoce cómo manejamos tus datos.',
+  alternates: { canonical: '/privacidad' },
 }
 
 export default function PrivacidadPage() {

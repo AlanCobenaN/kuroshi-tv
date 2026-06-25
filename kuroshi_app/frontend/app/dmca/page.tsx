@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'DMCA',
   description: 'Política de derechos de autor y procedimiento de aviso DMCA de Kuroshi.lat.',
+  alternates: { canonical: '/dmca' },
 }
 
 export default function DmcaPage() {

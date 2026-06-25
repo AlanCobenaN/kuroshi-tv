@@ -13,6 +13,8 @@ import { RelatedAnimes } from './RelatedAnimes'
 import { Footer } from '@/components/layout/Footer'
 import { AnimeDetailWithAds } from '@/components/ads/AnimeDetailWithAds'
 import { AdBanner } from '@/components/ads/AdBanner'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
+import { AnimeJsonLd } from '@/components/seo/AnimeJsonLd'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
 
@@ -88,6 +90,12 @@ export default async function AnimeDetailPage({ params }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd items={[
+        { name: 'Inicio', item: BASE_URL },
+        { name: 'Anime', item: `${BASE_URL}/anime` },
+        { name: anime.title_es, item: `${BASE_URL}/anime/${slug}` },
+      ]} />
+      <AnimeJsonLd anime={anime} />
       <div className="anime-detail-page">
         {/* Banner a sangre con overlay */}
         <AnimeBanner anime={anime} />

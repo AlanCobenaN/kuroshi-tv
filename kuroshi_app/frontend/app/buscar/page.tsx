@@ -14,6 +14,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title: q ? `"${q}" — Búsqueda` : 'Buscar',
     description: q ? `Resultados de búsqueda para "${q}" en Kuroshi.tv` : 'Busca anime, comunidades y usuarios en Kuroshi.tv',
+    openGraph: {
+      title: q ? `"${q}" — Búsqueda` : 'Buscar',
+      description: q ? `Resultados de búsqueda para "${q}" en Kuroshi.tv` : 'Busca anime, comunidades y usuarios en Kuroshi.tv',
+    },
+    alternates: { canonical: q ? undefined : '/buscar' },
+    robots: q ? { index: false, follow: true } : undefined,
   }
 }
 
