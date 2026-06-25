@@ -45,6 +45,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  other: {
+    'monetag': '292505d3a0386646497d135b6ac37745',
+  },
 }
 
 export default async function RootLayout({
