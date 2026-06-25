@@ -14,6 +14,8 @@ import { Footer } from '@/components/layout/Footer'
 import { AnimeDetailWithAds } from '@/components/ads/AnimeDetailWithAds'
 import { AdBanner } from '@/components/ads/AdBanner'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 interface Props {
   params: Promise<{ slug: string }>
 }
@@ -28,7 +30,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title: anime.title_es,
         description: anime.synopsis?.slice(0, 160),
+        url: `${BASE_URL}/anime/${slug}`,
         images: anime.banner_url ? [{ url: anime.banner_url }] : [{ url: anime.cover_url }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: anime.title_es,
+        description: anime.synopsis?.slice(0, 160),
+        images: anime.banner_url ? [anime.banner_url] : [anime.cover_url],
+      },
+      alternates: {
+        canonical: `/anime/${slug}`,
       },
     }
   } catch {

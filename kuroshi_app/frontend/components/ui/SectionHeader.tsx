@@ -7,13 +7,15 @@ interface Props {
   subtitle?: string
   href?: string
   hrefLabel?: string
+  as?: 'h1' | 'h2' | 'h3'
 }
 
-export function SectionHeader({ title, subtitle, href, hrefLabel = 'Ver todo' }: Props) {
+export function SectionHeader({ title, subtitle, href, hrefLabel = 'Ver todo', as = 'h2' }: Props) {
+  const Heading = as
   return (
     <div className="section-header">
       <div className="section-header-left">
-        <h2 className="section-title">{title}</h2>
+        <Heading className="section-title">{title}</Heading>
         {subtitle && <p className="section-subtitle">{subtitle}</p>}
       </div>
       {href && (

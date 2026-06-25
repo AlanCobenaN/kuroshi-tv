@@ -12,6 +12,7 @@ import { CatalogWithAds } from '@/components/ads/CatalogWithAds'
 export const metadata: Metadata = {
   title: 'Catálogo de Anime',
   description: 'Explora el catálogo completo de anime en Kuroshi.tv. Filtra por género, estado, temporada y más.',
+  alternates: { canonical: '/anime' },
 }
 
 interface SearchParams {
@@ -67,6 +68,7 @@ export default async function AnimeCatalogPage({ searchParams }: Props) {
         {/* Header */}
         <div className="catalog-header">
           <SectionHeader
+            as="h1"
             title={params.q ? `Resultados para "${params.q}"` : 'Catálogo de Anime'}
             subtitle={
               catalog.meta.total > 0

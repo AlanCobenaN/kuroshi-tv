@@ -1,0 +1,16 @@
+{
+  "name": "Kuroshi.lat — Anime + Comunidad",
+  "short_name": "Kuroshi",
+  "description": "Streaming de anime con red social integrada. Ve anime, comenta al minuto, únete a comunidades.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "orientation": "any",
+  "categories": ["entertainment", "social", "anime"],
+  "lang": "es-LA",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" },
+    { "src": "/og-default.svg", "sizes": "1200x630", "type": "image/svg+xml" }
+  ]
+}

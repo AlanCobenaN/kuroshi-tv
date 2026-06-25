@@ -10,6 +10,7 @@ import { CommunitiesWithAds } from '@/components/ads/CommunitiesWithAds'
 export const metadata: Metadata = {
   title: 'Comunidades',
   description: 'Explora comunidades, comparte y chatea con otros fans del anime.',
+  alternates: { canonical: '/comunidades' },
 }
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +37,7 @@ export default async function ComunidadesPage({ searchParams }: Props) {
 
   return (
     <>
+      <h1 className="sr-only">Comunidades</h1>
       <CommunitiesWithAds>
         <AdBanner />
         <CommunityHub
