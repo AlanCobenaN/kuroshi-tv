@@ -302,9 +302,7 @@ export class AdminService {
           airDate: (ep.aired ?? ep.air_date) ? new Date(ep.aired ?? ep.air_date) : null,
         }));
 
-      for (const ep of episodesToCreate) {
-        await this.prisma.episode.create({ data: ep });
-      }
+      await this.prisma.episode.createMany({ data: episodesToCreate });
     }
 
     return {
