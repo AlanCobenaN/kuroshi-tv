@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import Script from 'next/script'
 
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -59,6 +60,14 @@ export default async function RootLayout({
 
   return (
     <html lang="es" className={`${syne.variable} ${dmSans.variable}`}>
+      <head>
+          <Script
+            src="https://quge5.com/88/tag.min.js"
+            data-zone="253345"
+            strategy="beforeInteractive"
+            data-cfasync="false"
+          />
+        </head>
       <body>
         <SessionProvider session={session}>
           <TokenProvider>
