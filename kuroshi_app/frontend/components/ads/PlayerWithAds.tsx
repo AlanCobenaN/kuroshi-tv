@@ -7,5 +7,5 @@ interface Props {
 }
 
 export function PlayerWithAds({ children }: Props) {
-  return <>{children}</>
+  return <div className="container">{children}</div>
 }

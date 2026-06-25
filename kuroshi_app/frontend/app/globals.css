@@ -322,6 +322,14 @@ a {
   min-height: 100dvh;
 }
 
+/* Pantallas ultra-wide */
+@media (min-width: 1920px) {
+  .container { max-width: 1440px; }
+}
+@media (min-width: 2560px) {
+  .container { max-width: 1600px; }
+}
+
 /* ─── Responsive global ─────────────────────────────────── */
 
 @media (max-width: 640px) {
@@ -541,7 +549,7 @@ a {
 .comm-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .comm-card-banner { position: relative; height: 80px; background: var(--bg-elevated); }
 .comm-card--large .comm-card-banner { height: 120px; }
-.comm-card-banner-img { object-fit: cover; filter: brightness(0.6); }
+.comm-card-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
 .comm-card-banner-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, var(--bg-elevated), var(--bg-overlay)); }
 .comm-card-banner-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(17,17,24,0.9) 0%, transparent 60%); }
 .comm-card-badge {

@@ -29,6 +29,10 @@ export function AnimeBanner({ anime }: Props) {
           margin-bottom: -180px;
         }
         .anime-banner-img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
           object-position: center 20%;
           filter: brightness(0.45) saturate(1.1);
