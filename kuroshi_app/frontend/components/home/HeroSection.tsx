@@ -17,6 +17,8 @@ export function HeroSection({ anime }: Props) {
           alt=""
           className={`hero-bg-img${!anime.banner_url ? ' hero-bg-img--cover' : ''}`}
           aria-hidden="true"
+          fetchPriority="high"
+          loading="eager"
         />
         {/* Gradientes superpuestos */}
         <div className="hero-gradient-left"  aria-hidden="true" />

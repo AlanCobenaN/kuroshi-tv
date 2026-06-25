@@ -15,6 +15,8 @@ export function AnimeBanner({ anime }: Props) {
         src={bannerSrc}
         alt=""
         className="anime-banner-img"
+        fetchPriority="high"
+        loading="eager"
       />
       {/* Gradientes de legibilidad */}
       <div className="anime-banner-grad-bottom" />

@@ -113,7 +113,7 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
                 <div className="share-preview-header">
                   <div className="share-preview-avatar">
                     {data.avatarUrl ? (
-                      <img src={data.avatarUrl} alt="" className="share-preview-avatar-img" />
+                      <img src={data.avatarUrl} alt="" className="share-preview-avatar-img" loading="lazy" decoding="async" />
                     ) : (
                       <div className="share-preview-avatar-fallback">{data.title[0]}</div>
                     )}
@@ -126,13 +126,13 @@ export function ShareModal({ data, accessToken, isLoggedIn, onClose, onShared }:
                 <div className="share-preview-content">
                   <RichText content={data.description.slice(0, 300)} />
                 </div>
-                {data.imageUrl && <img src={data.imageUrl} alt="" className="share-preview-image" />}
+                {data.imageUrl && <img src={data.imageUrl} alt="" className="share-preview-image" loading="lazy" decoding="async" />}
               </>
             ) : (
               <div className="share-anime-preview">
                 {data.imageUrl && (
                   <div className="share-anime-preview-img-wrap">
-                    <img src={data.imageUrl} alt="" className="share-anime-preview-img" />
+                    <img src={data.imageUrl} alt="" className="share-anime-preview-img" loading="lazy" decoding="async" />
                   </div>
                 )}
                 <div className="share-anime-preview-body">
