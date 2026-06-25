@@ -99,12 +99,12 @@ export default async function HomePage() {
 
           {/* Sentinel para el floating button */}
           <div id="trending-sentinel" aria-hidden="true" />
-        </div>
 
-        {/* Feed de comunidades con anuncios verticales — full-width */}
-        <section className="home-section home-section--feed" aria-label="Feed de la comunidad">
-          <FeedWithAds isLoggedIn={!!session} accessToken={token ?? undefined} />
-        </section>
+          {/* Feed de comunidades */}
+          <section className="home-section" aria-label="Feed de la comunidad">
+            <FeedWithAds isLoggedIn={!!session} accessToken={token ?? undefined} />
+          </section>
+        </div>
       </div>
 
       <HomeFloatingCreate accessToken={token ?? undefined} />
