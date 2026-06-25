@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Footer } from '@/components/layout/Footer'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { CatalogWithAds } from '@/components/ads/CatalogWithAds'
+import { ItemListJsonLd } from '@/components/seo/ItemListJsonLd'
 
 export const metadata: Metadata = {
   title: 'Catálogo de Anime',
@@ -64,6 +65,15 @@ export default async function AnimeCatalogPage({ searchParams }: Props) {
 
   return (
     <>
+      <ItemListJsonLd
+        items={catalog.data.map((a, i) => ({
+          title: a.title_es,
+          url: `/anime/${a.slug}`,
+          image: a.cover_url,
+          rating: a.mal_rating,
+          position: i + 1 + ((filters.page ?? 1) - 1) * (filters.limit ?? 24),
+        }))}
+      />
       <div className="catalog-page container" style={{ paddingBottom: 0 }}>
         {/* Header */}
         <div className="catalog-header">

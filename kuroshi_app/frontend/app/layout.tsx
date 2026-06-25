@@ -69,6 +69,7 @@ export const metadata: Metadata = {
   other: {
     'monetag': '292505d3a0386646497d135b6ac37745',
     'google-site-verification': 'ZgiALJv64eMU_Qt8jZAzJSiAyZaMEYlu1SzZ-8QwHtU',
+    'date': new Date().toISOString().split('T')[0],
   },
 }
 
@@ -82,10 +83,16 @@ export default async function RootLayout({
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${BASE_URL}/#website`,
     name: 'Kuroshi.lat',
     url: BASE_URL,
     description:
       'Plataforma de streaming de anime con red social integrada.',
+    publisher: {
+      '@type': 'Organization',
+      '@id': `${BASE_URL}/#organization`,
+    },
+    inLanguage: 'es',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -99,16 +106,46 @@ export default async function RootLayout({
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${BASE_URL}/#organization`,
     name: 'Kuroshi.lat',
     url: BASE_URL,
     logo: `${BASE_URL}/og-default.svg`,
     description: 'Streaming de anime y comunidad para Latinoamérica.',
+    foundingDate: '2025',
+  }
+
+  const webpageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': BASE_URL,
+    url: BASE_URL,
+    name: 'Kuroshi.lat',
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': `${BASE_URL}/#website`,
+    },
+    about: {
+      '@type': 'Organization',
+      '@id': `${BASE_URL}/#organization`,
+    },
+    description: 'Plataforma de streaming de anime con red social integrada. Ve anime, comenta al minuto, únete a comunidades.',
+    inLanguage: 'es',
+    lastReviewed: new Date().toISOString().split('T')[0],
   }
 
   return (
     <html lang="es" className={`${syne.variable} ${dmSans.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
+        <link rel="preconnect" href="https://quge5.com" />
+        <link rel="dns-prefetch" href="https://quge5.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="alternate" hrefLang="es" href={BASE_URL} />
+        <link rel="alternate" hrefLang="es-MX" href={BASE_URL} />
+        <link rel="alternate" hrefLang="es-AR" href={BASE_URL} />
+        <link rel="alternate" hrefLang="es-CL" href={BASE_URL} />
+        <link rel="alternate" hrefLang="x-default" href={BASE_URL} />
         <Script
           src="https://quge5.com/88/tag.min.js"
           data-zone="253345"
@@ -119,6 +156,7 @@ export default async function RootLayout({
       <body>
         <JsonLd data={websiteJsonLd} />
         <JsonLd data={organizationJsonLd} />
+        <JsonLd data={webpageJsonLd} />
         <SessionProvider session={session}>
           <TokenProvider>
             <ThemeProvider>

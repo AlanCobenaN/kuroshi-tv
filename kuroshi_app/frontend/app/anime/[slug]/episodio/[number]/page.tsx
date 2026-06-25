@@ -9,6 +9,7 @@ import { EpisodePlayerClient } from './EpisodePlayerClient'
 import { Footer } from '@/components/layout/Footer'
 import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 import { EpisodeJsonLd } from '@/components/seo/EpisodeJsonLd'
+import { WebPageJsonLd } from '@/components/seo/WebPageJsonLd'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
 
@@ -107,6 +108,20 @@ export default async function EpisodePlayerPage({ params }: Props) {
         { name: `Episodio ${epNum}`, item: `${BASE_URL}/anime/${slug}/episodio/${epNum}` },
       ]} />
       <EpisodeJsonLd episode={episode} anime={anime} />
+      <WebPageJsonLd
+        name={`${anime?.title_es ?? slug} — Episodio ${epNum}${episode.title ? `: ${episode.title}` : ''} | Kuroshi.lat`}
+        description={episode.synopsis?.slice(0, 300) ?? `Ver episodio ${epNum} de ${anime?.title_es ?? slug} en Kuroshi.tv`}
+        url={`${BASE_URL}/anime/${slug}/episodio/${epNum}`}
+        mainEntity={{
+          '@type': 'TVEpisode',
+          name: episode.title || `Episodio ${epNum}`,
+          url: `${BASE_URL}/anime/${slug}/episodio/${epNum}`,
+        }}
+        breadcrumb={{
+          '@type': 'BreadcrumbList',
+          '@id': `${BASE_URL}/anime/${slug}/episodio/${epNum}#breadcrumb`,
+        }}
+      />
       <EpisodePlayerClient
         animeSlug={slug}
         anime={anime}

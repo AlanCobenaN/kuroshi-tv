@@ -5,6 +5,8 @@ import { LoginForm } from './LoginForm'
 export const metadata: Metadata = {
   title: 'Iniciar sesión',
   description: 'Accede a Kuroshi.lat con Google, Discord o tu email.',
+  robots: { index: false, follow: false },
+  alternates: { canonical: '/login' },
 }
 
 export default function LoginPage() {

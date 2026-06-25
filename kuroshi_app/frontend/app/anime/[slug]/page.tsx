@@ -15,6 +15,7 @@ import { AnimeDetailWithAds } from '@/components/ads/AnimeDetailWithAds'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 import { AnimeJsonLd } from '@/components/seo/AnimeJsonLd'
+import { WebPageJsonLd } from '@/components/seo/WebPageJsonLd'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
 
@@ -96,6 +97,20 @@ export default async function AnimeDetailPage({ params }: Props) {
         { name: anime.title_es, item: `${BASE_URL}/anime/${slug}` },
       ]} />
       <AnimeJsonLd anime={anime} />
+      <WebPageJsonLd
+        name={`${anime.title_es} — Ver anime online | Kuroshi.lat`}
+        description={anime.synopsis?.slice(0, 300) ?? `Ver ${anime.title_es} online en Kuroshi.tv`}
+        url={`${BASE_URL}/anime/${slug}`}
+        mainEntity={{
+          '@type': (anime as any).type === 'pelicula' ? 'Movie' : 'TVSeries',
+          name: anime.title_es,
+          url: `${BASE_URL}/anime/${slug}`,
+        }}
+        breadcrumb={{
+          '@type': 'BreadcrumbList',
+          '@id': `${BASE_URL}/anime/${slug}#breadcrumb`,
+        }}
+      />
       <div className="anime-detail-page">
         {/* Banner a sangre con overlay */}
         <AnimeBanner anime={anime} />

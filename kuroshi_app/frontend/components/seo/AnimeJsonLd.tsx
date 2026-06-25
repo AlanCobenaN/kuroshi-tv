@@ -9,6 +9,7 @@ type AnimeWithType = {
   cover_url: string
   banner_url?: string
   mal_rating?: number
+  community_rating?: number
   community_rating_count?: number
   genres: { id: string; name: string }[]
   seasons?: { id: string; number: number }[]
@@ -19,6 +20,7 @@ type AnimeWithType = {
   is_visible: boolean
   created_at: string
   type?: string
+  contentRating?: string
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
@@ -37,17 +39,24 @@ function getGenreNames(anime: AnimeWithType): string[] {
 export function AnimeJsonLd({ anime }: { anime: AnimeWithType }) {
   const schemaType = (anime.type && animeTypeMap[anime.type]) || 'TVSeries'
   const genreNames = getGenreNames(anime)
+  const animeUrl = `${BASE_URL}/anime/${anime.slug}`
 
   const data: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': schemaType,
     name: anime.title_es,
     alternateName: anime.title_jp || undefined,
-    url: `${BASE_URL}/anime/${anime.slug}`,
+    url: animeUrl,
     image: anime.banner_url ?? anime.cover_url,
     description: anime.synopsis?.slice(0, 500),
     genre: genreNames.length > 0 ? genreNames : undefined,
     dateCreated: anime.created_at?.split('T')[0],
+    inLanguage: 'es',
+    author: {
+      '@type': 'Organization',
+      '@id': `${BASE_URL}/#organization`,
+    },
+    ...(genreNames.length > 0 ? { about: genreNames.map(g => ({ '@type': 'Thing', name: g })) } : {}),
   }
 
   if (schemaType === 'TVSeries') {
@@ -55,10 +64,23 @@ export function AnimeJsonLd({ anime }: { anime: AnimeWithType }) {
     data.numberOfSeasons = anime.seasons?.length ?? undefined
   }
 
-  if (anime.mal_rating) {
+  if (anime.total_views && anime.total_views > 0) {
+    data.interactionStatistic = {
+      '@type': 'InteractionCounter',
+      interactionType: 'WatchAction',
+      userInteractionCount: anime.total_views,
+    }
+  }
+
+  if (anime.contentRating) {
+    data.contentRating = anime.contentRating
+  }
+
+  const ratingValue = anime.mal_rating ?? anime.community_rating
+  if (ratingValue) {
     data.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: anime.mal_rating,
+      ratingValue,
       bestRating: 10,
       worstRating: 0,
       ratingCount: anime.community_rating_count ?? 1,
