@@ -48,6 +48,7 @@ export const metadata: Metadata = {
   },
   other: {
     'monetag': '292505d3a0386646497d135b6ac37745',
+    'google-site-verification': 'ZgiALJv64eMU_Qt8jZAzJSiAyZaMEYlu1SzZ-8QwHtU',
   },
 }
 
