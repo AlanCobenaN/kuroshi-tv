@@ -13,6 +13,7 @@ import { Footer } from '@/components/layout/Footer'
 import { FeedWithAds } from '@/components/ads/FeedWithAds'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { HomeFloatingCreate } from '@/components/home/HomeFloatingCreate'
+import { WelcomeBanner } from '@/components/home/WelcomeBanner'
 import { Anime, AnimeSummary } from '@/types'
 
 export const metadata: Metadata = {
@@ -63,6 +64,8 @@ export default async function HomePage() {
         {heroAnime && <HeroSection anime={heroAnime} />}
 
         <div className="home-content container">
+          <WelcomeBanner />
+
           {/* Continuar viendo — solo para usuarios logueados con progreso */}
           {continueWatching.length > 0 && (
             <ContinueWatchingSection items={continueWatching} />
