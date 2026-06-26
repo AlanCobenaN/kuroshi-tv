@@ -55,7 +55,7 @@ export default async function HomePage() {
   const pendingItems = watchlistData.grouped?.pendiente ?? []
 
   // El hero slider usa todos los trending
-  const heroAnimes = trending.slice(0, 8) as (Anime & { synopsis?: string })[]
+  const heroAnimes = trending.slice(0, 5) as (Anime & { synopsis?: string })[]
 
   return (
     <>

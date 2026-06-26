@@ -8,42 +8,69 @@ interface Props {
 }
 
 export function HeroSection({ animes }: Props) {
+  const items = animes.slice(0, 5)
   const [current, setCurrent] = useState(0)
   const [prev, setPrev] = useState<number | null>(null)
   const [paused, setPaused] = useState(false)
+  const [progress, setProgress] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const INTERVAL = 6000
+  const TICK = 50
 
   const goTo = useCallback((idx: number) => {
     if (idx === current) return
     setPrev(current)
     setCurrent(idx)
+    setProgress(0)
   }, [current])
 
   const next = useCallback(() => {
-    goTo((current + 1) % animes.length)
-  }, [current, animes.length, goTo])
-
-  const anime = animes[current]
-  const prevAnime = prev !== null ? animes[prev] : null
+    goTo((current + 1) % items.length)
+  }, [current, items.length, goTo])
 
   useEffect(() => {
-    if (paused || animes.length <= 1) return
-    timerRef.current = setInterval(next, 6000)
+    setProgress(0)
+    if (paused || items.length <= 1) return
+    timerRef.current = setInterval(next, INTERVAL)
+    progressRef.current = setInterval(() => {
+      setProgress(p => Math.min(p + (TICK / INTERVAL) * 100, 100))
+    }, TICK)
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
+      if (progressRef.current) clearInterval(progressRef.current)
     }
-  }, [paused, animes.length, next])
+  }, [paused, items.length, next, current])
+
+  const anime = items[current]
 
   return (
     <section
-      className="hero-slider"
+      className="hero"
       aria-label="Animes destacados"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      {/* Progress bar */}
+      <div className="hero-progress" aria-hidden="true">
+        <div className="hero-progress-track">
+          {items.map((_, i) => (
+            <div key={i} className="hero-progress-segment">
+              <div
+                className="hero-progress-fill"
+                style={{
+                  width: i < current ? '100%' : i === current ? `${progress}%` : '0%',
+                  transition: i === current ? 'width 50ms linear' : 'none',
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Slides */}
       <div className="hero-slides">
-        {animes.map((a, i) => (
+        {items.map((a, i) => (
           <div
             key={a.id}
             className={`hero-slide${i === current ? ' hero-slide--active' : ''}${i === prev ? ' hero-slide--prev' : ''}`}
@@ -63,8 +90,8 @@ export function HeroSection({ animes }: Props) {
 
       {/* Overlays */}
       <div className="hero-gradient-left" aria-hidden="true" />
-      <div className="hero-gradient-bottom" aria-hidden="true" />
       <div className="hero-gradient-right" aria-hidden="true" />
+      <div className="hero-gradient-bottom" aria-hidden="true" />
       <div className="hero-noise" aria-hidden="true" />
 
       {/* Content */}
@@ -72,7 +99,7 @@ export function HeroSection({ animes }: Props) {
         <div className="hero-body" key={anime.id}>
           <div className="hero-genres">
             {anime.genres?.slice(0, 3).map((g, i) => (
-              <span key={typeof g === 'string' ? g : g.id} className="hero-genre">
+              <span key={typeof g === 'string' ? g : g.id} className="hero-genre" style={{ animationDelay: `${i * 0.08}s` }}>
                 {typeof g === 'string' ? g : g.name}
               </span>
             ))}
@@ -118,30 +145,29 @@ export function HeroSection({ animes }: Props) {
         </div>
       </div>
 
-      {/* Thumbnails */}
-      <div className="hero-thumbs">
-        <div className="hero-thumbs-track">
-          {animes.map((a, i) => (
+      {/* Thumbnail cards */}
+      <div className="hero-cards">
+        <div className="hero-cards-track">
+          {items.map((a, i) => (
             <button
               key={a.id}
-              className={`hero-thumb${i === current ? ' hero-thumb--active' : ''}`}
+              className={`hero-card${i === current ? ' hero-card--active' : ''}`}
               onClick={() => goTo(i)}
               aria-label={`Ir a ${a.title_es}`}
             >
-              <img src={a.cover_url} alt="" />
-              <span className="hero-thumb-label">
-                <span className="hero-thumb-num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="hero-thumb-title">{a.title_es}</span>
-              </span>
+              <img src={a.cover_url} alt="" className="hero-card-img" loading="lazy" />
+              <div className="hero-card-overlay" aria-hidden="true" />
+              <span className="hero-card-title">{a.title_es}</span>
             </button>
           ))}
         </div>
       </div>
 
       <style>{`
-        .hero-slider {
+        /* ── Container ── */
+        .hero {
           position: relative;
-          height: clamp(500px, 70vh, 720px);
+          height: clamp(560px, 85vh, 860px);
           display: flex;
           align-items: flex-end;
           overflow: hidden;
@@ -149,7 +175,36 @@ export function HeroSection({ animes }: Props) {
           padding-top: var(--total-nav);
         }
 
-        /* Slides */
+        /* ── Progress bar ── */
+        .hero-progress {
+          position: absolute;
+          top: calc(var(--total-nav) + 0px);
+          left: 0;
+          right: 0;
+          z-index: 10;
+          padding: 0 1rem;
+        }
+        .hero-progress-track {
+          display: flex;
+          gap: 4px;
+          max-width: 1280px;
+          margin: 0 auto;
+        }
+        .hero-progress-segment {
+          flex: 1;
+          height: 3px;
+          background: rgba(255,255,255,0.15);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+        .hero-progress-fill {
+          height: 100%;
+          background: var(--accent);
+          border-radius: 2px;
+          transition: width 50ms linear;
+        }
+
+        /* ── Slides ── */
         .hero-slides {
           position: absolute;
           inset: 0;
@@ -159,8 +214,8 @@ export function HeroSection({ animes }: Props) {
           position: absolute;
           inset: 0;
           opacity: 0;
-          transition: opacity 0.8s ease, transform 0.8s ease;
-          transform: scale(1.05);
+          transform: scale(1.08);
+          transition: opacity 0.9s ease, transform 0.9s ease;
         }
         .hero-slide--active {
           opacity: 1;
@@ -182,58 +237,66 @@ export function HeroSection({ animes }: Props) {
           height: 100%;
           object-fit: cover;
           object-position: center 20%;
-          filter: brightness(0.55);
+          filter: brightness(0.5);
         }
         .hero-slide-bg-img--cover {
           object-position: center top;
-          filter: blur(3px) brightness(0.45);
-          transform: scale(1.08);
+          filter: blur(4px) brightness(0.4);
+          transform: scale(1.1);
         }
 
-        /* Overlays */
+        /* ── Gradients ── */
         .hero-gradient-left {
           position: absolute;
           inset: 0;
           z-index: 1;
-          background: linear-gradient(to right, rgba(10,10,15,0.92) 0%, rgba(10,10,15,0.5) 50%, transparent 80%);
+          background: linear-gradient(to right, rgba(10,10,15,0.93) 0%, rgba(10,10,15,0.5) 45%, transparent 75%);
         }
         .hero-gradient-right {
           position: absolute;
           inset: 0;
           z-index: 1;
-          background: linear-gradient(to left, rgba(10,10,15,0.6) 0%, transparent 40%);
+          background: linear-gradient(to left, rgba(10,10,15,0.5) 0%, transparent 35%);
         }
         .hero-gradient-bottom {
           position: absolute;
           inset: 0;
           z-index: 1;
-          background: linear-gradient(to top, var(--bg-base) 0%, rgba(10,10,15,0.3) 40%, transparent 70%);
+          background: linear-gradient(to top, var(--bg-base) 0%, rgba(10,10,15,0.2) 35%, transparent 65%);
         }
         .hero-noise {
           position: absolute;
           inset: 0;
           z-index: 1;
-          opacity: 0.03;
+          opacity: 0.025;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
 
-        /* Content */
+        /* ── Content ── */
         .hero-content {
           position: relative;
           z-index: 2;
           width: 100%;
-          padding-bottom: 7rem;
+          padding-bottom: 8rem;
         }
         .hero-body {
-          max-width: 560px;
+          max-width: 580px;
           display: flex;
           flex-direction: column;
           gap: 0.875rem;
-          animation: hero-fade-in 0.6s ease both;
         }
+        .hero-body > * {
+          animation: hero-stagger 0.5s ease both;
+        }
+        .hero-genres  { animation-delay: 0s; }
+        .hero-title   { animation-delay: 0.1s; }
+        .hero-title-jp{ animation-delay: 0.15s; }
+        .hero-meta    { animation-delay: 0.2s; }
+        .hero-synopsis{ animation-delay: 0.3s; }
+        .hero-actions { animation-delay: 0.4s; }
 
-        @keyframes hero-fade-in {
-          from { opacity: 0; transform: translateY(16px); }
+        @keyframes hero-stagger {
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
 
@@ -253,18 +316,18 @@ export function HeroSection({ animes }: Props) {
           background: rgba(255,255,255,0.08);
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: var(--radius-full);
-          padding: 0.2rem 0.65rem;
+          padding: 0.25rem 0.7rem;
         }
 
         /* Title */
         .hero-title {
           font-family: var(--font-display);
-          font-size: clamp(2rem, 5vw, 3.25rem);
+          font-size: clamp(2rem, 5vw, 3.5rem);
           font-weight: 800;
           color: var(--text-primary);
-          line-height: 1.1;
+          line-height: 1.08;
           letter-spacing: -0.02em;
-          text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+          text-shadow: 0 2px 24px rgba(0,0,0,0.6);
           margin: 0;
         }
         .hero-title-jp {
@@ -324,7 +387,7 @@ export function HeroSection({ animes }: Props) {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.75rem 1.75rem;
+          padding: 0.8rem 2rem;
           background: var(--accent);
           color: #fff;
           font-family: var(--font-display);
@@ -342,7 +405,7 @@ export function HeroSection({ animes }: Props) {
         .hero-btn-secondary {
           display: inline-flex;
           align-items: center;
-          padding: 0.75rem 1.5rem;
+          padding: 0.8rem 1.5rem;
           background: rgba(255,255,255,0.08);
           border: 1px solid rgba(255,255,255,0.15);
           color: var(--text-primary);
@@ -359,8 +422,8 @@ export function HeroSection({ animes }: Props) {
           transform: translateY(-2px);
         }
 
-        /* Thumbnails */
-        .hero-thumbs {
+        /* ── Thumbnail cards ── */
+        .hero-cards {
           position: absolute;
           bottom: 0;
           left: 0;
@@ -371,71 +434,85 @@ export function HeroSection({ animes }: Props) {
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
+          padding-bottom: env(safe-area-inset-bottom, 0px);
         }
-        .hero-thumbs::-webkit-scrollbar { display: none; }
-        .hero-thumbs-track {
+        .hero-cards::-webkit-scrollbar { display: none; }
+        .hero-cards-track {
           display: flex;
-          gap: 0.5rem;
-          padding: 0 calc((100% - 1280px) / 2 + 1rem) 1.5rem;
-          min-width: min-content;
-        }
-        .hero-thumb {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
           gap: 0.75rem;
-          padding: 0.5rem;
-          background: rgba(10,10,15,0.7);
-          border: 1px solid rgba(255,255,255,0.08);
+          padding: 0 calc((100% - 1280px) / 2 + 1rem) 2rem;
+          min-width: min-content;
+          justify-content: center;
+        }
+        .hero-card {
+          flex-shrink: 0;
+          position: relative;
+          width: 180px;
+          aspect-ratio: 2 / 3;
           border-radius: var(--radius-md);
+          overflow: hidden;
           cursor: pointer;
-          transition: all var(--transition-fast);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          width: 240px;
+          border: 2px solid transparent;
+          background: var(--bg-elevated);
+          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+          padding: 0;
           text-align: left;
           color: var(--text-primary);
         }
-        .hero-thumb img {
-          width: 40px;
-          height: 56px;
+        .hero-card-img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          border-radius: var(--radius-sm);
-          flex-shrink: 0;
+          transition: transform 0.5s ease;
         }
-        .hero-thumb:hover {
-          background: rgba(255,255,255,0.12);
-          border-color: rgba(255,255,255,0.2);
+        .hero-card-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, transparent 70%);
+          transition: opacity 0.3s ease;
         }
-        .hero-thumb--active {
-          background: rgba(230,57,70,0.2);
-          border-color: var(--accent);
-        }
-        .hero-thumb-label {
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
-          min-width: 0;
-        }
-        .hero-thumb-num {
+        .hero-card-title {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 1rem 0.75rem 0.75rem;
           font-family: var(--font-display);
-          font-size: 0.625rem;
+          font-size: 0.8125rem;
           font-weight: 700;
-          color: var(--text-muted);
-          letter-spacing: 0.05em;
-        }
-        .hero-thumb-title {
-          font-family: var(--font-display);
-          font-size: 0.75rem;
-          font-weight: 600;
+          line-height: 1.2;
+          color: #fff;
+          text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+          z-index: 1;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
+        .hero-card:hover {
+          transform: translateY(-6px) scale(1.03);
+        }
+        .hero-card:hover .hero-card-img {
+          transform: scale(1.1);
+        }
+        .hero-card--active {
+          border-color: var(--accent);
+          box-shadow: 0 0 24px rgba(230,57,70,0.3), 0 8px 32px rgba(0,0,0,0.5);
+          transform: translateY(-6px) scale(1.03);
+        }
+        .hero-card--active .hero-card-img {
+          transform: scale(1.08);
+        }
 
-        /* Responsive */
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+          .hero-cards-track { justify-content: flex-start; padding: 0 1rem 1.5rem; }
+          .hero-card { width: 140px; }
+          .hero-card-title { font-size: 0.7rem; padding: 0.75rem 0.5rem 0.5rem; }
+        }
         @media (max-width: 768px) {
-          .hero-slider { height: clamp(420px, 65vh, 560px); }
+          .hero { height: clamp(480px, 75vh, 620px); }
           .hero-gradient-left {
             background: linear-gradient(to right, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.7) 60%, rgba(10,10,15,0.4) 100%);
           }
@@ -443,22 +520,16 @@ export function HeroSection({ animes }: Props) {
           .hero-synopsis { display: none; }
           .hero-body { max-width: 100%; gap: 0.625rem; }
           .hero-title { font-size: clamp(1.5rem, 6vw, 2rem); }
-          .hero-content { padding-bottom: 6rem; }
-          .hero-thumbs-track {
-            padding: 0 1rem 1rem;
-          }
-          .hero-thumb { width: 180px; padding: 0.4rem; }
-          .hero-thumb img { width: 32px; height: 45px; }
-          .hero-thumb-title { font-size: 0.6875rem; }
-          .hero-thumb-num { font-size: 0.5625rem; }
+          .hero-content { padding-bottom: 7rem; }
         }
-
         @media (max-width: 480px) {
-          .hero-slider { height: clamp(380px, 60vh, 480px); }
-          .hero-content { padding-bottom: 5rem; }
-          .hero-thumb { width: 150px; }
-          .hero-thumb img { width: 28px; height: 40px; }
-          .hero-thumbs-track { padding: 0 0.75rem 0.75rem; gap: 0.35rem; }
+          .hero { height: clamp(420px, 70vh, 520px); }
+          .hero-content { padding-bottom: 6rem; }
+          .hero-card { width: 110px; }
+          .hero-card-title { font-size: 0.625rem; padding: 0.5rem 0.4rem 0.4rem; }
+          .hero-cards-track { gap: 0.5rem; }
+          .hero-progress { padding: 0 0.5rem; }
+          .hero-progress-segment { height: 2px; }
         }
       `}</style>
     </section>
