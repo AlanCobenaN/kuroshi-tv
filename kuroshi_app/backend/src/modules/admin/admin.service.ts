@@ -210,7 +210,7 @@ export class AdminService {
               'id,title,alternative_titles,synopsis,mean,genres,status,num_episodes,start_season,studios,main_picture,pictures',
           },
           headers: { 'X-MAL-CLIENT-ID': malClientId },
-          timeout: 10000,
+          timeout: 30000,
         },
       );
       animeData = response.data;
@@ -222,8 +222,9 @@ export class AdminService {
         jikanPage++;
         const epRes = await axios.get(
           `https://api.jikan.moe/v4/anime/${dto.malId}/episodes`,
-          { params: { page: jikanPage }, timeout: 10000 },
+          { params: { page: jikanPage }, timeout: 30000 },
         );
+        await new Promise((r) => setTimeout(r, 800));
         const pageData = epRes.data?.data ?? [];
         if (pageData.length === 0) break;
         // Jikan returns flat episode objects with 'episode' instead of 'episode_number' and 'aired' instead of 'air_date'
