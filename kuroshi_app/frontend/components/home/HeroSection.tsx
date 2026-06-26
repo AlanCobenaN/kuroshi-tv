@@ -11,7 +11,6 @@ export function HeroSection({ animes }: Props) {
   const items = animes.slice(0, 5)
   const [current, setCurrent] = useState(0)
   const [prev, setPrev] = useState<number | null>(null)
-  const [paused, setPaused] = useState(false)
   const [progress, setProgress] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -31,7 +30,7 @@ export function HeroSection({ animes }: Props) {
 
   useEffect(() => {
     setProgress(0)
-    if (paused || items.length <= 1) return
+    if (items.length <= 1) return
     timerRef.current = setInterval(next, INTERVAL)
     progressRef.current = setInterval(() => {
       setProgress(p => Math.min(p + (TICK / INTERVAL) * 100, 100))
@@ -40,7 +39,7 @@ export function HeroSection({ animes }: Props) {
       if (timerRef.current) clearInterval(timerRef.current)
       if (progressRef.current) clearInterval(progressRef.current)
     }
-  }, [paused, items.length, next, current])
+  }, [items.length, next, current])
 
   const anime = items[current]
 
@@ -97,8 +96,6 @@ export function HeroSection({ animes }: Props) {
         <div
           className="hero-body"
           key={anime.id}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
         >
           <div className="hero-genres">
             {anime.genres?.slice(0, 3).map((g, i) => (
@@ -216,21 +213,11 @@ export function HeroSection({ animes }: Props) {
           position: absolute;
           inset: 0;
           opacity: 0;
-          transform: scale(1.08);
-          transition: opacity 0.9s ease, transform 0.9s ease;
-        }
-        .hero-slide--active {
-          opacity: 1;
-          transform: scale(1);
-          z-index: 1;
-        }
-        .hero-slide--prev {
-          opacity: 0;
-          transform: scale(1);
+          z-index: 0;
         }
         .hero-slide-bg {
           position: absolute;
-          inset: 0;
+          inset: -5%;
         }
         .hero-slide-bg-img {
           position: absolute;
@@ -240,11 +227,58 @@ export function HeroSection({ animes }: Props) {
           object-fit: cover;
           object-position: center 20%;
           filter: brightness(0.5);
+          transform: scale(1.12);
+          transition: transform 8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .hero-slide-bg-img--cover {
           object-position: center top;
           filter: blur(4px) brightness(0.4);
-          transform: scale(1.1);
+          transform: scale(1.15);
+        }
+
+        /* Active slide: crossfade + Ken Burns zoom */
+        .hero-slide--active {
+          opacity: 1;
+          z-index: 1;
+          transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .hero-slide--active .hero-slide-bg-img {
+          transform: scale(1);
+        }
+
+        /* Prev slide: gentle exit */
+        .hero-slide--prev {
+          opacity: 0;
+          z-index: 2;
+          transition: opacity 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        }
+        .hero-slide--prev .hero-slide-bg-img {
+          transform: scale(1.08);
+          transition: transform 0.8s ease;
+        }
+
+        /* Overlay mask sweep on transition */
+        .hero-slide::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          background: var(--bg-base);
+          pointer-events: none;
+        }
+        .hero-slide--active::after {
+          animation: hero-sweep 1.4s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+        }
+        @keyframes hero-sweep {
+          0%   { opacity: 0.6; clip-path: inset(0 100% 0 0); }
+          40%  { opacity: 0.2; clip-path: inset(0 0% 0 0); }
+          100% { opacity: 0; clip-path: inset(0 0% 0 0); }
+        }
+
+        /* Content stagger animation refines */
+        @keyframes hero-stagger {
+          from { opacity: 0; transform: translateY(24px); filter: blur(4px); }
+          to   { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
         /* ── Gradients ── */
@@ -429,26 +463,17 @@ export function HeroSection({ animes }: Props) {
           transform: translateY(-2px);
         }
 
-        /* ── Thumbnail cards (right side, vertical) ── */
+        /* ── Thumbnail cards (right side, grid 3 cols → 2 rows) ── */
         .hero-cards {
           flex-shrink: 0;
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          max-height: min(70vh, 600px);
         }
-        .hero-cards::-webkit-scrollbar { display: none; }
         .hero-cards-track {
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-columns: repeat(3, 130px);
           gap: 0.5rem;
         }
         .hero-card {
-          flex-shrink: 0;
           position: relative;
-          width: 160px;
           aspect-ratio: 2 / 3;
           border-radius: var(--radius-md);
           overflow: hidden;
@@ -459,6 +484,16 @@ export function HeroSection({ animes }: Props) {
           padding: 0;
           text-align: left;
           color: var(--text-primary);
+          animation: card-enter 0.5s ease both;
+        }
+        .hero-card:nth-child(1) { animation-delay: 0.05s; }
+        .hero-card:nth-child(2) { animation-delay: 0.1s; }
+        .hero-card:nth-child(3) { animation-delay: 0.15s; }
+        .hero-card:nth-child(4) { animation-delay: 0.2s; }
+        .hero-card:nth-child(5) { animation-delay: 0.25s; }
+        @keyframes card-enter {
+          from { opacity: 0; transform: translateX(30px); }
+          to   { opacity: 1; transform: translateX(0); }
         }
         .hero-card-img {
           position: absolute;
@@ -471,7 +506,7 @@ export function HeroSection({ animes }: Props) {
         .hero-card-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, transparent 70%);
+          background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.15) 45%, transparent 70%);
           transition: opacity 0.3s ease;
         }
         .hero-card-title {
@@ -479,38 +514,40 @@ export function HeroSection({ animes }: Props) {
           bottom: 0;
           left: 0;
           right: 0;
-          padding: 1rem 0.75rem 0.75rem;
+          padding: 1rem 0.6rem 0.6rem;
           font-family: var(--font-display);
-          font-size: 0.8125rem;
+          font-size: 0.75rem;
           font-weight: 700;
-          line-height: 1.2;
+          line-height: 1.25;
           color: #fff;
-          text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+          text-shadow: 0 2px 12px rgba(0,0,0,0.9);
           z-index: 1;
-          white-space: nowrap;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
+          word-break: break-word;
         }
         .hero-card:hover {
-          transform: translateX(-4px) scale(1.03);
+          transform: scale(1.05);
+          z-index: 2;
         }
         .hero-card:hover .hero-card-img {
-          transform: scale(1.1);
+          transform: scale(1.12);
         }
         .hero-card--active {
           border-color: var(--accent);
           box-shadow: 0 0 24px rgba(230,57,70,0.3), 0 8px 32px rgba(0,0,0,0.5);
-          transform: translateX(-4px) scale(1.03);
+          transform: scale(1.05);
         }
         .hero-card--active .hero-card-img {
-          transform: scale(1.08);
+          transform: scale(1.1);
         }
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
-          .hero-card { width: 130px; }
-          .hero-card-title { font-size: 0.7rem; padding: 0.75rem 0.5rem 0.5rem; }
-          .hero-cards { max-height: min(65vh, 500px); }
+          .hero-cards-track { grid-template-columns: repeat(3, 110px); gap: 0.4rem; }
+          .hero-card-title { font-size: 0.65rem; padding: 0.75rem 0.5rem 0.5rem; }
         }
         @media (max-width: 768px) {
           .hero { height: clamp(480px, 75vh, 620px); }
@@ -525,16 +562,15 @@ export function HeroSection({ animes }: Props) {
         }
         @media (max-width: 640px) {
           .hero { height: clamp(440px, 75vh, 560px); }
-          .hero-card { width: 110px; }
-          .hero-card-title { font-size: 0.625rem; padding: 0.5rem 0.4rem 0.4rem; }
-          .hero-cards-track { gap: 0.4rem; }
+          .hero-cards-track { grid-template-columns: repeat(3, 95px); gap: 0.35rem; }
+          .hero-card-title { font-size: 0.5625rem; padding: 0.5rem 0.35rem 0.35rem; }
           .hero-progress { padding: 0 0.5rem; }
           .hero-progress-segment { height: 2px; }
           .hero-inner { gap: 0.75rem; }
         }
         @media (max-width: 480px) {
-          .hero-card { width: 100px; }
-          .hero-card-title { font-size: 0.5625rem; padding: 0.4rem 0.3rem 0.3rem; }
+          .hero-cards-track { grid-template-columns: repeat(3, 85px); gap: 0.3rem; }
+          .hero-card-title { font-size: 0.5rem; padding: 0.4rem 0.25rem 0.25rem; }
         }
       `}</style>
     </section>

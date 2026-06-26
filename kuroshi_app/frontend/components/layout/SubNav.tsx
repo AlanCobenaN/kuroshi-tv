@@ -50,8 +50,10 @@ export function SubNav() {
           right: 0;
           z-index: 99;
           height: var(--subnav-height);
-          background: transparent;
-          border-bottom: 1px solid transparent;
+          background: rgba(10, 10, 15, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.03);
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
