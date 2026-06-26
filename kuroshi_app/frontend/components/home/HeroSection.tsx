@@ -483,7 +483,7 @@ export function HeroSection({ animes }: Props) {
         /* ── Thumbnail cards (right side, grid 3 cols → 2 rows) ── */
         .hero-cards {
           flex-shrink: 0;
-          transform: translate(15px, 30px);
+          transform: translate(30px, 50px);
         }
         .hero-cards-track {
           display: grid;
@@ -491,8 +491,8 @@ export function HeroSection({ animes }: Props) {
           grid-template-rows: auto auto;
           gap: 0.5rem;
         }
-        .hero-card:nth-child(1) { grid-row: 1; grid-column: 1; }
-        .hero-card:nth-child(2) { grid-row: 1; grid-column: 2; }
+        .hero-card:nth-child(1) { grid-row: 1; grid-column: 2; }
+        .hero-card:nth-child(2) { grid-row: 1; grid-column: 1; }
         .hero-card:nth-child(3) { grid-row: 2; grid-column: 1; }
         .hero-card:nth-child(4) { grid-row: 2; grid-column: 2; }
         .hero-card:nth-child(5) { grid-row: 2; grid-column: 3; }
@@ -570,7 +570,7 @@ export function HeroSection({ animes }: Props) {
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
-          .hero-cards { transform: translate(10px, 20px); }
+          .hero-cards { transform: translate(20px, 35px); }
           .hero-cards-track { grid-template-columns: repeat(3, 95px); gap: 0.4rem; }
           .hero-card-title { font-size: 0.6rem; padding: 0.6rem 0.4rem 0.4rem; }
         }
@@ -587,7 +587,7 @@ export function HeroSection({ animes }: Props) {
         }
         @media (max-width: 640px) {
           .hero { height: clamp(440px, 75vh, 560px); }
-          .hero-cards { transform: translate(6px, 12px); }
+          .hero-cards { transform: translate(12px, 20px); }
           .hero-cards-track { grid-template-columns: repeat(3, 80px); gap: 0.35rem; }
           .hero-card-title { font-size: 0.5rem; padding: 0.4rem 0.25rem 0.25rem; }
           .hero-progress { padding: 0 0.5rem; }
@@ -595,7 +595,7 @@ export function HeroSection({ animes }: Props) {
           .hero-inner { gap: 0.75rem; }
         }
         @media (max-width: 480px) {
-          .hero-cards { transform: translate(4px, 8px); }
+          .hero-cards { transform: translate(8px, 14px); }
           .hero-cards-track { grid-template-columns: repeat(3, 70px); gap: 0.3rem; }
           .hero-card-title { font-size: 0.4375rem; padding: 0.3rem 0.2rem 0.2rem; }
         }
