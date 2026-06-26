@@ -48,8 +48,6 @@ export function HeroSection({ animes }: Props) {
     <section
       className="hero"
       aria-label="Animes destacados"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
     >
       {/* Progress bar */}
       <div className="hero-progress" aria-hidden="true">
@@ -94,9 +92,14 @@ export function HeroSection({ animes }: Props) {
       <div className="hero-gradient-bottom" aria-hidden="true" />
       <div className="hero-noise" aria-hidden="true" />
 
-      {/* Content */}
-      <div className="hero-content container">
-        <div className="hero-body" key={anime.id}>
+      {/* Content + Cards */}
+      <div className="hero-inner container">
+        <div
+          className="hero-body"
+          key={anime.id}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
           <div className="hero-genres">
             {anime.genres?.slice(0, 3).map((g, i) => (
               <span key={typeof g === 'string' ? g : g.id} className="hero-genre" style={{ animationDelay: `${i * 0.08}s` }}>
@@ -143,23 +146,22 @@ export function HeroSection({ animes }: Props) {
             </Link>
           </div>
         </div>
-      </div>
 
-      {/* Thumbnail cards */}
-      <div className="hero-cards">
-        <div className="hero-cards-track">
-          {items.map((a, i) => (
-            <button
-              key={a.id}
-              className={`hero-card${i === current ? ' hero-card--active' : ''}`}
-              onClick={() => goTo(i)}
-              aria-label={`Ir a ${a.title_es}`}
-            >
-              <img src={a.cover_url} alt="" className="hero-card-img" loading="lazy" />
-              <div className="hero-card-overlay" aria-hidden="true" />
-              <span className="hero-card-title">{a.title_es}</span>
-            </button>
-          ))}
+        <div className="hero-cards">
+          <div className="hero-cards-track">
+            {items.map((a, i) => (
+              <button
+                key={a.id}
+                className={`hero-card${i === current ? ' hero-card--active' : ''}`}
+                onClick={() => goTo(i)}
+                aria-label={`Ir a ${a.title_es}`}
+              >
+                <img src={a.cover_url} alt="" className="hero-card-img" loading="lazy" />
+                <div className="hero-card-overlay" aria-hidden="true" />
+                <span className="hero-card-title">{a.title_es}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -169,7 +171,7 @@ export function HeroSection({ animes }: Props) {
           position: relative;
           height: clamp(560px, 85vh, 860px);
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           overflow: hidden;
           margin-top: calc(var(--total-nav) * -1);
           padding-top: var(--total-nav);
@@ -272,13 +274,18 @@ export function HeroSection({ animes }: Props) {
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
 
-        /* ── Content ── */
-        .hero-content {
+        /* ── Inner (content + cards row) ── */
+        .hero-inner {
           position: relative;
           z-index: 2;
           width: 100%;
-          padding-bottom: 8rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 2rem;
         }
+
+        /* ── Content (left side) ── */
         .hero-body {
           max-width: 580px;
           display: flex;
@@ -422,32 +429,26 @@ export function HeroSection({ animes }: Props) {
           transform: translateY(-2px);
         }
 
-        /* ── Thumbnail cards ── */
+        /* ── Thumbnail cards (right side, vertical) ── */
         .hero-cards {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          z-index: 3;
-          overflow-x: auto;
-          overflow-y: hidden;
+          flex-shrink: 0;
+          overflow-y: auto;
+          overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
-          padding-bottom: env(safe-area-inset-bottom, 0px);
+          max-height: min(70vh, 600px);
         }
         .hero-cards::-webkit-scrollbar { display: none; }
         .hero-cards-track {
           display: flex;
-          gap: 0.75rem;
-          padding: 0 calc((100% - 1280px) / 2 + 1rem) 2rem;
-          min-width: min-content;
-          justify-content: center;
+          flex-direction: column;
+          gap: 0.5rem;
         }
         .hero-card {
           flex-shrink: 0;
           position: relative;
-          width: 180px;
+          width: 160px;
           aspect-ratio: 2 / 3;
           border-radius: var(--radius-md);
           overflow: hidden;
@@ -491,7 +492,7 @@ export function HeroSection({ animes }: Props) {
           text-overflow: ellipsis;
         }
         .hero-card:hover {
-          transform: translateY(-6px) scale(1.03);
+          transform: translateX(-4px) scale(1.03);
         }
         .hero-card:hover .hero-card-img {
           transform: scale(1.1);
@@ -499,7 +500,7 @@ export function HeroSection({ animes }: Props) {
         .hero-card--active {
           border-color: var(--accent);
           box-shadow: 0 0 24px rgba(230,57,70,0.3), 0 8px 32px rgba(0,0,0,0.5);
-          transform: translateY(-6px) scale(1.03);
+          transform: translateX(-4px) scale(1.03);
         }
         .hero-card--active .hero-card-img {
           transform: scale(1.08);
@@ -507,9 +508,9 @@ export function HeroSection({ animes }: Props) {
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
-          .hero-cards-track { justify-content: flex-start; padding: 0 1rem 1.5rem; }
-          .hero-card { width: 140px; }
+          .hero-card { width: 130px; }
           .hero-card-title { font-size: 0.7rem; padding: 0.75rem 0.5rem 0.5rem; }
+          .hero-cards { max-height: min(65vh, 500px); }
         }
         @media (max-width: 768px) {
           .hero { height: clamp(480px, 75vh, 620px); }
@@ -518,18 +519,22 @@ export function HeroSection({ animes }: Props) {
           }
           .hero-gradient-right { display: none; }
           .hero-synopsis { display: none; }
-          .hero-body { max-width: 100%; gap: 0.625rem; }
+          .hero-body { max-width: 100%; }
           .hero-title { font-size: clamp(1.5rem, 6vw, 2rem); }
-          .hero-content { padding-bottom: 7rem; }
+          .hero-inner { gap: 1.25rem; }
         }
-        @media (max-width: 480px) {
-          .hero { height: clamp(420px, 70vh, 520px); }
-          .hero-content { padding-bottom: 6rem; }
+        @media (max-width: 640px) {
+          .hero { height: clamp(440px, 75vh, 560px); }
           .hero-card { width: 110px; }
           .hero-card-title { font-size: 0.625rem; padding: 0.5rem 0.4rem 0.4rem; }
-          .hero-cards-track { gap: 0.5rem; }
+          .hero-cards-track { gap: 0.4rem; }
           .hero-progress { padding: 0 0.5rem; }
           .hero-progress-segment { height: 2px; }
+          .hero-inner { gap: 0.75rem; }
+        }
+        @media (max-width: 480px) {
+          .hero-card { width: 100px; }
+          .hero-card-title { font-size: 0.5625rem; padding: 0.4rem 0.3rem 0.3rem; }
         }
       `}</style>
     </section>

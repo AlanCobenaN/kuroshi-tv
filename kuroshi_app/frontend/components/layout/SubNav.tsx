@@ -5,11 +5,10 @@ import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
   { label: 'Inicio',      href: '/',             active: true  },
+  { label: 'Comunidades', href: '/comunidades',   active: true  },
   { label: 'Anime',       href: '/anime',         active: true  },
   { label: 'Manga',       href: '#',              active: false },
   { label: 'Manhwa',      href: '#',              active: false },
-  { label: 'Juegos',      href: '#',              active: false },
-  { label: 'Comunidades', href: '/comunidades',   active: true  },
 ] as const
 
 export function SubNav() {
@@ -51,10 +50,8 @@ export function SubNav() {
           right: 0;
           z-index: 99;
           height: var(--subnav-height);
-          background: rgba(17, 17, 24, 0.96);
-          border-bottom: 1px solid var(--border);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background: transparent;
+          border-bottom: 1px solid transparent;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;

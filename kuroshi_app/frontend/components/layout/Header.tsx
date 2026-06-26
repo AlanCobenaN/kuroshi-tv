@@ -347,10 +347,8 @@ export function Header() {
           align-items: center;
           gap: 1.5rem;
           padding: 0 1.5rem;
-          background: rgba(10, 10, 15, 0.92);
-          border-bottom: 1px solid var(--border);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: transparent;
+          border-bottom: 1px solid transparent;
         }
 
         .kuroshi-logo {
