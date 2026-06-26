@@ -483,15 +483,22 @@ export function HeroSection({ animes }: Props) {
         /* ── Thumbnail cards (right side, grid 3 cols → 2 rows) ── */
         .hero-cards {
           flex-shrink: 0;
+          transform: translate(15px, 30px);
         }
         .hero-cards-track {
           display: grid;
           grid-template-columns: repeat(3, 130px);
+          grid-template-rows: auto auto;
           gap: 0.5rem;
         }
+        .hero-card:nth-child(1) { grid-row: 1; grid-column: 1; }
+        .hero-card:nth-child(2) { grid-row: 1; grid-column: 2; }
+        .hero-card:nth-child(3) { grid-row: 2; grid-column: 1; }
+        .hero-card:nth-child(4) { grid-row: 2; grid-column: 2; }
+        .hero-card:nth-child(5) { grid-row: 2; grid-column: 3; }
         .hero-card {
           position: relative;
-          aspect-ratio: 2 / 3;
+          aspect-ratio: 3 / 4;
           border-radius: var(--radius-md);
           overflow: hidden;
           cursor: pointer;
@@ -509,7 +516,7 @@ export function HeroSection({ animes }: Props) {
         .hero-card:nth-child(4) { animation-delay: 0.2s; }
         .hero-card:nth-child(5) { animation-delay: 0.25s; }
         @keyframes card-enter {
-          from { opacity: 0; transform: translateX(30px); }
+          from { opacity: 0; transform: translateX(120px); }
           to   { opacity: 1; transform: translateX(0); }
         }
         .hero-card-img {
@@ -563,6 +570,7 @@ export function HeroSection({ animes }: Props) {
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
+          .hero-cards { transform: translate(10px, 20px); }
           .hero-cards-track { grid-template-columns: repeat(3, 110px); gap: 0.4rem; }
           .hero-card-title { font-size: 0.65rem; padding: 0.75rem 0.5rem 0.5rem; }
         }
@@ -579,6 +587,7 @@ export function HeroSection({ animes }: Props) {
         }
         @media (max-width: 640px) {
           .hero { height: clamp(440px, 75vh, 560px); }
+          .hero-cards { transform: translate(6px, 12px); }
           .hero-cards-track { grid-template-columns: repeat(3, 95px); gap: 0.35rem; }
           .hero-card-title { font-size: 0.5625rem; padding: 0.5rem 0.35rem 0.35rem; }
           .hero-progress { padding: 0 0.5rem; }
@@ -586,6 +595,7 @@ export function HeroSection({ animes }: Props) {
           .hero-inner { gap: 0.75rem; }
         }
         @media (max-width: 480px) {
+          .hero-cards { transform: translate(4px, 8px); }
           .hero-cards-track { grid-template-columns: repeat(3, 85px); gap: 0.3rem; }
           .hero-card-title { font-size: 0.5rem; padding: 0.4rem 0.25rem 0.25rem; }
         }
