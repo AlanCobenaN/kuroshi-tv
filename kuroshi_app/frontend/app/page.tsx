@@ -54,14 +54,14 @@ export default async function HomePage() {
     : {}
   const pendingItems = watchlistData.grouped?.pendiente ?? []
 
-  // El hero usa el primer anime en tendencias
-  const heroAnime = trending[0] as (Anime & { synopsis?: string }) | undefined
+  // El hero slider usa todos los trending
+  const heroAnimes = trending.slice(0, 8) as (Anime & { synopsis?: string })[]
 
   return (
     <>
       <div className="home-page">
-        {/* Hero con el anime más popular */}
-        {heroAnime && <HeroSection anime={heroAnime} />}
+        {/* Hero slider con los animes top */}
+        {heroAnimes.length > 0 && <HeroSection animes={heroAnimes} />}
 
         <div className="home-content container">
           <WelcomeBanner />
