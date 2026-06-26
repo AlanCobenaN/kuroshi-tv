@@ -11,6 +11,7 @@ export function HeroSection({ animes }: Props) {
   const items = animes.slice(0, 5)
   const [current, setCurrent] = useState(0)
   const [prev, setPrev] = useState<number | null>(null)
+  const [direction, setDirection] = useState(1)
   const [progress, setProgress] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -19,10 +20,12 @@ export function HeroSection({ animes }: Props) {
 
   const goTo = useCallback((idx: number) => {
     if (idx === current) return
+    const forward = idx > current || (current === items.length - 1 && idx === 0)
+    setDirection(forward ? 1 : -1)
     setPrev(current)
     setCurrent(idx)
     setProgress(0)
-  }, [current])
+  }, [current, items.length])
 
   const next = useCallback(() => {
     goTo((current + 1) % items.length)
@@ -65,24 +68,48 @@ export function HeroSection({ animes }: Props) {
         </div>
       </div>
 
-      {/* Slides */}
+      {/* Slides — carousel horizontal */}
       <div className="hero-slides">
-        {items.map((a, i) => (
-          <div
-            key={a.id}
-            className={`hero-slide${i === current ? ' hero-slide--active' : ''}${i === prev ? ' hero-slide--prev' : ''}`}
-            aria-hidden={i !== current}
-          >
-            <div className="hero-slide-bg">
-              <img
-                src={a.banner_url || a.cover_url}
-                alt=""
-                className={`hero-slide-bg-img${!a.banner_url ? ' hero-slide-bg-img--cover' : ''}`}
-                loading={i === 0 ? 'eager' : 'lazy'}
-              />
+        {items.map((a, i) => {
+          let transform: string
+          let zIndex: number
+          const isActive = i === current
+          const isPrev = i === prev
+
+          if (isActive) {
+            transform = 'translateX(0)'
+            zIndex = 2
+          } else if (isPrev) {
+            transform = `translateX(${-direction * 100}%)`
+            zIndex = 1
+          } else {
+            transform = `translateX(${direction * 100}%)`
+            zIndex = 0
+          }
+
+          return (
+            <div
+              key={a.id}
+              className="hero-slide"
+              aria-hidden={!isActive}
+              style={{
+                transform,
+                zIndex,
+                transition: isActive || isPrev ? 'transform 0.8s cubic-bezier(0.65, 0, 0.35, 1)' : 'none',
+              }}
+            >
+              <div className="hero-slide-bg">
+                <img
+                  src={a.banner_url || a.cover_url}
+                  alt=""
+                  className={`hero-slide-bg-img${!a.banner_url ? ' hero-slide-bg-img--cover' : ''}`}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                />
+              </div>
+              {isActive && <div className="hero-slide-sweep" aria-hidden="true" />}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Overlays */}
@@ -203,17 +230,17 @@ export function HeroSection({ animes }: Props) {
           transition: width 50ms linear;
         }
 
-        /* ── Slides ── */
+        /* ── Slides (carousel horizontal) ── */
         .hero-slides {
           position: absolute;
           inset: 0;
           z-index: 0;
+          overflow: hidden;
         }
         .hero-slide {
           position: absolute;
           inset: 0;
-          opacity: 0;
-          z-index: 0;
+          will-change: transform;
         }
         .hero-slide-bg {
           position: absolute;
@@ -235,47 +262,29 @@ export function HeroSection({ animes }: Props) {
           filter: blur(4px) brightness(0.4);
           transform: scale(1.15);
         }
+        .hero-slide:nth-child(2) .hero-slide-bg-img { transition-delay: 0.1s; }
 
-        /* Active slide: crossfade + Ken Burns zoom */
-        .hero-slide--active {
-          opacity: 1;
-          z-index: 1;
-          transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .hero-slide--active .hero-slide-bg-img {
+        /* Ken Burns zoom on active slide */
+        .hero-slide[style*="translateX(0)"] .hero-slide-bg-img {
           transform: scale(1);
         }
 
-        /* Prev slide: gentle exit */
-        .hero-slide--prev {
-          opacity: 0;
-          z-index: 2;
-          transition: opacity 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19);
-        }
-        .hero-slide--prev .hero-slide-bg-img {
-          transform: scale(1.08);
-          transition: transform 0.8s ease;
-        }
-
-        /* Overlay mask sweep on transition */
-        .hero-slide::after {
-          content: '';
+        /* Sweep overlay on active slide entrance */
+        .hero-slide-sweep {
           position: absolute;
           inset: 0;
           z-index: 1;
           background: var(--bg-base);
           pointer-events: none;
-        }
-        .hero-slide--active::after {
-          animation: hero-sweep 1.4s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+          animation: hero-sweep 1.2s cubic-bezier(0.77, 0, 0.18, 1) forwards;
         }
         @keyframes hero-sweep {
-          0%   { opacity: 0.6; clip-path: inset(0 100% 0 0); }
-          40%  { opacity: 0.2; clip-path: inset(0 0% 0 0); }
+          0%   { opacity: 0.5; clip-path: inset(0 100% 0 0); }
+          40%  { opacity: 0.15; clip-path: inset(0 0% 0 0); }
           100% { opacity: 0; clip-path: inset(0 0% 0 0); }
         }
 
-        /* Content stagger animation refines */
+        /* Content stagger */
         @keyframes hero-stagger {
           from { opacity: 0; transform: translateY(24px); filter: blur(4px); }
           to   { opacity: 1; transform: translateY(0); filter: blur(0); }
@@ -370,12 +379,20 @@ export function HeroSection({ animes }: Props) {
           letter-spacing: -0.02em;
           text-shadow: 0 2px 24px rgba(0,0,0,0.6);
           margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          word-break: break-word;
         }
         .hero-title-jp {
           font-size: 0.9375rem;
           color: var(--text-muted);
           font-style: italic;
           margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         /* Meta */
