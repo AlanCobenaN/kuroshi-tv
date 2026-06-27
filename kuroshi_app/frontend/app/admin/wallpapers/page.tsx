@@ -93,7 +93,7 @@ export default function AdminWallpapersPage() {
 
       <div className="wallpaper-upload-section">
         <h2>Subir nuevo wallpaper</h2>
-        <p className="wallpaper-hint">Imágenes 4K recomendadas (JPG, PNG, WebP — máx 3MB)</p>
+        <p className="wallpaper-hint">Imágenes 4K recomendadas (JPG, PNG, WebP — máx 7MB)</p>
         <div className="wallpaper-upload-row">
           <input
             ref={fileRef}

@@ -29,6 +29,7 @@ export class WallpapersService {
     const { url, publicId } = await this.uploadsService.uploadToCloudinary(
       dto.image,
       dto.mimeType,
+      7,
     );
 
     return this.prisma.wallpaper.create({

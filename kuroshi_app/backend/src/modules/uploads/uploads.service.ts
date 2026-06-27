@@ -14,6 +14,7 @@ export class UploadsService {
   async uploadToCloudinary(
     base64Image: string,
     mimeType: string,
+    maxSizeMb: number = 3,
   ): Promise<{ url: string; publicId: string }> {
     const cloudName = this.config.get<string>('CLOUDINARY_CLOUD_NAME');
     const apiKey = this.config.get<string>('CLOUDINARY_API_KEY');
@@ -35,9 +36,9 @@ export class UploadsService {
 
     // Validar tamaño aproximado (base64 es ~33% más grande que el original)
     const approximateSizeBytes = (base64Image.length * 3) / 4;
-    const maxSizeBytes = 3 * 1024 * 1024; // 3MB
+    const maxSizeBytes = maxSizeMb * 1024 * 1024;
     if (approximateSizeBytes > maxSizeBytes) {
-      throw new BadRequestException('La imagen no puede superar 3MB');
+      throw new BadRequestException(`La imagen no puede superar ${maxSizeMb}MB`);
     }
 
     try {
