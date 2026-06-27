@@ -610,6 +610,16 @@ export const adminApi = {
   updateSettings: (body: Record<string, unknown>, token: string) =>
     api.put('/admin/settings', body, { token }),
 
+  // Wallpapers
+  getWallpapers: (token: string) =>
+    api.get('/admin/wallpapers', { token, cache: 'no-store' }),
+
+  createWallpaper: (body: { image: string; mimeType: string }, token: string) =>
+    api.post('/admin/wallpapers', body, { token }),
+
+  deleteWallpaper: (id: string, token: string) =>
+    api.delete(`/admin/wallpapers/${id}`, { token }),
+
   // Géneros
   getGenres: (token: string) =>
     api.get('/admin/genres', { token, cache: 'no-store' }),
@@ -622,6 +632,13 @@ export const adminApi = {
 
   deleteGenre: (id: string, token: string) =>
     api.delete(`/admin/genres/${id}`, { token }),
+}
+
+// ─── Módulo Wallpapers — público ──────────────────────────────
+
+export const wallpapersApi = {
+  getAll: (token?: string) =>
+    api.get<{ id: string; url: string }[]>('/wallpapers', { token, cache: 'no-store' }),
 }
 
 // ─── Módulo Reportes — 1 endpoint ───────────────────────────

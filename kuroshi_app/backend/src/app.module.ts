@@ -15,6 +15,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { GenresModule } from './modules/genres/genres.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { WallpapersModule } from './modules/wallpapers/wallpapers.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 
@@ -38,6 +39,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     GenresModule,
     PostsModule,
     ReportsModule,
+    WallpapersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

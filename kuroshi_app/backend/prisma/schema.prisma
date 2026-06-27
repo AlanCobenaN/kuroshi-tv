@@ -638,7 +638,21 @@ model Rank {
 }
 
 // ================================================================
-// GRUPO 5 — MODERACIÓN
+// GRUPO 5 — WALLPAPERS (fondos de pantalla del sitio)
+// ================================================================
+
+model Wallpaper {
+  id        String   @id @default(uuid()) @db.Uuid
+  url       String   @map("url")
+  publicId  String   @map("public_id") @db.VarChar(255)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("wallpapers")
+}
+
+// ================================================================
+// GRUPO 6 — MODERACIÓN
 // ================================================================
 
 model PasswordResetToken {

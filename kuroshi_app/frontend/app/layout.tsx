@@ -8,6 +8,7 @@ import { authOptions } from '@/lib/auth'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { TokenProvider } from '@/components/providers/TokenProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { WallpaperProvider } from '@/components/providers/WallpaperProvider'
 import { JsonLd } from '@/components/seo/JsonLd'
 
 import { Header } from '@/components/layout/Header'
@@ -164,11 +165,13 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <TokenProvider>
             <ThemeProvider>
-              <Header />
-              <SubNav />
-              <main className="page-content">
-                {children}
-              </main>
+              <WallpaperProvider>
+                <Header />
+                <SubNav />
+                <main className="page-content">
+                  {children}
+                </main>
+              </WallpaperProvider>
             </ThemeProvider>
           </TokenProvider>
         </SessionProvider>

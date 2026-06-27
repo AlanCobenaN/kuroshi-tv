@@ -543,6 +543,15 @@ export interface WsUserTyping {
   username: string
 }
 
+// ─── Wallpapers ──────────────────────────────────────────────
+
+export interface Wallpaper {
+  id: string
+  url: string
+  is_active?: boolean
+  created_at?: string
+}
+
 // ─── Cloudflare Turnstile ──────────────────────────────────
 export interface TurnstileObject {
   render: (container: HTMLElement, options: TurnstileOptions) => string

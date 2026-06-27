@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/admin/reportes', label: 'Reportes', icon: '🚨' },
   { href: '/admin/estadisticas', label: 'Estadísticas', icon: '📈' },
   { href: '/admin/generos', label: 'Géneros', icon: '🏷️' },
+  { href: '/admin/wallpapers', label: 'Wallpapers', icon: '🖼️' },
   { href: '/admin/configuracion', label: 'Configuración', icon: '⚙️' },
 ]
 
