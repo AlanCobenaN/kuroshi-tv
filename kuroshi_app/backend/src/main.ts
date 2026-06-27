@@ -34,9 +34,9 @@ async function bootstrap() {
   app.useGlobalInterceptors(new SnakeCaseInterceptor());
 
   // ── CORS ──────────────────────────────────────────────────
-  // ── Body parser: 10 MB para subida de imágenes ──────────
-  app.use(bodyParser.json({ limit: '10mb' }));
-  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+  // ── Body parser: 16 MB para subida de wallpapers 4K ─────
+  app.use(bodyParser.json({ limit: '16mb' }));
+  app.use(bodyParser.urlencoded({ limit: '16mb', extended: true }));
 
   app.enableCors({
     origin: [
