@@ -167,6 +167,7 @@ export interface AnimeSummary {
   status: AnimeStatus
   genres: Genre[]
   total_views?: number
+  ratings_count?: number
 }
 
 export interface Genre {

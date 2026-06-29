@@ -7,6 +7,7 @@ interface Item {
   url: string
   image?: string
   rating?: number
+  ratingCount?: number
   position: number
 }
 
@@ -28,6 +29,7 @@ export function ItemListJsonLd({ items, itemType = 'TVSeries' }: { items: Item[]
             ratingValue: item.rating,
             bestRating: 10,
             worstRating: 0,
+            ratingCount: item.ratingCount ?? 1,
           },
         } : {}),
       },

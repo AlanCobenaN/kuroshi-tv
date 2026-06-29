@@ -54,6 +54,7 @@ export class AnimeService {
         id: true, slug: true, titleEs: true, titleJp: true, status: true,
         malRating: true, coverUrl: true, bannerUrl: true, year: true, season: true, totalViews: true, totalEpisodes: true,
         genres: { select: { genre: { select: { name: true } } } },
+        _count: { select: { ratings: true } },
       },
       }),
       this.prisma.anime.count({ where }),

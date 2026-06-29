@@ -71,6 +71,7 @@ export default async function AnimeCatalogPage({ searchParams }: Props) {
           url: `/anime/${a.slug}`,
           image: a.cover_url,
           rating: a.mal_rating,
+          ratingCount: a.ratings_count,
           position: i + 1 + ((filters.page ?? 1) - 1) * (filters.limit ?? 24),
         }))}
       />
