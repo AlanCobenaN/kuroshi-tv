@@ -11,15 +11,19 @@ interface Item {
   position: number
 }
 
-export function ItemListJsonLd({ items, itemType = 'TVSeries' }: { items: Item[]; itemType?: string }) {
+export function ItemListJsonLd({ items, itemType = 'TVSeries', url }: { items: Item[]; itemType?: string; url?: string }) {
   const data: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
+    ...(url ? { '@id': url, url } : {}),
+    numberOfItems: items.length,
     itemListElement: items.map(item => ({
       '@type': 'ListItem',
       position: item.position,
+      url: `${BASE_URL}${item.url}`,
       item: {
         '@type': itemType,
+        '@id': `${BASE_URL}${item.url}`,
         name: item.title,
         url: `${BASE_URL}${item.url}`,
         ...(item.image ? { image: item.image } : {}),

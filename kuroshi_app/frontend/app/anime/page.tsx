@@ -66,6 +66,7 @@ export default async function AnimeCatalogPage({ searchParams }: Props) {
   return (
     <>
       <ItemListJsonLd
+        url={`${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'}/anime${Object.keys(params).length > 0 ? `?${new URLSearchParams(Object.entries(params).filter(([,v]) => v !== undefined).map(([k, v]) => [k, String(v)]))}` : ''}`}
         items={catalog.data.map((a, i) => ({
           title: a.title_es,
           url: `/anime/${a.slug}`,
