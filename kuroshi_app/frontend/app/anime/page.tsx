@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { CatalogWithAds } from '@/components/ads/CatalogWithAds'
 import { ItemListJsonLd } from '@/components/seo/ItemListJsonLd'
+import { WebPageJsonLd } from '@/components/seo/WebPageJsonLd'
 
 export const metadata: Metadata = {
   title: 'Catálogo de Anime',
@@ -63,10 +64,17 @@ export default async function AnimeCatalogPage({ searchParams }: Props) {
 
   const hasActiveFilters = !!(params.genre || params.status || params.season || params.year || params.studio || params.q)
 
+  const pageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'}/anime${Object.keys(params).length > 0 ? `?${new URLSearchParams(Object.entries(params).filter(([,v]) => v !== undefined).map(([k, v]) => [k, String(v)]))}` : ''}`
+
   return (
     <>
+      <WebPageJsonLd
+        name={params.q ? `Resultados para "${params.q}" | Kuroshi.lat` : 'Catálogo de Anime | Kuroshi.lat'}
+        description="Explora el catálogo completo de anime en Kuroshi.tv. Filtra por género, estado, temporada y más."
+        url={pageUrl}
+      />
       <ItemListJsonLd
-        url={`${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'}/anime${Object.keys(params).length > 0 ? `?${new URLSearchParams(Object.entries(params).filter(([,v]) => v !== undefined).map(([k, v]) => [k, String(v)]))}` : ''}`}
+        url={pageUrl}
         items={catalog.data.map((a, i) => ({
           title: a.title_es,
           url: `/anime/${a.slug}`,

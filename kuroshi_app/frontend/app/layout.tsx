@@ -115,25 +115,6 @@ export default async function RootLayout({
     foundingDate: '2025',
   }
 
-  const webpageJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    '@id': BASE_URL,
-    url: BASE_URL,
-    name: 'Kuroshi.lat',
-    isPartOf: {
-      '@type': 'WebSite',
-      '@id': `${BASE_URL}/#website`,
-    },
-    about: {
-      '@type': 'Organization',
-      '@id': `${BASE_URL}/#organization`,
-    },
-    description: 'Plataforma de streaming de anime con red social integrada. Ve anime, comenta al minuto, únete a comunidades.',
-    inLanguage: 'es',
-    lastReviewed: new Date().toISOString().split('T')[0],
-  }
-
   return (
     <html lang="es" className={`${syne.variable} ${dmSans.variable}`}>
       <head>
@@ -161,7 +142,6 @@ export default async function RootLayout({
       <body>
         <JsonLd data={websiteJsonLd} />
         <JsonLd data={organizationJsonLd} />
-        <JsonLd data={webpageJsonLd} />
         <SessionProvider session={session}>
           <TokenProvider>
             <ThemeProvider>

@@ -14,6 +14,7 @@ import { FeedWithAds } from '@/components/ads/FeedWithAds'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { HomeFloatingCreate } from '@/components/home/HomeFloatingCreate'
 import { WelcomeBanner } from '@/components/home/WelcomeBanner'
+import { WebPageJsonLd } from '@/components/seo/WebPageJsonLd'
 import { Anime, AnimeSummary } from '@/types'
 
 export const metadata: Metadata = {
@@ -57,8 +58,15 @@ export default async function HomePage() {
   // El hero slider usa todos los trending
   const heroAnimes = trending.slice(0, 5) as (Anime & { synopsis?: string })[]
 
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
   return (
     <>
+      <WebPageJsonLd
+        name="Kuroshi.lat — Anime + Comunidad"
+        description="Plataforma de streaming de anime con red social integrada. Ve anime, comenta al minuto, únete a comunidades."
+        url={BASE_URL}
+      />
       <div className="home-page">
         {/* Hero slider con los animes top */}
         {heroAnimes.length > 0 && <HeroSection animes={heroAnimes} />}
