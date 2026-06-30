@@ -577,3 +577,18 @@ declare global {
     turnstile?: TurnstileObject
   }
 }
+
+// ─── Schedule ──────────────────────────────────────────────────
+export interface ScheduleDay {
+  date: string
+  items: ScheduleItem[]
+}
+
+export interface ScheduleItem {
+  id: string
+  anilistId: number
+  episode: number
+  airingAt: string
+  title: string | null
+  coverUrl: string | null
+}

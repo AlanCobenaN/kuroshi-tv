@@ -6,7 +6,7 @@
 //        NEXT_PUBLIC_API_URL → Client Components (navegador → Nginx)
 // ============================================================
 
-import { ApiError } from '@/types'
+import { ApiError, ScheduleDay } from '@/types'
 
 function getBaseUrl(): string {
   if (typeof window === 'undefined') {
@@ -665,6 +665,13 @@ export const postsApi = {
 
   sharePost: (postId: string, body: { content?: string; communitySlug?: string }, token: string) =>
     api.post(`/posts/${postId}/share`, body, { token }),
+}
+
+// ─── Módulo Schedule — 1 endpoint ────────────────────────────
+
+export const scheduleApi = {
+  get: () =>
+    api.get<ScheduleDay[]>('/schedules', { cache: 'no-store' }),
 }
 
 // ─── Módulo Uploads — 1 endpoint ─────────────────────────────

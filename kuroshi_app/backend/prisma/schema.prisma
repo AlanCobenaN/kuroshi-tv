@@ -655,7 +655,25 @@ model Wallpaper {
 }
 
 // ================================================================
-// GRUPO 6 — MODERACIÓN
+// GRUPO 6 — CALENDARIO DE EMISIÓN (AniList sync)
+// ================================================================
+
+model AiringSchedule {
+  id        String   @id @default(uuid()) @db.Uuid
+  anilistId Int      @map("anilist_id")
+  episode   Int
+  airingAt  DateTime @map("airing_at")
+  title     String?  @db.VarChar(200)
+  coverUrl  String?  @map("cover_url")
+  syncedAt  DateTime @default(now()) @map("synced_at")
+
+  @@index([airingAt])
+  @@index([anilistId])
+  @@map("airing_schedule")
+}
+
+// ================================================================
+// GRUPO 7 — MODERACIÓN
 // ================================================================
 
 model PasswordResetToken {

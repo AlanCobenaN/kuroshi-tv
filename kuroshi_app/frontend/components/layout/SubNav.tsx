@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
   { label: 'Inicio',      href: '/',             active: true  },
+  { label: 'Calendario',  href: '/calendario',    active: true  },
   { label: 'Comunidades', href: '/comunidades',   active: true  },
   { label: 'Anime',       href: '/anime',         active: true  },
   { label: 'Manga',       href: '#',              active: false },
