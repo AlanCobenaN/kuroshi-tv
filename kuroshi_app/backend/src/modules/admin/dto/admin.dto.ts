@@ -33,7 +33,20 @@ export class CreateAnimeDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  titleEn?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   titleJp?: string;
+
+  @ApiPropertyOptional({ description: 'Nombres alternativos/sinónimos (JSON array)' })
+  @IsOptional()
+  aliases?: string[];
+
+  @ApiPropertyOptional({ description: 'URLs externas (MAL, Wikipedia, etc.) — JSON array' })
+  @IsOptional()
+  sameAs?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()

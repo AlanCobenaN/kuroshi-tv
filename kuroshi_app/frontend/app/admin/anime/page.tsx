@@ -15,9 +15,10 @@ export default function AdminAnimePage() {
   const [editing, setEditing] = useState<any>(null)
   const [importMalId, setImportMalId] = useState('')
   const [form, setForm] = useState({
-    title_es: '', title_jp: '', synopsis: '', status: 'proximamente',
-    year: 2024, season: '', studio: '', total_episodes: 12,
+    title_es: '', title_en: '', title_jp: '', synopsis: '', status: 'proximamente',
+    year: 2024, season: '', studio: '', total_episodes: 0,
     cover_url: '', banner_url: '', genres: '', mal_rating: 0, mal_id: 0,
+    aliases: '', same_as: '',
   })
 
   const fetchAnimes = () => {
@@ -35,7 +36,7 @@ export default function AdminAnimePage() {
   const resetForm = () => {
     setShowForm(false)
     setEditing(null)
-    setForm({ title_es: '', title_jp: '', synopsis: '', status: 'proximamente', year: 2024, season: '', studio: '', total_episodes: 12, cover_url: '', banner_url: '', genres: '', mal_rating: 0, mal_id: 0 })
+    setForm({ title_es: '', title_en: '', title_jp: '', synopsis: '', status: 'proximamente', year: 2024, season: '', studio: '', total_episodes: 0, cover_url: '', banner_url: '', genres: '', mal_rating: 0, mal_id: 0, aliases: '', same_as: '' })
   }
 
   const handleSave = async () => {
@@ -45,6 +46,7 @@ export default function AdminAnimePage() {
     try {
       const body = {
         titleEs: form.title_es,
+        titleEn: form.title_en || undefined,
         titleJp: form.title_jp || undefined,
         synopsis: form.synopsis || undefined,
         status: form.status,
@@ -57,6 +59,8 @@ export default function AdminAnimePage() {
         malRating: form.mal_rating || undefined,
         malId: form.mal_id || undefined,
         genres: form.genres ? form.genres.split(',').map((g: string) => g.trim()).filter(Boolean) : [],
+        aliases: form.aliases ? form.aliases.split(',').map((a: string) => a.trim()).filter(Boolean) : [],
+        sameAs: form.same_as ? form.same_as.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       }
       if (editing) {
         await adminApi.updateAnime(editing.id, body, session.accessToken)
@@ -79,11 +83,12 @@ export default function AdminAnimePage() {
     try {
       const data: any = await adminApi.importAnimeFromMAL(parseInt(importMalId), session.accessToken)
       setForm({
-        title_es: data.title_es ?? '', title_jp: data.title_jp ?? '', synopsis: data.synopsis ?? '',
-        status: data.status ?? 'proximamente', year: data.year ?? 2024, season: data.season ?? '',
-        studio: data.studio ?? '', total_episodes: data.total_episodes ?? 12,
+        title_es: data.title_es ?? '', title_en: data.title_en ?? '', title_jp: data.title_jp ?? '',
+        synopsis: data.synopsis ?? '', status: data.status ?? 'proximamente', year: data.year ?? 2024,
+        season: data.season ?? '', studio: data.studio ?? '', total_episodes: data.total_episodes ?? 0,
         cover_url: data.cover_url ?? '', banner_url: data.banner_url ?? '',
         genres: (data.genres ?? []).join(', '), mal_rating: data.mal_rating ?? 0, mal_id: data.mal_id ?? 0,
+        aliases: (data.aliases ?? []).join(', '), same_as: (data.same_as ?? []).join(', '),
       })
       setShowForm(true)
       setMessage('Datos importados desde MAL. Revisá y guardá.')
@@ -108,12 +113,22 @@ export default function AdminAnimePage() {
   const editAnime = (a: any) => {
     setEditing(a)
     setForm({
-      title_es: a.title_es ?? '', title_jp: a.title_jp ?? '', synopsis: a.synopsis ?? '',
-      status: a.status ?? 'proximamente', year: a.year ?? 2024, season: a.season ?? '',
-      studio: a.studio ?? '', total_episodes: a.total_episodes ?? 12,
-      cover_url: a.cover_url ?? '', banner_url: a.banner_url ?? '',
+      title_es: a.title_es ?? '',
+      title_en: a.title_en ?? '',
+      title_jp: a.title_jp ?? '',
+      synopsis: a.synopsis ?? '',
+      status: a.status ?? 'proximamente',
+      year: a.year ?? 2024,
+      season: a.season ?? '',
+      studio: a.studio ?? '',
+      total_episodes: a.total_episodes ?? 0,
+      cover_url: a.cover_url ?? '',
+      banner_url: a.banner_url ?? '',
       genres: (a.genres ?? []).map((g: any) => g.name ?? g).join(', '),
-      mal_rating: a.mal_rating ?? 0, mal_id: a.mal_id ?? 0,
+      mal_rating: a.mal_rating ?? 0,
+      mal_id: a.mal_id ?? 0,
+      aliases: (a.aliases ?? []).join(', '),
+      same_as: (a.same_as ?? []).join(', '),
     })
     setShowForm(true)
   }
@@ -166,6 +181,7 @@ export default function AdminAnimePage() {
           </h3>
           <div className="form-grid">
             <div className="settings-field"><label>Título ES*</label><input type="text" value={form.title_es} onChange={e => setForm(f => ({ ...f, title_es: e.target.value }))} className="input" /></div>
+            <div className="settings-field"><label>Título EN</label><input type="text" value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} className="input" /></div>
             <div className="settings-field"><label>Título JP</label><input type="text" value={form.title_jp} onChange={e => setForm(f => ({ ...f, title_jp: e.target.value }))} className="input" /></div>
             <div className="settings-field"><label>Estado</label><select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input">
               <option value="en_emision">En emisión</option><option value="finalizado">Finalizado</option><option value="proximamente">Próximamente</option>
@@ -182,6 +198,8 @@ export default function AdminAnimePage() {
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>URL Cover</label><input type="text" value={form.cover_url} onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))} className="input" /></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>URL Banner</label><input type="text" value={form.banner_url} onChange={e => setForm(f => ({ ...f, banner_url: e.target.value }))} className="input" /></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>Géneros (separados por coma)</label><input type="text" value={form.genres} onChange={e => setForm(f => ({ ...f, genres: e.target.value }))} className="input" placeholder="Acción, Romance, Shonen" /></div>
+            <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>Alias / Sinónimos (separados por coma)</label><input type="text" value={form.aliases} onChange={e => setForm(f => ({ ...f, aliases: e.target.value }))} className="input" placeholder="Cyberpunk Edgerunners, Cyberpunk: Edgerunners, CP: Edgerunners" /></div>
+            <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>SameAs / URLs externas (separadas por coma)</label><input type="text" value={form.same_as} onChange={e => setForm(f => ({ ...f, same_as: e.target.value }))} className="input" placeholder="https://myanimelist.net/anime/52034, https://en.wikipedia.org/wiki/Cyberpunk:_Edgerunners" /></div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
             <button onClick={handleSave} className="btn-primary">{editing ? 'Actualizar' : 'Crear'}</button>

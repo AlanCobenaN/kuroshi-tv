@@ -4,7 +4,10 @@ type AnimeWithType = {
   id: string
   slug: string
   title_es: string
+  title_en?: string
   title_jp?: string
+  aliases?: string[]
+  same_as?: string[]
   synopsis?: string
   cover_url: string
   banner_url?: string
@@ -41,11 +44,21 @@ export function AnimeJsonLd({ anime }: { anime: AnimeWithType }) {
   const genreNames = getGenreNames(anime)
   const animeUrl = `${BASE_URL}/anime/${anime.slug}`
 
+  const alternateNames: string[] = []
+  if (anime.title_en) alternateNames.push(anime.title_en)
+  if (anime.title_jp) alternateNames.push(anime.title_jp)
+  if (anime.aliases && Array.isArray(anime.aliases)) {
+    for (const alias of anime.aliases) {
+      if (!alternateNames.includes(alias)) alternateNames.push(alias)
+    }
+  }
+
   const data: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': schemaType,
     name: anime.title_es,
-    alternateName: anime.title_jp || undefined,
+    ...(alternateNames.length > 0 ? { alternateName: alternateNames.length === 1 ? alternateNames[0] : alternateNames } : {}),
+    ...(anime.same_as && Array.isArray(anime.same_as) && anime.same_as.length > 0 ? { sameAs: anime.same_as } : {}),
     url: animeUrl,
     image: anime.banner_url ?? anime.cover_url,
     description: anime.synopsis?.slice(0, 500),

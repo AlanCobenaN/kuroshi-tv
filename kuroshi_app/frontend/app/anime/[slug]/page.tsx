@@ -23,16 +23,44 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+function buildKeywords(anime: Anime): string[] {
+  const keywords = new Set<string>()
+  keywords.add(anime.title_es.toLowerCase())
+  if (anime.title_en) keywords.add(anime.title_en.toLowerCase())
+  if (anime.title_jp) keywords.add(anime.title_jp.toLowerCase())
+  if (anime.aliases) anime.aliases.forEach(a => keywords.add(a.toLowerCase()))
+  keywords.add(`ver ${anime.title_es.toLowerCase()} online`)
+  keywords.add(`${anime.title_es.toLowerCase()} anime`)
+  keywords.add(`ver ${anime.title_es.toLowerCase()} sub español`)
+  if (anime.genres) anime.genres.forEach(g => keywords.add(g.name.toLowerCase()))
+  keywords.add('anime online')
+  keywords.add('ver anime gratis')
+  keywords.add('kuroshi')
+  return Array.from(keywords)
+}
+
+function buildDescription(anime: Anime): string {
+  const parts: string[] = []
+  if (anime.synopsis) parts.push(anime.synopsis.slice(0, 160))
+  const titleVariants = [anime.title_es]
+  if (anime.title_en) titleVariants.push(anime.title_en)
+  if (anime.title_jp) titleVariants.push(anime.title_jp)
+  parts.push(`Ver ${titleVariants.join(', ')} online en Kuroshi.lat`)
+  return parts.join(' — ')
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   try {
     const anime = await animeApi.getBySlug(slug) as Anime
+    const title = `${anime.title_es} — Ver anime online`
     return {
-      title: `${anime.title_es} — Ver anime online`,
-      description: anime.synopsis?.slice(0, 160) ?? `Ver ${anime.title_es} online en Kuroshi.tv`,
+      title,
+      description: buildDescription(anime),
+      keywords: buildKeywords(anime),
       openGraph: {
         title: anime.title_es,
-        description: anime.synopsis?.slice(0, 160),
+        description: anime.synopsis?.slice(0, 160) ?? `Ver ${anime.title_es} online en Kuroshi.tv`,
         url: `${BASE_URL}/anime/${slug}`,
         images: anime.banner_url ? [{ url: anime.banner_url }] : [{ url: anime.cover_url }],
       },

@@ -29,6 +29,7 @@ export class AnimeService {
     if (search) {
       where.OR = [
         { titleEs: { contains: search, mode: 'insensitive' } },
+        { titleEn: { contains: search, mode: 'insensitive' } },
         { titleJp: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -51,11 +52,11 @@ export class AnimeService {
       this.prisma.anime.findMany({
         where, orderBy, skip, take: limit,
       select: {
-        id: true, slug: true, titleEs: true, titleJp: true, status: true,
+        id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, status: true,
         malRating: true, coverUrl: true, bannerUrl: true, year: true, season: true, totalViews: true, totalEpisodes: true,
+        aliases: true, sameAs: true,
         genres: { select: { genre: { select: { name: true } } } },
         _count: { select: { ratings: true } },
-      },
       }),
       this.prisma.anime.count({ where }),
     ]);
@@ -72,11 +73,12 @@ export class AnimeService {
       orderBy: { totalViews: 'desc' },
       take: 10,
       select: {
-        id: true, slug: true, titleEs: true, titleJp: true, malRating: true,
+        id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, malRating: true,
         coverUrl: true, bannerUrl: true, totalViews: true, status: true,
+        aliases: true, sameAs: true,
         genres: { select: { genre: { select: { name: true } } } },
-      },
-    });
+      }),
+    );
     return animes.map((a, index) => ({ ...this.formatAnimeCard(a), rank: index + 1 }));
   }
 
@@ -86,8 +88,9 @@ export class AnimeService {
       orderBy: { totalViews: 'desc' },
       take: 20,
       select: {
-        id: true, slug: true, titleEs: true, titleJp: true, malRating: true,
+        id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, malRating: true,
         coverUrl: true, bannerUrl: true, status: true,
+        aliases: true, sameAs: true,
         genres: { select: { genre: { select: { name: true } } } },
         seasons: {
           orderBy: { number: 'desc' }, take: 1,

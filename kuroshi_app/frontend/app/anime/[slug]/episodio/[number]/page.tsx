@@ -26,9 +26,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const animeTitle = episode.anime?.title_es ?? slug
     const title = `${animeTitle} — Episodio ${epNum}${episode.title ? ': ' + episode.title : ''}`
     const description = episode.synopsis ?? `Ver episodio ${epNum} de ${animeTitle} en Kuroshi.tv`
+    const keywords = [
+      animeTitle.toLowerCase(),
+      `episodio ${epNum} ${animeTitle.toLowerCase()}`,
+      `ver ${animeTitle.toLowerCase()} episodio ${epNum}`,
+      `${animeTitle.toLowerCase()} capitulo ${epNum}`,
+      `${animeTitle.toLowerCase()} sub español`,
+      'anime online',
+      'ver anime gratis',
+    ]
+
     return {
       title,
       description,
+      keywords,
       openGraph: {
         title,
         description,

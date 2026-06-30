@@ -29,6 +29,9 @@ export function AnimeInfo({ anime, isLoggedIn }: Props) {
       {/* Títulos */}
       <div className="anime-info-titles">
         <h1 className="anime-title-es">{anime.title_es}</h1>
+        {anime.title_en && (
+          <p className="anime-title-en">{anime.title_en}</p>
+        )}
         {anime.title_jp && (
           <p className="anime-title-jp">{anime.title_jp}</p>
         )}
@@ -60,6 +63,18 @@ export function AnimeInfo({ anime, isLoggedIn }: Props) {
           </div>
         )}
       </div>
+
+      {/* Nombres alternativos */}
+      {anime.aliases && Array.isArray(anime.aliases) && anime.aliases.length > 0 && (
+        <div className="anime-aliases">
+          <span className="anime-aliases-label">También conocido como:</span>
+          <div className="anime-aliases-list">
+            {anime.aliases.map((alias, i) => (
+              <span key={i} className="anime-alias-tag">{alias}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Géneros */}
       {anime.genres && anime.genres.length > 0 && (
@@ -150,6 +165,11 @@ export function AnimeInfo({ anime, isLoggedIn }: Props) {
           line-height: 1.15;
           margin: 0;
         }
+        .anime-title-en {
+          font-size: 0.9375rem;
+          color: var(--text-secondary);
+          margin: 0;
+        }
         .anime-title-jp {
           font-size: 0.9375rem;
           color: var(--text-muted);
@@ -182,6 +202,34 @@ export function AnimeInfo({ anime, isLoggedIn }: Props) {
           color: var(--text-muted);
         }
         .rating-count { font-weight: 400; }
+
+        /* Nombres alternativos */
+        .anime-aliases {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+        }
+        .anime-aliases-label {
+          font-family: var(--font-display);
+          font-size: 0.6875rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+        }
+        .anime-aliases-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.375rem;
+        }
+        .anime-alias-tag {
+          padding: 0.2rem 0.6rem;
+          font-size: 0.8125rem;
+          color: var(--text-secondary);
+          background: var(--bg-overlay);
+          border: 1px dashed var(--border);
+          border-radius: var(--radius-full);
+        }
 
         /* Géneros */
         .anime-genres {

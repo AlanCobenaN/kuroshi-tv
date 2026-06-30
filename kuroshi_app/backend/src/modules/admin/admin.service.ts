@@ -107,6 +107,7 @@ export class AdminService {
     if (search) {
       where.OR = [
         { titleEs: { contains: search, mode: 'insensitive' } },
+        { titleEn: { contains: search, mode: 'insensitive' } },
         { titleJp: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -121,21 +122,37 @@ export class AdminService {
           id: true,
           slug: true,
           titleEs: true,
+          titleEn: true,
           titleJp: true,
+          synopsis: true,
           status: true,
           isVisible: true,
           totalViews: true,
           malRating: true,
+          malId: true,
           coverUrl: true,
           bannerUrl: true,
+          year: true,
+          season: true,
+          studio: true,
+          totalEpisodes: true,
+          aliases: true,
+          sameAs: true,
+          genres: { select: { genre: { select: { id: true, name: true } } } },
           _count: { select: { seasons: true } },
         },
       }),
       this.prisma.anime.count({ where }),
     ]);
 
+    const formatGenres = (a: any) => ({
+      ...a,
+      totalViews: Number(a.totalViews),
+      genres: a.genres?.map((g: any) => g.genre) ?? [],
+    });
+
     return {
-      data: animes.map((a) => ({ ...a, totalViews: Number(a.totalViews) })),
+      data: animes.map(formatGenres),
       meta: { page, total, total_pages: Math.ceil(total / limit) },
     };
   }
@@ -170,8 +187,19 @@ export class AdminService {
 
       const bannerUrl = data.pictures?.[1]?.large ?? data.pictures?.[0]?.large ?? null;
 
+      const titleEn = data.alternative_titles?.en ?? null;
+      const aliases: string[] = [];
+      if (data.alternative_titles?.synonyms) {
+        aliases.push(...data.alternative_titles.synonyms);
+      }
+      if (titleEn && titleEn !== data.title) aliases.push(titleEn);
+      if (data.alternative_titles?.es && data.alternative_titles.es !== data.title && data.alternative_titles.es !== titleEn) {
+        aliases.push(data.alternative_titles.es);
+      }
+
       return {
         titleEs: data.alternative_titles?.es ?? data.title,
+        titleEn,
         titleJp: data.title,
         synopsis: data.synopsis,
         malRating: data.mean,
@@ -184,6 +212,7 @@ export class AdminService {
         coverUrl: data.main_picture?.large ?? data.main_picture?.medium,
         bannerUrl,
         genres: data.genres?.map((g: any) => g.name) ?? [],
+        aliases,
       };
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
@@ -261,12 +290,24 @@ export class AdminService {
     });
     if (existingMal) throw new ConflictException('Este anime ya existe (mismo MAL ID)');
 
+    const titleEn = animeData.alternative_titles?.en ?? null;
+    const aliases: string[] = [];
+    if (animeData.alternative_titles?.synonyms) {
+      aliases.push(...animeData.alternative_titles.synonyms);
+    }
+    if (titleEn && titleEn !== animeData.title) aliases.push(titleEn);
+    if (animeData.alternative_titles?.es && animeData.alternative_titles.es !== animeData.title && animeData.alternative_titles.es !== titleEn) {
+      aliases.push(animeData.alternative_titles.es);
+    }
+
     // 4. Create anime
     const anime = await this.prisma.anime.create({
       data: {
         slug,
         titleEs: animeData.alternative_titles?.es ?? animeData.title,
+        titleEn,
         titleJp: animeData.title,
+        aliases: aliases.length > 0 ? aliases : undefined,
         synopsis: animeData.synopsis,
         malRating: animeData.mean,
         malId: animeData.id,

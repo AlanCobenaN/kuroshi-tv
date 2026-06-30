@@ -269,7 +269,10 @@ model Anime {
   id              String      @id @default(uuid()) @db.Uuid
   slug            String      @unique @db.VarChar(200)         // kuroshi.lat/anime/[slug]
   titleEs         String      @map("title_es") @db.VarChar(200)
+  titleEn         String?     @map("title_en") @db.VarChar(200)
   titleJp         String?     @map("title_jp") @db.VarChar(200)
+  aliases         Json?       @default("[]")                   // nombres alternativos/sinónimos
+  sameAs          Json?       @default("[]")                   // URLs externas (MAL, Wikipedia, etc.)
   synopsis        String?     @db.Text
   status          AnimeStatus @default(proximamente)
   year            Int?

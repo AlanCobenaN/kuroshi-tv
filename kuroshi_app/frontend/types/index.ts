@@ -133,7 +133,10 @@ export interface Anime {
   id: string
   slug: string
   title_es: string
+  title_en?: string
   title_jp: string
+  aliases?: string[]
+  same_as?: string[]
   synopsis: string
   cover_url: string
   banner_url?: string
@@ -160,7 +163,9 @@ export interface AnimeSummary {
   id: string
   slug: string
   title_es: string
+  title_en?: string
   title_jp: string
+  aliases?: string[]
   cover_url: string
   banner_url?: string
   mal_rating?: number

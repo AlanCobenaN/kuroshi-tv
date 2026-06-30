@@ -22,6 +22,7 @@ export class SearchService {
             isVisible: true,
             OR: [
               { titleEs: { contains: query, mode: 'insensitive' } },
+              { titleEn: { contains: query, mode: 'insensitive' } },
               { titleJp: { contains: query, mode: 'insensitive' } },
             ],
           },
@@ -31,6 +32,7 @@ export class SearchService {
             id: true,
             slug: true,
             titleEs: true,
+            titleEn: true,
             titleJp: true,
             coverUrl: true,
             malRating: true,
@@ -80,6 +82,7 @@ export class SearchService {
             isVisible: true,
             OR: [
               { titleEs: { contains: query, mode: 'insensitive' } },
+              { titleEn: { contains: query, mode: 'insensitive' } },
               { titleJp: { contains: query, mode: 'insensitive' } },
             ],
           },
