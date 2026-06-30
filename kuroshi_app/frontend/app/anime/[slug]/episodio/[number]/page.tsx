@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const episode = await animeApi.getEpisode(slug, epNum) as Episode & { anime?: Anime }
     const animeTitle = episode.anime?.title_es ?? slug
-    const title = `${animeTitle} — Episodio ${epNum}${episode.title ? ': ' + episode.title : ''}`
+    const title = `Ver ${animeTitle} — Episodio ${epNum}${episode.title ? ': ' + episode.title : ''} | Kuroshi.lat`
     const description = episode.synopsis ?? `Ver episodio ${epNum} de ${animeTitle} en Kuroshi.tv`
     const keywords = [
       animeTitle.toLowerCase(),
@@ -120,7 +120,7 @@ export default async function EpisodePlayerPage({ params }: Props) {
       ]} />
       <EpisodeJsonLd episode={episode} anime={anime} />
       <WebPageJsonLd
-        name={`${anime?.title_es ?? slug} — Episodio ${epNum}${episode.title ? `: ${episode.title}` : ''} | Kuroshi.lat`}
+        name={`Ver ${anime?.title_es ?? slug} — Episodio ${epNum}${episode.title ? `: ${episode.title}` : ''} | Kuroshi.lat`}
         description={episode.synopsis?.slice(0, 300) ?? `Ver episodio ${epNum} de ${anime?.title_es ?? slug} en Kuroshi.tv`}
         url={`${BASE_URL}/anime/${slug}/episodio/${epNum}`}
         mainEntity={{

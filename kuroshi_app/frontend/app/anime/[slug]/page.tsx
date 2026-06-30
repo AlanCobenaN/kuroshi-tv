@@ -53,20 +53,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   try {
     const anime = await animeApi.getBySlug(slug) as Anime
-    const title = `${anime.title_es} — Ver anime online`
+    const title = `Ver ${anime.title_es} | Kuroshi.lat`
     return {
       title,
       description: buildDescription(anime),
       keywords: buildKeywords(anime),
       openGraph: {
-        title: anime.title_es,
+        title: `Ver ${anime.title_es} | Kuroshi.lat`,
         description: anime.synopsis?.slice(0, 160) ?? `Ver ${anime.title_es} online en Kuroshi.tv`,
         url: `${BASE_URL}/anime/${slug}`,
         images: anime.banner_url ? [{ url: anime.banner_url }] : [{ url: anime.cover_url }],
       },
       twitter: {
         card: 'summary_large_image',
-        title: anime.title_es,
+        title: `Ver ${anime.title_es} | Kuroshi.lat`,
         description: anime.synopsis?.slice(0, 160),
         images: anime.banner_url ? [anime.banner_url] : [anime.cover_url],
       },
@@ -126,7 +126,7 @@ export default async function AnimeDetailPage({ params }: Props) {
       ]} />
       <AnimeJsonLd anime={anime} />
       <WebPageJsonLd
-        name={`${anime.title_es} — Ver anime online | Kuroshi.lat`}
+        name={`Ver ${anime.title_es} | Kuroshi.lat`}
         description={anime.synopsis?.slice(0, 300) ?? `Ver ${anime.title_es} online en Kuroshi.tv`}
         url={`${BASE_URL}/anime/${slug}`}
         mainEntity={{
