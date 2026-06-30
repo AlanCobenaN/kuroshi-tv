@@ -7,10 +7,24 @@ import { Footer } from '@/components/layout/Footer'
 import { AdBanner } from '@/components/ads/AdBanner'
 import { CommunitiesWithAds } from '@/components/ads/CommunitiesWithAds'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 export const metadata: Metadata = {
   title: 'Comunidades',
-  description: 'Explora comunidades, comparte y chatea con otros fans del anime.',
+  description: 'Explora comunidades, comparte y chatea con otros fans del anime en Kuroshi.lat.',
   alternates: { canonical: '/comunidades' },
+  openGraph: {
+    title: 'Comunidades | Kuroshi.lat',
+    description: 'Explora comunidades, comparte y chatea con otros fans del anime en Kuroshi.lat.',
+    url: `${BASE_URL}/comunidades`,
+    images: [{ url: '/og-default.svg', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Comunidades | Kuroshi.lat',
+    description: 'Explora comunidades, comparte y chatea con otros fans del anime.',
+    images: ['/og-default.svg'],
+  },
 }
 
 export const dynamic = 'force-dynamic'

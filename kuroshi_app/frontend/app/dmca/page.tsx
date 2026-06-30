@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 export const metadata: Metadata = {
   title: 'DMCA',
   description: 'Política de derechos de autor y procedimiento de aviso DMCA de Kuroshi.lat.',
   alternates: { canonical: '/dmca' },
+  openGraph: {
+    title: 'DMCA | Kuroshi.lat',
+    description: 'Política de derechos de autor y procedimiento de aviso DMCA de Kuroshi.lat.',
+    url: `${BASE_URL}/dmca`,
+  },
 }
 
 export default function DmcaPage() {

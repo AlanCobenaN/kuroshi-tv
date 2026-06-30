@@ -91,11 +91,18 @@ export default function AdminEpisodesPage() {
     setError('')
     setMessage('')
     try {
+      const body = { ...form }
+      if (!body.airDate) body.airDate = undefined as any
+      if (!body.synopsis) body.synopsis = undefined as any
+      if (!body.thumbnailUrl) body.thumbnailUrl = undefined as any
+      if (!body.title) body.title = undefined as any
+      if (seasons.some(s => s.number === body.seasonNumber)) body.seasonTitle = undefined as any
+
       if (editingEpisode) {
-        await adminApi.updateEpisode(editingEpisode.id, form, session.accessToken)
+        await adminApi.updateEpisode(editingEpisode.id, body, session.accessToken)
         setMessage('Episodio actualizado')
       } else {
-        await adminApi.createEpisode(form, session.accessToken)
+        await adminApi.createEpisode(body, session.accessToken)
         setMessage('Episodio creado')
       }
       resetForm()
@@ -284,6 +291,11 @@ export default function AdminEpisodesPage() {
                     Temporada {s.number}{s.title && s.title !== `Temporada ${s.number}` ? ` — ${s.title}` : ''} ({s._count?.episodes ?? 0} eps)
                   </option>
                 ))}
+                {!seasons.some(s => s.number === form.seasonNumber) && form.seasonNumber > 0 && (
+                  <option value={form.seasonNumber} disabled>
+                    {form.seasonTitle || `Temporada ${form.seasonNumber}`} (nueva)
+                  </option>
+                )}
                 <option value="__new__">+ Nueva temporada</option>
               </select>
             </div>

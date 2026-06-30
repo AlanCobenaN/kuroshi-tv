@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 export const metadata: Metadata = {
   title: 'Contacto',
   description: 'Ponte en contacto con el equipo de Kuroshi.lat.',
   alternates: { canonical: '/contacto' },
+  openGraph: {
+    title: 'Contacto | Kuroshi.lat',
+    description: 'Ponte en contacto con el equipo de Kuroshi.lat.',
+    url: `${BASE_URL}/contacto`,
+  },
 }
 
 export default function ContactoPage() {

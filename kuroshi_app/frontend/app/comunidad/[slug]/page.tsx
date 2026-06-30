@@ -18,6 +18,10 @@ import { communitiesApi } from '@/lib/api'
 import { Community } from '@/types'
 import { CommunityClient } from '@/app/comunidades/[slug]/CommunityClient'
 import { Footer } from '@/components/layout/Footer'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
+import { WebPageJsonLd } from '@/components/seo/WebPageJsonLd'
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -27,11 +31,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   try {
     const community = await communitiesApi.getBySlug(slug) as Community
+    const imageUrl = community.banner_url ?? community.avatar_url ?? '/og-default.svg'
     return {
       title: `${community.name} — Comunidad`,
       description: community.description ?? `Comunidad de fans: ${community.name}`,
-      // URL canónica apunta a /comunidad/ (singular)
       alternates: { canonical: `/comunidad/${slug}` },
+      openGraph: {
+        title: `${community.name} — Comunidad | Kuroshi.lat`,
+        description: community.description ?? `Comunidad de fans: ${community.name}`,
+        url: `${BASE_URL}/comunidad/${slug}`,
+        images: [{ url: imageUrl, width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${community.name} — Comunidad | Kuroshi.lat`,
+        description: community.description ?? `Comunidad de fans: ${community.name}`,
+        images: [imageUrl],
+      },
     }
   } catch {
     return { title: 'Comunidad' }
@@ -53,6 +69,16 @@ export default async function CommunityPage({ params }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd items={[
+        { name: 'Inicio', item: BASE_URL },
+        { name: 'Comunidades', item: `${BASE_URL}/comunidades` },
+        { name: community.name, item: `${BASE_URL}/comunidad/${slug}` },
+      ]} />
+      <WebPageJsonLd
+        name={`${community.name} — Comunidad | Kuroshi.lat`}
+        description={community.description ?? `Comunidad de fans: ${community.name}`}
+        url={`${BASE_URL}/comunidad/${slug}`}
+      />
       <CommunityClient
         community={community}
         isMember={isMember}

@@ -11,10 +11,24 @@ import { CatalogWithAds } from '@/components/ads/CatalogWithAds'
 import { ItemListJsonLd } from '@/components/seo/ItemListJsonLd'
 import { WebPageJsonLd } from '@/components/seo/WebPageJsonLd'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 export const metadata: Metadata = {
   title: 'Catálogo de Anime',
-  description: 'Explora el catálogo completo de anime en Kuroshi.tv. Filtra por género, estado, temporada y más.',
+  description: 'Explora el catálogo completo de anime en Kuroshi.lat. Filtra por género, estado, temporada y más.',
   alternates: { canonical: '/anime' },
+  openGraph: {
+    title: 'Catálogo de Anime | Kuroshi.lat',
+    description: 'Explora el catálogo completo de anime en Kuroshi.lat. Filtra por género, estado, temporada y más.',
+    url: `${BASE_URL}/anime`,
+    images: [{ url: '/og-default.svg', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Catálogo de Anime | Kuroshi.lat',
+    description: 'Explora el catálogo completo de anime en Kuroshi.lat.',
+    images: ['/og-default.svg'],
+  },
 }
 
 interface SearchParams {

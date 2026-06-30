@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 export const metadata: Metadata = {
   title: 'Política de Privacidad',
   description: 'Política de privacidad de Kuroshi.lat. Conoce cómo manejamos tus datos.',
   alternates: { canonical: '/privacidad' },
+  openGraph: {
+    title: 'Política de Privacidad | Kuroshi.lat',
+    description: 'Política de privacidad de Kuroshi.lat. Conoce cómo manejamos tus datos.',
+    url: `${BASE_URL}/privacidad`,
+  },
 }
 
 export default function PrivacidadPage() {

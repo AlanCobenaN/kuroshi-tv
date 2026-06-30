@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
+
 export const metadata: Metadata = {
   title: 'Términos y Condiciones',
   description: 'Términos y condiciones de uso de Kuroshi.lat.',
   alternates: { canonical: '/terminos' },
+  openGraph: {
+    title: 'Términos y Condiciones | Kuroshi.lat',
+    description: 'Términos y condiciones de uso de Kuroshi.lat.',
+    url: `${BASE_URL}/terminos`,
+  },
 }
 
 export default function TerminosPage() {
