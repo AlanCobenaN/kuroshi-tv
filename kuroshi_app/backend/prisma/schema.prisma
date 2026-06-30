@@ -271,8 +271,8 @@ model Anime {
   titleEs         String      @map("title_es") @db.VarChar(200)
   titleEn         String?     @map("title_en") @db.VarChar(200)
   titleJp         String?     @map("title_jp") @db.VarChar(200)
-  aliases         Json?       @default("[]")                   // nombres alternativos/sinónimos
-  sameAs          Json?       @default("[]")                   // URLs externas (MAL, Wikipedia, etc.)
+  aliases         Json?       @default("[]") @map("aliases")   // nombres alternativos/sinónimos
+  sameAs          Json?       @default("[]") @map("same_as")   // URLs externas (MAL, Wikipedia, etc.)
   synopsis        String?     @db.Text
   status          AnimeStatus @default(proximamente)
   year            Int?
