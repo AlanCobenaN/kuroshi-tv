@@ -16,7 +16,7 @@ export default function AdminEpisodesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingEpisode, setEditingEpisode] = useState<any>(null)
   const [form, setForm] = useState({
-    animeSlug: '', seasonNumber: 1, number: 1, title: '', synopsis: '',
+    animeSlug: '', seasonNumber: 1, seasonTitle: '', number: 1, title: '', synopsis: '',
     thumbnailUrl: '', airDate: '',
   })
   const [serverEpId, setServerEpId] = useState<string | null>(null)
@@ -81,7 +81,7 @@ export default function AdminEpisodesPage() {
     setShowForm(false)
     setEditingEpisode(null)
     setForm({
-      animeSlug: selectedAnime, seasonNumber: 1, number: 1, title: '', synopsis: '',
+      animeSlug: selectedAnime, seasonNumber: 1, seasonTitle: '', number: 1, title: '', synopsis: '',
       thumbnailUrl: '', airDate: '',
     })
   }
@@ -119,8 +119,8 @@ export default function AdminEpisodesPage() {
   const editEpisode = (ep: any) => {
     setEditingEpisode(ep)
     setForm({
-      animeSlug: selectedAnime, seasonNumber: ep.seasonNumber ?? 1, number: ep.number,
-      title: ep.title ?? '', synopsis: ep.synopsis ?? '',
+      animeSlug: selectedAnime, seasonNumber: ep.seasonNumber ?? 1, seasonTitle: '',
+      number: ep.number, title: ep.title ?? '', synopsis: ep.synopsis ?? '',
       thumbnailUrl: ep.thumbnail_url ?? '', airDate: ep.air_date ? ep.air_date.slice(0, 10) : '',
     })
     setShowForm(true)
@@ -245,14 +245,34 @@ export default function AdminEpisodesPage() {
           </h3>
           <div className="form-grid">
             <div className="settings-field"><label>Número</label><input type="number" value={form.number} onChange={e => setForm(f => ({ ...f, number: parseInt(e.target.value) || 1 }))} className="input" /></div>
-            <div className="settings-field"><label>Temporada</label><input type="number" value={form.seasonNumber} onChange={e => setForm(f => ({ ...f, seasonNumber: parseInt(e.target.value) || 1 }))} className="input" /></div>
+            <div className="settings-field"><label>Temporada</label>
+              <select value={form.seasonNumber} onChange={e => {
+                const val = e.target.value
+                if (val === '__new__') {
+                  const nextNum = Math.max(0, ...seasons.map(s => s.number)) + 1
+                  setForm(f => ({ ...f, seasonNumber: nextNum, seasonTitle: `Temporada ${nextNum}` }))
+                } else {
+                  setForm(f => ({ ...f, seasonNumber: parseInt(val), seasonTitle: seasons.find(s => s.number === parseInt(val))?.title ?? '' }))
+                }
+              }} className="input">
+                {seasons.map(s => (
+                  <option key={s.id} value={s.number}>
+                    Temporada {s.number}{s.title && s.title !== `Temporada ${s.number}` ? ` — ${s.title}` : ''} ({s._count?.episodes ?? 0} eps)
+                  </option>
+                ))}
+                <option value="__new__">+ Nueva temporada</option>
+              </select>
+            </div>
+            {!editingEpisode && !seasons.some(s => s.number === form.seasonNumber) && (
+              <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>Título de temporada (opcional)</label>
+                <input type="text" value={form.seasonTitle ?? ''} onChange={e => setForm(f => ({ ...f, seasonTitle: e.target.value }))} className="input" placeholder="Ej: Saga de los Andes" />
+              </div>
+            )}
             <div className="settings-field"><label>Título</label><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="input" /></div>
             <div className="settings-field"><label>Fecha de emisión</label><input type="date" value={form.airDate} onChange={e => setForm(f => ({ ...f, airDate: e.target.value }))} className="input" /></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>Sinopsis</label><textarea value={form.synopsis} onChange={e => setForm(f => ({ ...f, synopsis: e.target.value }))} className="input" rows={2} /></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>URL miniatura</label><input type="text" value={form.thumbnailUrl} onChange={e => setForm(f => ({ ...f, thumbnailUrl: e.target.value }))} className="input" /></div>
           </div>
-
-
 
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
             <button onClick={handleSave} className="btn-primary">{editingEpisode ? 'Actualizar' : 'Crear'}</button>
@@ -276,7 +296,7 @@ export default function AdminEpisodesPage() {
         </div>
         <table className="admin-table">
           <thead>
-            <tr><th>#</th><th>Título</th><th>Temp.</th><th>Servidores</th><th>Acciones</th></tr>
+            <tr><th>#</th><th>Título</th><th>Servidores</th><th>Acciones</th></tr>
           </thead>
           <tbody>
             {(() => {
@@ -287,26 +307,49 @@ export default function AdminEpisodesPage() {
               )
               if (filtered.length === 0) {
                 if (episodes.length === 0) {
-                  return <tr key="no-episodes"><td colSpan={5} style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No hay episodios para este anime</td></tr>
+                  return <tr key="no-episodes"><td colSpan={4} style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No hay episodios para este anime</td></tr>
                 }
-                return <tr key="no-results"><td colSpan={5} style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No se encontraron episodios con "{epSearchQuery}"</td></tr>
+                return <tr key="no-results"><td colSpan={4} style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No se encontraron episodios con "{epSearchQuery}"</td></tr>
               }
-              return filtered.map(ep => (
-              <tr key={ep.id}>
-                <td>{ep.number}</td>
-                <td>{ep.title ?? `Episodio ${ep.number}`}</td>
-                <td>{ep.seasonNumber ?? ep.season_id?.slice(0, 8)}</td>
-                <td>
-                  <button onClick={() => openServerManager(ep.id)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                    {(ep._count?.video_servers ?? ep._count?.videoServers ?? 0)} servidores
-                  </button>
-                </td>
-                <td>
-                  <button onClick={() => editEpisode(ep)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', marginRight: '0.25rem' }}>Editar</button>
-                  <button onClick={() => handleDelete(ep.id)} className="btn-danger" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>Eliminar</button>
-                </td>
-              </tr>
-            ))
+              // Agrupar por temporada
+              const grouped: { number: number; title: string; episodes: any[] }[] = []
+              for (const ep of filtered) {
+                let group = grouped.find(g => g.number === ep.seasonNumber)
+                if (!group) {
+                  const season = seasons.find(s => s.number === ep.seasonNumber)
+                  group = { number: ep.seasonNumber, title: season?.title ?? `Temporada ${ep.seasonNumber}`, episodes: [] }
+                  grouped.push(group)
+                }
+                group.episodes.push(ep)
+              }
+              grouped.sort((a, b) => a.number - b.number)
+
+              const rows: any[] = []
+              for (const group of grouped) {
+                rows.push(
+                  <tr key={`season-${group.number}`} className="season-header-row">
+                    <td colSpan={4} className="season-header-label">{group.title} ({group.episodes.length} episodios)</td>
+                  </tr>
+                )
+                for (const ep of group.episodes) {
+                  rows.push(
+                    <tr key={ep.id}>
+                      <td>{ep.number}</td>
+                      <td>{ep.title ?? `Episodio ${ep.number}`}</td>
+                      <td>
+                        <button onClick={() => openServerManager(ep.id)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                          {(ep._count?.video_servers ?? ep._count?.videoServers ?? 0)} servidores
+                        </button>
+                      </td>
+                      <td>
+                        <button onClick={() => editEpisode(ep)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', marginRight: '0.25rem' }}>Editar</button>
+                        <button onClick={() => handleDelete(ep.id)} className="btn-danger" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>Eliminar</button>
+                      </td>
+                    </tr>
+                  )
+                }
+              }
+              return rows
             })()}
           </tbody>
         </table>
@@ -358,6 +401,7 @@ export default function AdminEpisodesPage() {
         .admin-table th, .admin-table td { text-align: left; padding: 0.625rem 0.875rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
         .admin-table th { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: var(--bg-elevated); }
         .admin-table td { color: var(--text-secondary); }
+        .season-header-row td { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); background: var(--bg-overlay); padding: 0.5rem 0.875rem; letter-spacing: 0.02em; }
         .btn-primary, .btn-secondary, .btn-danger { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; transition: all var(--transition-fast); }
         .btn-primary { background: var(--accent); color: #000; }
         .btn-secondary { background: var(--bg-overlay); color: var(--text-primary); }

@@ -120,6 +120,17 @@ export class CreateEpisodeDto {
   @IsInt()
   seasonNumber: number;
 
+  @ApiPropertyOptional({ description: 'Título personalizado para la temporada (solo si se crea una nueva)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  seasonTitle?: string;
+
+  @ApiPropertyOptional({ enum: ['regular', 'ova', 'especial'] })
+  @IsOptional()
+  @IsEnum(['regular', 'ova', 'especial'])
+  seasonType?: string = 'regular';
+
   @ApiProperty()
   @IsInt()
   number: number;

@@ -535,7 +535,8 @@ export class AdminService {
         data: {
           animeId: anime.id,
           number: dto.seasonNumber,
-          type: 'regular',
+          title: dto.seasonTitle,
+          type: (dto.seasonType as any) ?? 'regular',
         },
       });
     }
