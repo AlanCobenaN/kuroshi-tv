@@ -50,13 +50,17 @@ export class AnimeService {
 
     const [animes, total] = await Promise.all([
       this.prisma.anime.findMany({
-        where, orderBy, skip, take: limit,
-      select: {
-        id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, status: true,
-        malRating: true, coverUrl: true, bannerUrl: true, year: true, season: true, totalViews: true, totalEpisodes: true,
-        aliases: true, sameAs: true,
-        genres: { select: { genre: { select: { name: true } } } },
-        _count: { select: { ratings: true } },
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        select: {
+          id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, status: true,
+          malRating: true, coverUrl: true, bannerUrl: true, year: true, season: true, totalViews: true, totalEpisodes: true,
+          aliases: true, sameAs: true,
+          genres: { select: { genre: { select: { name: true } } } },
+          _count: { select: { ratings: true } },
+        },
       }),
       this.prisma.anime.count({ where }),
     ]);
@@ -77,8 +81,8 @@ export class AnimeService {
         coverUrl: true, bannerUrl: true, totalViews: true, status: true,
         aliases: true, sameAs: true,
         genres: { select: { genre: { select: { name: true } } } },
-      }),
-    );
+      },
+    });
     return animes.map((a, index) => ({ ...this.formatAnimeCard(a), rank: index + 1 }));
   }
 
