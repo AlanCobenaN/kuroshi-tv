@@ -41,16 +41,34 @@ function getDayMeta(dateStr: string) {
   }
 }
 
+function toDateStr(d: Date): string {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
+
 export function CalendarioClient({ initialSchedule }: Props) {
   const days = useMemo(() => {
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    return initialSchedule
-      .filter(g => new Date(g.date + 'T00:00:00') >= now)
-      .slice(0, 7)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Build lookup from API data
+    const lookup = new Map<string, ScheduleDay>()
+    for (const day of initialSchedule) {
+      lookup.set(day.date, day)
+    }
+
+    // Generate 7 consecutive days starting today
+    const result: (ScheduleDay & { empty: boolean })[] = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today)
+      d.setDate(d.getDate() + i)
+      const dateStr = toDateStr(d)
+      const existing = lookup.get(dateStr)
+      result.push(existing ? { ...existing, empty: false } : { date: dateStr, items: [], empty: true })
+    }
+    return result
   }, [initialSchedule])
 
-  if (days.length === 0) {
+  if (days.every(d => d.empty)) {
     return (
       <div className="cw-empty">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', opacity: 0.4 }}>
@@ -82,9 +100,13 @@ export function CalendarioClient({ initialSchedule }: Props) {
                 <span className="cw-day-date">{meta.dayNum}<span className="cw-day-month">{meta.month}</span></span>
               </div>
               <div className="cw-cards">
-                {day.items.map(item => (
-                  <EpisodeCard key={item.id} item={item} />
-                ))}
+                {day.empty ? (
+                  <div className="cw-empty-day">Sin episodios</div>
+                ) : (
+                  day.items.map(item => (
+                    <EpisodeCard key={item.id} item={item} />
+                  ))
+                )}
               </div>
             </div>
           )
@@ -219,6 +241,15 @@ export function CalendarioClient({ initialSchedule }: Props) {
         .cw-ep-time {
           font-weight: 600;
           color: var(--accent);
+        }
+        .cw-empty-day {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem 0.5rem;
+          font-size: 0.6875rem;
+          color: var(--text-muted);
+          flex: 1;
         }
         @media (max-width: 820px) {
           .cw-grid {
