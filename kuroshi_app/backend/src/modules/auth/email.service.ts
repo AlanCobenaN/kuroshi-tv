@@ -1,26 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly workerUrl: string;
+  private readonly resend: Resend;
+  private readonly fromEmail: string;
 
   constructor(private config: ConfigService) {
-    this.workerUrl = this.config.get('CLOUDFLARE_EMAIL_WORKER_URL', 'http://localhost:8787');
+    this.resend = new Resend(this.config.get('RESEND_API_KEY', ''));
+    this.fromEmail = 'Kuroshi.lat <noreply@kuroshi.lat>';
   }
 
-  private async sendViaWorker(to: string, subject: string, htmlContent: string): Promise<void> {
-    const response = await fetch(`${this.workerUrl}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, subject, htmlContent }),
+  private async sendViaResend(to: string, subject: string, htmlContent: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.fromEmail,
+      to: [to],
+      subject,
+      html: htmlContent,
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      this.logger.error(`Cloudflare email worker error: ${response.status} ${error}`);
-      throw new Error(`Failed to send email via Cloudflare Worker: ${response.status}`);
+    if (error) {
+      this.logger.error(`Resend error: ${JSON.stringify(error)}`);
+      throw new Error(`Failed to send email via Resend: ${error.message}`);
     }
   }
 
@@ -40,7 +43,7 @@ export class EmailService {
       </div>
     `;
 
-    await this.sendViaWorker(to, 'Verifica tu email en Kuroshi.lat', htmlContent);
+    await this.sendViaResend(to, 'Verifica tu email en Kuroshi.lat', htmlContent);
   }
 
   async sendPasswordResetConfirmation(to: string, token: string, username: string) {
@@ -58,7 +61,7 @@ export class EmailService {
       </div>
     `;
 
-    await this.sendViaWorker(to, '¿Olvidaste tu contraseña? — Kuroshi.lat', htmlContent);
+    await this.sendViaResend(to, '¿Olvidaste tu contraseña? — Kuroshi.lat', htmlContent);
   }
 
   async sendTemporaryPassword(to: string, tempPassword: string, username: string) {
@@ -75,6 +78,6 @@ export class EmailService {
       </div>
     `;
 
-    await this.sendViaWorker(to, 'Tu contraseña temporal — Kuroshi.lat', htmlContent);
+    await this.sendViaResend(to, 'Tu contraseña temporal — Kuroshi.lat', htmlContent);
   }
 }
