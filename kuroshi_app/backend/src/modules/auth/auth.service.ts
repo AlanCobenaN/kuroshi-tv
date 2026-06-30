@@ -4,6 +4,8 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -18,6 +20,8 @@ import { EmailService } from './email.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -388,40 +392,46 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        bio: true,
-        avatarUrl: true,
-        emailVerified: true,
-        visibility: true,
-        createdAt: true,
-        lastActiveAt: true,
-        oauthGoogleId: true,
-        oauthDiscordId: true,
-        passwordHash: true,
-        favoriteAnime: {
-          select: { id: true, slug: true, titleEs: true, coverUrl: true },
-        },
-        _count: {
-          select: {
-            watchlist: true,
-            communityMemberships: true,
-            friendRequestsSent: { where: { status: 'aceptada' } },
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          bio: true,
+          avatarUrl: true,
+          emailVerified: true,
+          visibility: true,
+          createdAt: true,
+          lastActiveAt: true,
+          oauthGoogleId: true,
+          oauthDiscordId: true,
+          passwordHash: true,
+          favoriteAnime: {
+            select: { id: true, slug: true, titleEs: true, coverUrl: true },
+          },
+          _count: {
+            select: {
+              watchlist: true,
+              communityMemberships: true,
+              friendRequestsSent: { where: { status: 'aceptada' } },
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Usuario no encontrado');
+      if (!user) {
+        throw new UnauthorizedException('Usuario no encontrado');
+      }
+
+      return user;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      this.logger.error(`getMe error for user ${userId}: ${(error as Error).message}`, (error as Error).stack);
+      throw new InternalServerErrorException('Error al obtener perfil');
     }
-
-    return user;
   }
 
   async updateLastActive(userId: string) {
