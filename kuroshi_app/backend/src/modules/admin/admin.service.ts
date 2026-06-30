@@ -170,7 +170,7 @@ export class AdminService {
         {
           params: {
             fields:
-              'id,title,alternative_titles,synopsis,mean,genres,status,num_episodes,start_season,studios,main_picture,pictures',
+              'id,title,alternative_titles,mean,status,num_episodes,start_season,studios,main_picture,pictures',
           },
           headers: { 'X-MAL-CLIENT-ID': malClientId },
           timeout: 10000,
@@ -201,7 +201,6 @@ export class AdminService {
         titleEs: data.alternative_titles?.es ?? data.title,
         titleEn,
         titleJp: data.title,
-        synopsis: data.synopsis,
         malRating: data.mean,
         malId: data.id,
         status: statusMap[data.status] ?? 'proximamente',
@@ -211,7 +210,6 @@ export class AdminService {
         studio: data.studios?.[0]?.name,
         coverUrl: data.main_picture?.large ?? data.main_picture?.medium,
         bannerUrl,
-        genres: data.genres?.map((g: any) => g.name) ?? [],
         aliases,
       };
     } catch (error) {
@@ -236,7 +234,7 @@ export class AdminService {
         {
           params: {
             fields:
-              'id,title,alternative_titles,synopsis,mean,genres,status,num_episodes,start_season,studios,main_picture,pictures',
+              'id,title,alternative_titles,mean,status,num_episodes,start_season,studios,main_picture,pictures',
           },
           headers: { 'X-MAL-CLIENT-ID': malClientId },
           timeout: 30000,
@@ -308,7 +306,6 @@ export class AdminService {
         titleEn,
         titleJp: animeData.title,
         aliases: aliases.length > 0 ? aliases : undefined,
-        synopsis: animeData.synopsis,
         malRating: animeData.mean,
         malId: animeData.id,
         status: (statusMap[animeData.status] ?? 'proximamente') as any,
@@ -321,13 +318,7 @@ export class AdminService {
       },
     });
 
-    // 5. Sync genres
-    const genreNames = animeData.genres?.map((g: any) => g.name) ?? [];
-    if (genreNames.length) {
-      await this.syncGenres(anime.id, genreNames);
-    }
-
-    // 6. Create season and episodes
+    // 5. Create season and episodes
     if (episodesData.length > 0) {
       const season = await this.prisma.animeSeason.create({
         data: { animeId: anime.id, number: 1, type: 'regular' },
@@ -357,7 +348,6 @@ export class AdminService {
         coverUrl: anime.coverUrl,
         bannerUrl: anime.bannerUrl,
         totalEpisodes: anime.totalEpisodes,
-        genres: genreNames,
       },
       episodesImported: episodesData.length,
       message: `Anime y ${episodesData.length} episodios importados correctamente`,
