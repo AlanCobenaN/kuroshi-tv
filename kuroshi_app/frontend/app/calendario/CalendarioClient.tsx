@@ -94,23 +94,22 @@ export function CalendarioClient({ initialSchedule }: Props) {
       <style>{`
         .cw-root {
           overflow-x: auto;
-          padding-bottom: 0.5rem;
           scrollbar-width: thin;
           scrollbar-color: var(--border) transparent;
         }
         .cw-grid {
           display: grid;
-          grid-template-columns: repeat(7, minmax(180px, 1fr));
-          gap: 0.75rem;
-          min-width: 640px;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 0.625rem;
         }
         .cw-col {
           background: var(--bg-surface);
           border: 1px solid var(--border);
-          border-radius: var(--radius-xl);
+          border-radius: var(--radius-lg);
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          min-width: 0;
         }
         .cw-col--today {
           border-color: var(--accent);
@@ -121,37 +120,34 @@ export function CalendarioClient({ initialSchedule }: Props) {
           flex-direction: column;
           align-items: center;
           gap: 0.125rem;
-          padding: 1rem 0.75rem 0.75rem;
+          padding: 0.75rem 0.5rem 0.625rem;
           background: var(--bg-elevated);
           border-bottom: 1px solid var(--border);
           text-align: center;
         }
         .cw-day-label {
           font-family: var(--font-display);
-          font-size: 0.8125rem;
+          font-size: 0.6875rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: var(--accent);
         }
-        .cw-col--today .cw-day-label {
-          color: var(--accent);
-        }
         .cw-day-date {
           font-family: var(--font-display);
-          font-size: 1.75rem;
+          font-size: 1.375rem;
           font-weight: 800;
           line-height: 1;
           color: var(--text-primary);
         }
         .cw-day-month {
-          font-size: 0.6875rem;
+          font-size: 0.5625rem;
           font-weight: 600;
           color: var(--text-muted);
           text-transform: uppercase;
           letter-spacing: 0.03em;
           display: block;
-          margin-top: 0.125rem;
+          margin-top: 0.0625rem;
         }
         .cw-cards {
           display: flex;
@@ -160,17 +156,18 @@ export function CalendarioClient({ initialSchedule }: Props) {
         }
         .cw-ep-card {
           display: flex;
-          gap: 0.5rem;
-          padding: 0.625rem 0.75rem;
+          gap: 0.375rem;
+          padding: 0.5rem;
           text-decoration: none;
           border-bottom: 1px solid var(--border);
           transition: background var(--transition-fast);
+          align-items: center;
         }
         .cw-ep-card:last-child { border-bottom: none; }
         .cw-ep-card:hover { background: var(--bg-overlay); }
         .cw-ep-cover {
-          width: 36px;
-          height: 50px;
+          width: 28px;
+          height: 40px;
           border-radius: var(--radius-sm);
           overflow: hidden;
           flex-shrink: 0;
@@ -185,17 +182,17 @@ export function CalendarioClient({ initialSchedule }: Props) {
           display: flex; align-items: center; justify-content: center;
           color: var(--text-muted);
         }
-        .cw-ep-cover-placeholder svg { width: 14px; height: 14px; }
+        .cw-ep-cover-placeholder svg { width: 12px; height: 12px; }
         .cw-ep-body {
           flex: 1;
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: 0.0625rem;
         }
         .cw-ep-title {
           font-family: var(--font-display);
-          font-size: 0.75rem;
+          font-size: 0.6875rem;
           font-weight: 700;
           color: var(--text-primary);
           white-space: nowrap;
@@ -205,9 +202,10 @@ export function CalendarioClient({ initialSchedule }: Props) {
         .cw-ep-meta {
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.6875rem;
+          gap: 0.25rem;
+          font-size: 0.625rem;
           color: var(--text-muted);
+          flex-wrap: wrap;
         }
         .cw-ep-num {
           font-weight: 600;
@@ -216,10 +214,41 @@ export function CalendarioClient({ initialSchedule }: Props) {
           width: 2px; height: 2px;
           border-radius: 50%;
           background: var(--text-muted);
+          flex-shrink: 0;
         }
         .cw-ep-time {
           font-weight: 600;
           color: var(--accent);
+        }
+        @media (max-width: 820px) {
+          .cw-grid {
+            grid-template-columns: repeat(7, minmax(140px, 1fr));
+          }
+        }
+        @media (max-width: 600px) {
+          .cw-grid {
+            grid-template-columns: repeat(7, minmax(120px, 1fr));
+            gap: 0.5rem;
+          }
+          .cw-day-header {
+            padding: 0.625rem 0.375rem 0.5rem;
+          }
+          .cw-day-date {
+            font-size: 1.125rem;
+          }
+          .cw-ep-card {
+            padding: 0.375rem;
+          }
+          .cw-ep-cover {
+            width: 22px;
+            height: 32px;
+          }
+          .cw-ep-title {
+            font-size: 0.625rem;
+          }
+          .cw-ep-meta {
+            font-size: 0.5625rem;
+          }
         }
       `}</style>
     </div>
@@ -242,7 +271,7 @@ function EpisodeCard({ item }: { item: ScheduleDay['items'][0] }) {
           <img src={item.cover_url} alt="" loading="lazy" />
         ) : (
           <div className="cw-ep-cover-placeholder">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
           </div>
         )}
       </div>

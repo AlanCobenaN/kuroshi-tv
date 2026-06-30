@@ -38,17 +38,21 @@ export default async function CalendarioPage() {
         <h1 className="calendario-title">Calendario de Emisión</h1>
         <p className="calendario-subtitle">Episodios próximos sincronizados con AniList</p>
       </div>
-      <CalendarioClient initialSchedule={schedule} />
+      <div className="calendario-grid-wrapper">
+        <CalendarioClient initialSchedule={schedule} />
+      </div>
       <Footer />
       <style>{`
         .calendario-page {
-          max-width: 960px;
-          margin: 0 auto;
-          padding: 1.5rem 1rem 3rem;
+          padding: 1.5rem 0 3rem;
         }
         .calendario-header {
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
+          max-width: 960px;
+          margin-left: auto;
+          margin-right: auto;
+          padding: 0 1rem;
         }
         .calendario-title {
           font-family: var(--font-display);
@@ -61,6 +65,9 @@ export default async function CalendarioPage() {
           font-size: 0.875rem;
           color: var(--text-muted);
           margin: 0;
+        }
+        .calendario-grid-wrapper {
+          padding: 0 0.75rem;
         }
       `}</style>
     </div>
