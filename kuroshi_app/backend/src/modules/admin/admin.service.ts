@@ -589,6 +589,30 @@ export class AdminService {
     return { message: 'Episodio eliminado' };
   }
 
+  async updateSeason(seasonId: string, dto: { title?: string; type?: string }) {
+    const season = await this.prisma.animeSeason.findUnique({ where: { id: seasonId } });
+    if (!season) throw new NotFoundException('Temporada no encontrada');
+
+    return this.prisma.animeSeason.update({
+      where: { id: seasonId },
+      data: {
+        ...(dto.title !== undefined ? { title: dto.title } : {}),
+        ...(dto.type !== undefined ? { type: dto.type as any } : {}),
+      },
+    });
+  }
+
+  async deleteSeason(seasonId: string) {
+    const season = await this.prisma.animeSeason.findUnique({
+      where: { id: seasonId },
+      include: { _count: { select: { episodes: true } } },
+    });
+    if (!season) throw new NotFoundException('Temporada no encontrada');
+
+    await this.prisma.animeSeason.delete({ where: { id: seasonId } });
+    return { message: `Temporada "${season.title ?? season.number}" eliminada con sus ${season._count.episodes} episodios` };
+  }
+
   async addVideoServer(episodeId: string, dto: AddVideoServerDto) {
     const episode = await this.prisma.episode.findUnique({ where: { id: episodeId } });
     if (!episode) throw new NotFoundException('Episodio no encontrado');

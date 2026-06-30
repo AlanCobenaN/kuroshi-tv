@@ -549,6 +549,13 @@ export const adminApi = {
   removeVideoServer: (serverId: string, token: string) =>
     api.delete(`/admin/servers/${serverId}`, { token }),
 
+  // Temporadas
+  updateSeason: (seasonId: string, body: { title?: string; type?: string }, token: string) =>
+    api.put(`/admin/seasons/${seasonId}`, body, { token }),
+
+  deleteSeason: (seasonId: string, token: string) =>
+    api.delete(`/admin/seasons/${seasonId}`, { token }),
+
   // Usuarios
   getUsers: (token: string, page = 1, filter?: string) => {
     const query = filter ? `?page=${page}&filter=${filter}` : `?page=${page}`

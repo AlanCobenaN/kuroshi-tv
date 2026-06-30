@@ -105,6 +105,30 @@ export default function AdminEpisodesPage() {
     }
   }
 
+  const handleRenameSeason = async (seasonId: string, currentTitle: string) => {
+    if (!session?.accessToken) return
+    const newTitle = prompt('Nuevo nombre para la temporada:', currentTitle)
+    if (!newTitle || newTitle === currentTitle) return
+    try {
+      await adminApi.updateSeason(seasonId, { title: newTitle }, session.accessToken)
+      setMessage('Temporada renombrada')
+      loadEpisodes(selectedAnime)
+    } catch (err: any) {
+      setError(err?.message ?? 'Error al renombrar temporada')
+    }
+  }
+
+  const handleDeleteSeason = async (seasonId: string) => {
+    if (!session?.accessToken || !confirm('¿Eliminar esta temporada y TODOS sus episodios?')) return
+    try {
+      await adminApi.deleteSeason(seasonId, session.accessToken)
+      setMessage('Temporada eliminada')
+      loadEpisodes(selectedAnime)
+    } catch (err: any) {
+      setError(err?.message ?? 'Error al eliminar temporada')
+    }
+  }
+
   const handleDelete = async (episodeId: string) => {
     if (!session?.accessToken || !confirm('¿Eliminar este episodio?')) return
     try {
@@ -312,12 +336,12 @@ export default function AdminEpisodesPage() {
                 return <tr key="no-results"><td colSpan={4} style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No se encontraron episodios con "{epSearchQuery}"</td></tr>
               }
               // Agrupar por temporada
-              const grouped: { number: number; title: string; episodes: any[] }[] = []
+              const grouped: { id: string; number: number; title: string; episodes: any[] }[] = []
               for (const ep of filtered) {
                 let group = grouped.find(g => g.number === ep.seasonNumber)
                 if (!group) {
                   const season = seasons.find(s => s.number === ep.seasonNumber)
-                  group = { number: ep.seasonNumber, title: season?.title ?? `Temporada ${ep.seasonNumber}`, episodes: [] }
+                  group = { id: season?.id ?? '', number: ep.seasonNumber, title: season?.title ?? `Temporada ${ep.seasonNumber}`, episodes: [] }
                   grouped.push(group)
                 }
                 group.episodes.push(ep)
@@ -328,7 +352,15 @@ export default function AdminEpisodesPage() {
               for (const group of grouped) {
                 rows.push(
                   <tr key={`season-${group.number}`} className="season-header-row">
-                    <td colSpan={4} className="season-header-label">{group.title} ({group.episodes.length} episodios)</td>
+                    <td colSpan={3} className="season-header-label">{group.title} ({group.episodes.length} episodios)</td>
+                    <td className="season-header-actions">
+                      {group.id && (
+                        <>
+                          <button onClick={() => handleRenameSeason(group.id, group.title)} className="btn-season" title="Renombrar temporada">✏️</button>
+                          <button onClick={() => handleDeleteSeason(group.id)} className="btn-season btn-season--danger" title="Eliminar temporada">🗑️</button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 )
                 for (const ep of group.episodes) {
@@ -402,6 +434,11 @@ export default function AdminEpisodesPage() {
         .admin-table th { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: var(--bg-elevated); }
         .admin-table td { color: var(--text-secondary); }
         .season-header-row td { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); background: var(--bg-overlay); padding: 0.5rem 0.875rem; letter-spacing: 0.02em; }
+        .season-header-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .season-header-actions { text-align: right; white-space: nowrap; }
+        .btn-season { background: none; border: none; cursor: pointer; font-size: 0.875rem; padding: 0.125rem 0.25rem; opacity: 0.5; transition: opacity var(--transition-fast); line-height: 1; }
+        .btn-season:hover { opacity: 1; }
+        .btn-season--danger:hover { filter: brightness(1.5); }
         .btn-primary, .btn-secondary, .btn-danger { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; transition: all var(--transition-fast); }
         .btn-primary { background: var(--accent); color: #000; }
         .btn-secondary { background: var(--bg-overlay); color: var(--text-primary); }

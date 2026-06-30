@@ -142,6 +142,20 @@ export class AdminController {
     return this.adminService.deleteEpisode(id);
   }
 
+  @Put('seasons/:id')
+  @Roles('moderador', 'owner')
+  @ApiOperation({ summary: 'Renombrar o cambiar tipo de temporada' })
+  updateSeason(@Param('id') id: string, @Body() dto: { title?: string; type?: string }) {
+    return this.adminService.updateSeason(id, dto);
+  }
+
+  @Delete('seasons/:id')
+  @Roles('moderador', 'owner')
+  @ApiOperation({ summary: 'Eliminar temporada con todos sus episodios' })
+  deleteSeason(@Param('id') id: string) {
+    return this.adminService.deleteSeason(id);
+  }
+
   @Post('episodes/:id/servers')
   @Roles('moderador', 'owner')
   @ApiOperation({ summary: 'Añadir servidor de video al episodio' })
