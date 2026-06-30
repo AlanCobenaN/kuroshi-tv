@@ -586,9 +586,9 @@ export interface ScheduleDay {
 
 export interface ScheduleItem {
   id: string
-  anilistId: number
+  anilist_id: number
   episode: number
-  airingAt: string
+  airing_at: string
   title: string | null
-  coverUrl: string | null
+  cover_url: string | null
 }

@@ -205,19 +205,19 @@ function DayGroup({ day, muted }: { day: ScheduleDay; muted?: boolean }) {
 }
 
 function EpisodeCard({ item }: { item: ScheduleDay['items'][0] }) {
-  const time = formatTime(item.airingAt)
+  const time = formatTime(item.airing_at)
   const slug = item.title
     ? item.title.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')
         .slice(0, 200)
-    : `anilist-${item.anilistId}`
+    : `anilist-${item.anilist_id}`
 
   return (
     <Link href={`/anime/${slug}`} className="calendary-episode-card">
       <div className="calendary-ep-cover">
-        {item.coverUrl ? (
-          <img src={item.coverUrl} alt="" loading="lazy" />
+        {item.cover_url ? (
+          <img src={item.cover_url} alt="" loading="lazy" />
         ) : (
           <div className="calendary-ep-cover-placeholder">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
@@ -225,7 +225,7 @@ function EpisodeCard({ item }: { item: ScheduleDay['items'][0] }) {
         )}
       </div>
       <div className="calendary-ep-info">
-        <strong className="calendary-ep-title">{item.title ?? `Anime #${item.anilistId}`}</strong>
+        <strong className="calendary-ep-title">{item.title ?? `Anime #${item.anilist_id}`}</strong>
         <span className="calendary-ep-episode">Episodio {item.episode}</span>
       </div>
       <div className="calendary-ep-time">
