@@ -347,44 +347,42 @@ export class AuthService {
   }
 
   async confirmResetPassword(token: string) {
+    const now = new Date();
+
+    const result = await this.prisma.passwordResetToken.updateMany({
+      where: { token, usedAt: null, expiresAt: { gte: now } },
+      data: { usedAt: now },
+    });
+
+    if (result.count === 0) {
+      const record = await this.prisma.passwordResetToken.findUnique({
+        where: { token },
+      });
+      if (!record) throw new BadRequestException('Token inválido');
+      if (record.usedAt) throw new BadRequestException('Este token ya fue utilizado');
+      throw new BadRequestException('El token ha expirado. Solicita uno nuevo.');
+    }
+
     const record = await this.prisma.passwordResetToken.findUnique({
       where: { token },
     });
 
-    if (!record) {
-      throw new BadRequestException('Token inválido');
-    }
-
-    if (record.usedAt) {
-      throw new BadRequestException('Este token ya fue utilizado');
-    }
-
-    if (record.expiresAt < new Date()) {
-      throw new BadRequestException('El token ha expirado. Solicita uno nuevo.');
-    }
-
     const tempPassword = crypto.randomBytes(4).toString('hex');
-
     const passwordHash = await bcrypt.hash(tempPassword, 12);
 
     await this.prisma.user.update({
-      where: { email: record.email },
+      where: { email: record!.email },
       data: { passwordHash },
     });
 
-    await this.prisma.passwordResetToken.update({
-      where: { id: record.id },
-      data: { usedAt: new Date() },
-    });
-
     const user = await this.prisma.user.findUnique({
-      where: { email: record.email },
+      where: { email: record!.email },
       select: { username: true },
     });
 
     if (user) {
       await this.emailService
-        .sendTemporaryPassword(record.email, tempPassword, user.username)
+        .sendTemporaryPassword(record!.email, tempPassword, user.username)
         .catch(() => {});
     }
 

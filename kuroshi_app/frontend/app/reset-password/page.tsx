@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { authApi } from '@/lib/api'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get('token')
+  const calledRef = useRef(false)
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired'>('loading')
   const [message, setMessage] = useState('')
@@ -18,6 +19,9 @@ export default function ResetPasswordPage() {
       setMessage('Token no proporcionado.')
       return
     }
+
+    if (calledRef.current) return
+    calledRef.current = true
 
     authApi.confirmResetPassword(token)
       .then((res: any) => {
