@@ -17,11 +17,13 @@ export default async function SettingsPage() {
 
   let emailVerified = session.user.email_verified
   let linkedMethods: string[] = []
+  let twoFactorEnabled = false
 
   try {
     const me = await authApi.me(session.accessToken) as any
     if (me) {
       if (typeof me.email_verified === 'boolean') emailVerified = me.email_verified
+      if (typeof me.twoFactorEnabled === 'boolean') twoFactorEnabled = me.twoFactorEnabled
 
       const methods: string[] = []
       if (me.oauthGoogleId) methods.push('google')
@@ -42,6 +44,7 @@ export default async function SettingsPage() {
           avatarUrl={session.user.avatar_url ?? ''}
           emailVerified={emailVerified}
           linkedMethods={linkedMethods}
+          twoFactorEnabled={twoFactorEnabled}
         />
       </div>
       <Footer />

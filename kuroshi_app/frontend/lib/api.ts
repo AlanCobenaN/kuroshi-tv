@@ -221,6 +221,12 @@ export const authApi = {
 
   ping: (token: string) =>
     api.post('/auth/ping', {}, { token }),
+
+  enableTwoFactor: (token: string) =>
+    api.post('/auth/me/2fa/enable', {}, { token }),
+
+  disableTwoFactor: (body: { password: string }, token: string) =>
+    api.post('/auth/me/2fa/disable', body, { token }),
 }
 
 // ─── Módulo Usuarios — 13 endpoints ──────────────────────────

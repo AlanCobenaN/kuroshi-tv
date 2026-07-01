@@ -18,6 +18,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyTwoFactorDto, DisableTwoFactorDto } from './dto/two-factor.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -148,5 +149,34 @@ export class AuthController {
   @ApiOperation({ summary: 'Confirmar cambio de contraseña con token y recibir contraseña temporal' })
   async confirmResetPassword(@Body('token') token: string) {
     return this.authService.confirmResetPassword(token);
+  }
+
+  @Public()
+  @Post('2fa/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verificar código 2FA y obtener JWT' })
+  async verifyTwoFactor(@Body() dto: VerifyTwoFactorDto) {
+    return this.authService.verifyTwoFactor(dto);
+  }
+
+  @Post('me/2fa/enable')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Activar verificación en dos pasos' })
+  async enableTwoFactor(@CurrentUser('id') userId: string) {
+    return this.authService.enableTwoFactor(userId);
+  }
+
+  @Post('me/2fa/disable')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Desactivar verificación en dos pasos' })
+  async disableTwoFactor(
+    @Body() dto: DisableTwoFactorDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.authService.disableTwoFactor(userId, dto);
   }
 }

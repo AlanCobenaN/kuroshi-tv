@@ -14,6 +14,7 @@ interface Props {
   avatarUrl?: string
   emailVerified?: boolean
   linkedMethods?: string[]
+  twoFactorEnabled?: boolean
 }
 
 type SectionId = 'perfil' | 'cuenta' | 'privacidad' | 'apariencia'
@@ -37,7 +38,7 @@ const SECTIONS: { id: SectionId; label: string; icon: React.ReactNode }[] = [
   },
 ]
 
-export function SettingsClient({ username: initialUsername, email, accessToken, provider, avatarUrl: initialAvatarUrl, emailVerified = false, linkedMethods }: Props) {
+export function SettingsClient({ username: initialUsername, email, accessToken, provider, avatarUrl: initialAvatarUrl, emailVerified = false, linkedMethods, twoFactorEnabled = false }: Props) {
   const [activeSection, setActiveSection] = useState<SectionId>('perfil')
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
@@ -93,7 +94,7 @@ export function SettingsClient({ username: initialUsername, email, accessToken, 
             />
           )}
           {activeSection === 'cuenta' && (
-            <AccountSection email={email} provider={provider} accessToken={accessToken} emailVerified={emailVerified} linkedMethods={linkedMethods} />
+            <AccountSection email={email} provider={provider} accessToken={accessToken} emailVerified={emailVerified} linkedMethods={linkedMethods} twoFactorEnabled={twoFactorEnabled} />
           )}
           {activeSection === 'privacidad' && (
             <PrivacySection
@@ -488,7 +489,7 @@ function AvatarSection({ currentAvatar, previewUrl, uploading, onSelect, onUploa
 
 /* ─── Sección Cuenta ─────────────────────────────────────── */
 
-function AccountSection({ email, provider, accessToken, emailVerified, linkedMethods }: { email: string; provider?: string; accessToken?: string; emailVerified?: boolean; linkedMethods?: string[] }) {
+function AccountSection({ email, provider, accessToken, emailVerified, linkedMethods, twoFactorEnabled: initialTwoFactor }: { email: string; provider?: string; accessToken?: string; emailVerified?: boolean; linkedMethods?: string[]; twoFactorEnabled?: boolean }) {
   const [showDanger, setShowDanger]        = useState(false)
   const [confirmText, setConfirmText]      = useState('')
   const [currentPassword, setCurrentPass]  = useState('')
@@ -501,6 +502,12 @@ function AccountSection({ email, provider, accessToken, emailVerified, linkedMet
   const [verifyMessage, setVerifyMessage]             = useState('')
   const [verifyError, setVerifyError]                 = useState(false)
   const [showForgotPass, setShowForgotPass]           = useState(false)
+  const [twoFactorEnabled, setTwoFactorEnabled]       = useState(initialTwoFactor ?? false)
+  const [twoFactorLoading, setTwoFactorLoading]       = useState(false)
+  const [twoFactorDisablePass, setTwoFactorDisablePass] = useState('')
+  const [twoFactorShowDisable, setTwoFactorShowDisable] = useState(false)
+  const [twoFactorError, setTwoFactorError]           = useState('')
+  const [twoFactorSuccess, setTwoFactorSuccess]       = useState('')
 
   const isEmailAccount = !linkedMethods || linkedMethods.includes('email')
 
@@ -694,6 +701,98 @@ function AccountSection({ email, provider, accessToken, emailVerified, linkedMet
           <ForgotPasswordModal isOpen={showForgotPass} onClose={() => setShowForgotPass(false)} />
         </>
       )}
+
+      {/* Verificación en dos pasos */}
+      <div className="settings-divider" />
+      <h3 className="settings-subtitle">Verificación en dos pasos</h3>
+
+      <SettingsField label="Código por email" hint="Recibirás un código de 6 dígitos al iniciar sesión">
+        <label className="toggle-label">
+          <input
+            type="checkbox"
+            className="toggle-input"
+            checked={twoFactorEnabled}
+            disabled={twoFactorLoading}
+            onChange={async () => {
+              setTwoFactorError('')
+              setTwoFactorSuccess('')
+              setTwoFactorLoading(true)
+              if (twoFactorEnabled) {
+                setTwoFactorShowDisable(true)
+                setTwoFactorLoading(false)
+              } else {
+                try {
+                  await authApi.enableTwoFactor(accessToken!)
+                  setTwoFactorEnabled(true)
+                  setTwoFactorSuccess('Verificación en dos pasos activada')
+                  setTimeout(() => setTwoFactorSuccess(''), 3000)
+                } catch (e: any) {
+                  setTwoFactorError(e?.message ?? 'Error al activar la verificación')
+                  setTimeout(() => setTwoFactorError(''), 3000)
+                } finally {
+                  setTwoFactorLoading(false)
+                }
+              }
+            }}
+          />
+          <span className="toggle-track">
+            <span className="toggle-thumb" />
+          </span>
+          <span className="toggle-text">{twoFactorEnabled ? 'Activado' : 'Desactivado'}</span>
+        </label>
+      </SettingsField>
+
+      {twoFactorShowDisable && (
+        <div className="two-factor-disable">
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem' }}>
+            Ingresa tu contraseña para desactivar la verificación en dos pasos:
+          </p>
+          <div className="input-row">
+            <input
+              type="password"
+              value={twoFactorDisablePass}
+              onChange={e => setTwoFactorDisablePass(e.target.value)}
+              placeholder="Contraseña actual"
+              className="input"
+              aria-label="Contraseña para desactivar 2FA"
+            />
+            <button
+              className="danger-btn"
+              disabled={twoFactorLoading || !twoFactorDisablePass}
+              onClick={async () => {
+                setTwoFactorError('')
+                setTwoFactorLoading(true)
+                try {
+                  await authApi.disableTwoFactor({ password: twoFactorDisablePass }, accessToken!)
+                  setTwoFactorEnabled(false)
+                  setTwoFactorShowDisable(false)
+                  setTwoFactorDisablePass('')
+                  setTwoFactorSuccess('Verificación en dos pasos desactivada')
+                  setTimeout(() => setTwoFactorSuccess(''), 3000)
+                } catch (e: any) {
+                  setTwoFactorError(e?.message ?? 'Error al desactivar')
+                  setTimeout(() => setTwoFactorError(''), 3000)
+                } finally {
+                  setTwoFactorLoading(false)
+                }
+              }}
+              style={{ flexShrink: 0 }}
+            >
+              {twoFactorLoading ? '...' : 'Desactivar'}
+            </button>
+          </div>
+          <button
+            onClick={() => { setTwoFactorShowDisable(false); setTwoFactorDisablePass(''); }}
+            className="forgot-pass-btn"
+            style={{ marginTop: '0.375rem' }}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      {twoFactorError && <p className="settings-error" role="alert">{twoFactorError}</p>}
+      {twoFactorSuccess && <p className="settings-success" role="status">{twoFactorSuccess}</p>}
 
       {/* Zona de peligro */}
       <div className="settings-divider" />
@@ -1079,6 +1178,8 @@ function SectionStyles() {
       .verify-feedback { margin: 0.25rem 0 0; }
       .forgot-pass-btn { background: none; border: none; cursor: pointer; padding: 0; font-family: var(--font-display); font-size: 0.8125rem; color: var(--text-muted); transition: color var(--transition-fast); }
       .forgot-pass-btn:hover { color: var(--accent); }
+      .input-row { display: flex; gap: 0.5rem; align-items: center; }
+      .two-factor-disable { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.875rem; margin-top: 0.5rem; }
     `}</style>
   )
 }

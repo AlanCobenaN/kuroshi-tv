@@ -15,6 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyTwoFactorDto, DisableTwoFactorDto } from './dto/two-factor.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { EmailService } from './email.service';
 
@@ -103,6 +104,7 @@ export class AuthService {
         isBanned: true,
         isActive: true,
         emailVerified: true,
+        twoFactorEnabled: true,
       },
     });
 
@@ -129,9 +131,14 @@ export class AuthService {
       data: { lastActiveAt: new Date() },
     });
 
+    if (user.twoFactorEnabled) {
+      await this.sendTwoFactorCode(user.id, user.email, user.username);
+      return { requiresTwoFactor: true, userId: user.id };
+    }
+
     const token = this.generateToken(user.id, user.username, user.role);
-    const { passwordHash, ...userWithoutPassword } = user;
-    return { access_token: token, user: userWithoutPassword };
+    const { passwordHash, twoFactorEnabled, ...userWithoutSensitive } = user;
+    return { access_token: token, user: userWithoutSensitive };
   }
 
   async handleGoogleOAuth(oauthData: {
@@ -289,6 +296,122 @@ export class AuthService {
     return { message: 'Email de verificación enviado' };
   }
 
+  private async sendTwoFactorCode(userId: string, email: string, username: string) {
+    const code = crypto.randomInt(100000, 999999).toString();
+
+    await this.prisma.twoFactorCode.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+
+    await this.prisma.twoFactorCode.create({
+      data: {
+        userId,
+        code,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    await this.emailService
+      .sendTwoFactorCode(email, code, username)
+      .catch(() => {});
+  }
+
+  async verifyTwoFactor(dto: VerifyTwoFactorDto) {
+    const record = await this.prisma.twoFactorCode.findFirst({
+      where: {
+        userId: dto.userId,
+        code: dto.code,
+        usedAt: null,
+        expiresAt: { gte: new Date() },
+      },
+    });
+
+    if (!record) {
+      throw new UnauthorizedException('Código inválido o expirado');
+    }
+
+    await this.prisma.twoFactorCode.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+      select: { id: true, username: true, role: true, emailVerified: true, isBanned: true, isActive: true },
+    });
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Cuenta no disponible');
+    }
+    if (user.isBanned) {
+      throw new UnauthorizedException('Esta cuenta ha sido baneada');
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastActiveAt: new Date() },
+    });
+
+    const token = this.generateToken(user.id, user.username, user.role);
+    return { access_token: token, user };
+  }
+
+  async enableTwoFactor(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, username: true, twoFactorEnabled: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+    if (user.twoFactorEnabled) {
+      throw new BadRequestException('La verificación en dos pasos ya está activada');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorEnabled: true },
+    });
+
+    return { message: 'Verificación en dos pasos activada' };
+  }
+
+  async disableTwoFactor(userId: string, dto: DisableTwoFactorDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true, twoFactorEnabled: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+    if (!user.twoFactorEnabled) {
+      throw new BadRequestException('La verificación en dos pasos no está activada');
+    }
+    if (!user.passwordHash) {
+      throw new BadRequestException('No puedes desactivar la verificación en dos pasos de una cuenta vinculada a Google o Discord');
+    }
+
+    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!passwordValid) {
+      throw new UnauthorizedException('Contraseña incorrecta');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorEnabled: false },
+    });
+
+    await this.prisma.twoFactorCode.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+
+    return { message: 'Verificación en dos pasos desactivada' };
+  }
+
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -418,6 +541,7 @@ export class AuthService {
           lastActiveAt: true,
           oauthGoogleId: true,
           oauthDiscordId: true,
+          twoFactorEnabled: true,
           passwordHash: true,
           favoriteAnime: {
             select: { id: true, slug: true, titleEs: true, coverUrl: true },

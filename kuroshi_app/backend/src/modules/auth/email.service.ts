@@ -80,4 +80,21 @@ export class EmailService {
 
     await this.sendViaResend(to, 'Tu contraseña temporal — Kuroshi.lat', htmlContent);
   }
+
+  async sendTwoFactorCode(to: string, code: string, username: string) {
+    const htmlContent = `
+      <div style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0f;color:#e0e0e0;padding:32px;border-radius:12px;border:1px solid #1f1f2a;">
+        <h1 style="font-size:24px;color:#fff;margin:0 0 8px;">Kuroshi.lat</h1>
+        <p style="color:#a0a0b0;margin:0 0 24px;">Hola <strong style="color:#fff;">${username}</strong>,</p>
+        <p style="color:#a0a0b0;margin:0 0 24px;">Tu c&oacute;digo de verificaci&oacute;n en dos pasos es:</p>
+        <div style="background:#1a1a2a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;text-align:center;margin:0 0 24px;">
+          <span style="font-family:monospace;font-size:32px;color:#fff;letter-spacing:8px;font-weight:700;">${code}</span>
+        </div>
+        <p style="color:#a0a0b0;margin:0 0 24px;">Este c&oacute;digo expira en 10 minutos. Si no solicitaste este c&oacute;digo, ignora este email.</p>
+        <p style="color:#6b6b80;font-size:12px;margin:12px 0 0;border-top:1px solid #1f1f2a;padding-top:16px;">Kuroshi.lat &mdash; Seguridad de cuenta</p>
+      </div>
+    `;
+
+    await this.sendViaResend(to, 'Tu código de verificación — Kuroshi.lat', htmlContent);
+  }
 }

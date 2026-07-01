@@ -26,6 +26,9 @@ export function LoginForm({ mode }: Props) {
   const [turnstileToken, setTurnstileToken] = useState('')
   const turnstileRef = useRef<HTMLDivElement>(null)
   const turnstileWidgetId = useRef<string | null>(null)
+  const [twoFactorUserId, setTwoFactorUserId] = useState<string | null>(null)
+  const [twoFactorCode, setTwoFactorCode] = useState('')
+  const [twoFactorError, setTwoFactorError] = useState('')
 
   // Cargar Turnstile y renderizar widget
   useEffect(() => {
@@ -115,25 +118,72 @@ export function LoginForm({ mode }: Props) {
       return
     }
 
-    // Login con credenciales
-    const result = await signIn('credentials', {
-      email,
-      password,
-      turnstileToken,
-      redirect: false,
-    })
+    // Login con credenciales — llamada directa al backend
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, turnstileToken }),
+        }
+      )
+      const data = await res.json()
 
-    setLoading(false)
+      setLoading(false)
 
-    if (result?.ok) {
-      // Reset turnstile after success
+      if (!res.ok) {
+        setError(data.message ?? 'Email o contraseña incorrectos')
+        return
+      }
+
+      if (data.requiresTwoFactor) {
+        setTwoFactorUserId(data.userId)
+        return
+      }
+
       if (turnstileWidgetId.current && window.turnstile) {
         window.turnstile.reset(turnstileWidgetId.current)
       }
+
+      await signIn('kuroshi', { token: data.access_token, redirect: false })
       await update()
       router.push('/')
-    } else {
-      setError('Email o contraseña incorrectos')
+    } catch {
+      setLoading(false)
+      setError('Error de conexión. Intenta de nuevo.')
+    }
+  }
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setTwoFactorError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/2fa/verify`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: twoFactorUserId, code: twoFactorCode }),
+        }
+      )
+      const data = await res.json()
+
+      setLoading(false)
+
+      if (!res.ok) {
+        setTwoFactorError(data.message ?? 'Código inválido')
+        return
+      }
+
+      await signIn('kuroshi', { token: data.access_token, redirect: false })
+      await update()
+      router.push('/')
+    } catch {
+      setLoading(false)
+      setTwoFactorError('Error de conexión. Intenta de nuevo.')
     }
   }
 
@@ -197,154 +247,208 @@ export function LoginForm({ mode }: Props) {
           <span className="auth-divider-text">o con email</span>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          {isRegister && (
+        {/* Paso 2FA */}
+        {twoFactorUserId ? (
+          <form onSubmit={handleTwoFactorSubmit} className="auth-form" noValidate>
             <div className="form-field">
-              <label htmlFor="username" className="form-label">
-                Nombre de usuario
+              <label className="form-label" style={{ textAlign: 'center' }}>
+                Verificación en dos pasos
               </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder="otaku_san_99"
-                className="input"
-                required
-                minLength={3}
-                maxLength={30}
-                pattern="[a-zA-Z0-9_]+"
-                autoComplete="username"
-                autoFocus
-              />
-              <span className="form-hint">Solo letras, números y guiones bajos</span>
-            </div>
-          )}
-
-          <div className="form-field">
-            <label htmlFor="email" className="form-label">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="tu@email.com"
-              className="input"
-              required
-              autoComplete="email"
-              autoFocus={!isRegister}
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="password" className="form-label">Contraseña</label>
-            <div className="password-wrapper">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder={isRegister ? 'Mínimo 8 caracteres' : '••••••••'}
-                className="input"
-                required
-                minLength={isRegister ? 8 : 1}
-                autoComplete={isRegister ? 'new-password' : 'current-password'}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(p => !p)}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            </div>
-            {!isRegister && (
-              <button
-                type="button"
-                onClick={() => setShowForgotPass(true)}
-                className="forgot-link"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            )}
-          </div>
-
-          {isRegister && (
-            <div className="form-field">
-              <label htmlFor="confirmPassword" className="form-label">Confirmar contraseña</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="Repite la contraseña"
-                className="input"
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-          )}
-
-          {error && (
-            <div className="auth-error" role="alert">
-              <ErrorIcon />
-              {error}
-            </div>
-          )}
-
-          <div ref={turnstileRef} className="turnstile-wrapper" />
-
-          <button
-            type="submit"
-            disabled={loading || (isRegister && !acceptTerms)}
-            className="btn-primary auth-submit"
-          >
-            {loading ? <Spinner /> : null}
-            {isRegister ? 'Crear cuenta' : 'Iniciar sesión'}
-          </button>
-        </form>
-
-        {/* Nota de verificación */}
-          {isRegister && (
-            <>
-              <label className="terms-checkbox">
-                <input
-                  type="checkbox"
-                  checked={acceptTerms}
-                  onChange={e => setAcceptTerms(e.target.checked)}
-                  required
-                  aria-label="Acepto los términos y condiciones"
-                />
-                <span className="terms-checkbox-text">
-                  Acepto los{' '}
-                  <a href="/terminos" target="_blank" className="terms-link" rel="noopener noreferrer">
-                    Términos y Condiciones
-                  </a>{' '}
-                  y la{' '}
-                  <a href="/privacidad" target="_blank" className="terms-link" rel="noopener noreferrer">
-                    Política de Privacidad
-                  </a>
-                </span>
-              </label>
-              <p className="auth-note">
-                Al registrarte puedes usar el sitio de inmediato. Te enviaremos un email de verificación, pero no es obligatorio para empezar.
+              <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Ingresa el código de 6 dígitos que enviamos a tu email
               </p>
-            </>
-          )}
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={twoFactorCode}
+                onChange={e => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                className="input"
+                style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '8px', fontFamily: 'monospace' }}
+                required
+                autoFocus
+                autoComplete="one-time-code"
+              />
+            </div>
 
-        {/* Link al otro modo */}
-        <p className="auth-switch">
-          {isRegister ? (
-            <>¿Ya tienes cuenta? <Link href="/login" className="auth-switch-link">Inicia sesión</Link></>
-          ) : (
-            <>¿No tienes cuenta? <Link href="/registro" className="auth-switch-link">Regístrate</Link></>
-          )}
-        </p>
-        <ForgotPasswordModal isOpen={showForgotPass} onClose={() => setShowForgotPass(false)} />
+            {twoFactorError && (
+              <div className="auth-error" role="alert">
+                <ErrorIcon />
+                {twoFactorError}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading || twoFactorCode.length < 6} className="btn-primary auth-submit">
+              {loading ? <Spinner /> : null}
+              Verificar código
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTwoFactorUserId(null)
+                setTwoFactorCode('')
+                setTwoFactorError('')
+              }}
+              className="auth-switch-link"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', fontSize: '0.8125rem' }}
+            >
+              Volver al inicio de sesión
+            </button>
+          </form>
+        ) : (
+          <>
+            <form onSubmit={handleSubmit} className="auth-form" noValidate>
+              {isRegister && (
+                <div className="form-field">
+                  <label htmlFor="username" className="form-label">
+                    Nombre de usuario
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="otaku_san_99"
+                    className="input"
+                    required
+                    minLength={3}
+                    maxLength={30}
+                    pattern="[a-zA-Z0-9_]+"
+                    autoComplete="username"
+                    autoFocus
+                  />
+                  <span className="form-hint">Solo letras, números y guiones bajos</span>
+                </div>
+              )}
+
+              <div className="form-field">
+                <label htmlFor="email" className="form-label">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  className="input"
+                  required
+                  autoComplete="email"
+                  autoFocus={!isRegister}
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="password" className="form-label">Contraseña</label>
+                <div className="password-wrapper">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={isRegister ? 'Mínimo 8 caracteres' : '••••••••'}
+                    className="input"
+                    required
+                    minLength={isRegister ? 8 : 1}
+                    autoComplete={isRegister ? 'new-password' : 'current-password'}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(p => !p)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
+                {!isRegister && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPass(true)}
+                    className="forgot-link"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                )}
+              </div>
+
+              {isRegister && (
+                <div className="form-field">
+                  <label htmlFor="confirmPassword" className="form-label">Confirmar contraseña</label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repite la contraseña"
+                    className="input"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </div>
+              )}
+
+              {error && (
+                <div className="auth-error" role="alert">
+                  <ErrorIcon />
+                  {error}
+                </div>
+              )}
+
+              <div ref={turnstileRef} className="turnstile-wrapper" />
+
+              <button
+                type="submit"
+                disabled={loading || (isRegister && !acceptTerms)}
+                className="btn-primary auth-submit"
+              >
+                {loading ? <Spinner /> : null}
+                {isRegister ? 'Crear cuenta' : 'Iniciar sesión'}
+              </button>
+            </form>
+
+            {/* Nota de verificación */}
+            {isRegister && (
+              <>
+                <label className="terms-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={e => setAcceptTerms(e.target.checked)}
+                    required
+                    aria-label="Acepto los términos y condiciones"
+                  />
+                  <span className="terms-checkbox-text">
+                    Acepto los{' '}
+                    <a href="/terminos" target="_blank" className="terms-link" rel="noopener noreferrer">
+                      Términos y Condiciones
+                    </a>{' '}
+                    y la{' '}
+                    <a href="/privacidad" target="_blank" className="terms-link" rel="noopener noreferrer">
+                      Política de Privacidad
+                    </a>
+                  </span>
+                </label>
+                <p className="auth-note">
+                  Al registrarte puedes usar el sitio de inmediato. Te enviaremos un email de verificación, pero no es obligatorio para empezar.
+                </p>
+              </>
+            )}
+
+            {/* Link al otro modo */}
+            <p className="auth-switch">
+              {isRegister ? (
+                <>¿Ya tienes cuenta? <Link href="/login" className="auth-switch-link">Inicia sesión</Link></>
+              ) : (
+                <>¿No tienes cuenta? <Link href="/registro" className="auth-switch-link">Regístrate</Link></>
+              )}
+            </p>
+            <ForgotPasswordModal isOpen={showForgotPass} onClose={() => setShowForgotPass(false)} />
+          </>
+        )}
       </div>
 
       <style>{`
