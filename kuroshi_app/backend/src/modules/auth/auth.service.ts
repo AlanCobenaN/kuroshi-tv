@@ -118,8 +118,9 @@ export class AuthService {
       throw new UnauthorizedException('Esta cuenta ha sido baneada');
     }
 
-    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const passwordValid = await bcrypt.compare(dto.password, user.passwordHash!);
     if (!passwordValid) {
+      this.logger.warn(`Login failed for ${dto.email}: hash=${(user.passwordHash ?? '').slice(0, 15)}...`);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
@@ -376,7 +377,12 @@ export class AuthService {
       select: { id: true, email: true },
     });
 
-    this.logger.log(`Password reset completed for ${updated.email} (${updated.id})`);
+    const verifyUser = await this.prisma.user.findUnique({
+      where: { email: record!.email },
+      select: { passwordHash: true },
+    });
+    const verifyOk = await bcrypt.compare(tempPassword, verifyUser!.passwordHash!);
+    this.logger.log(`Password reset for ${updated.email} (${updated.id}) — verify: ${verifyOk ? 'OK' : 'FAILED'}`);
 
     const user = await this.prisma.user.findUnique({
       where: { email: record!.email },
