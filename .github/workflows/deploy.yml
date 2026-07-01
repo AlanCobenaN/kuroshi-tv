@@ -42,6 +42,8 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
             NEXTAUTH_URL=https://kuroshi.lat
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ secrets.TURNSTILE_SITE_KEY }}
+            NEXT_PUBLIC_GA_ID=${{ secrets.GA_ID }}
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
