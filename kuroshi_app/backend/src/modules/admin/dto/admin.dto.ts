@@ -103,6 +103,18 @@ export class CreateAnimeDto {
   @IsBoolean()
   isVisible?: boolean = true;
 
+  @ApiPropertyOptional({ description: 'Número de temporada a crear (ej: 1)' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  seasonNumber?: number;
+
+  @ApiPropertyOptional({ description: 'Cantidad de episodios a crear automáticamente en la temporada' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  seasonEpisodes?: number;
+
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   genres?: string[];
@@ -185,6 +197,33 @@ export class CreateEpisodeDto {
   @IsOptional()
   @IsInt()
   adEndingMaxSec?: number = 30;
+}
+
+export class CreateSeasonWithEpisodesDto {
+  @ApiProperty()
+  @IsString()
+  animeSlug: string;
+
+  @ApiProperty()
+  @IsInt()
+  @Min(1)
+  seasonNumber: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  seasonTitle?: string;
+
+  @ApiPropertyOptional({ enum: ['regular', 'ova', 'especial'] })
+  @IsOptional()
+  @IsEnum(['regular', 'ova', 'especial'])
+  seasonType?: string = 'regular';
+
+  @ApiProperty({ description: 'Cantidad de episodios a crear automáticamente' })
+  @IsInt()
+  @Min(1)
+  episodeCount: number;
 }
 
 export class AddVideoServerDto {

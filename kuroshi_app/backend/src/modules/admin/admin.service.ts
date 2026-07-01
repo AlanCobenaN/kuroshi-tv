@@ -13,6 +13,7 @@ import {
   CreateAnimeDto,
   UpdateAnimeDto,
   CreateEpisodeDto,
+  CreateSeasonWithEpisodesDto,
   AddVideoServerDto,
   GetUsersDto,
   WarnUserDto,
@@ -443,7 +444,7 @@ export class AdminService {
       if (existingMal) throw new ConflictException('Este anime ya existe (mismo MAL ID)');
     }
 
-    const { genres, ...animeData } = dto;
+    const { genres, seasonNumber, seasonEpisodes, ...animeData } = dto;
 
     const anime = await this.prisma.anime.create({
       data: {
@@ -456,6 +457,21 @@ export class AdminService {
     // Asociar géneros
     if (genres?.length) {
       await this.syncGenres(anime.id, genres);
+    }
+
+    // Auto-crear temporada y episodios si se especificaron
+    if (seasonNumber && seasonEpisodes) {
+      const season = await this.prisma.animeSeason.create({
+        data: { animeId: anime.id, number: seasonNumber, type: 'regular' },
+      });
+
+      const episodesData = Array.from({ length: seasonEpisodes }, (_, i) => ({
+        seasonId: season.id,
+        number: i + 1,
+        title: `Episodio ${i + 1}`,
+      }));
+
+      await this.prisma.episode.createMany({ data: episodesData });
     }
 
     return anime;
@@ -601,6 +617,44 @@ export class AdminService {
 
     await this.prisma.animeSeason.delete({ where: { id: seasonId } });
     return { message: `Temporada "${season.title ?? season.number}" eliminada con sus ${season._count.episodes} episodios` };
+  }
+
+  async createSeasonWithEpisodes(dto: CreateSeasonWithEpisodesDto) {
+    const anime = await this.prisma.anime.findUnique({
+      where: { slug: dto.animeSlug },
+      select: { id: true, coverUrl: true },
+    });
+    if (!anime) throw new NotFoundException('Anime no encontrado');
+
+    const existingSeason = await this.prisma.animeSeason.findFirst({
+      where: { animeId: anime.id, number: dto.seasonNumber },
+    });
+    if (existingSeason) {
+      throw new ConflictException(`La temporada ${dto.seasonNumber} ya existe`);
+    }
+
+    const season = await this.prisma.animeSeason.create({
+      data: {
+        animeId: anime.id,
+        number: dto.seasonNumber,
+        title: dto.seasonTitle,
+        type: (dto.seasonType as any) ?? 'regular',
+      },
+    });
+
+    const episodesData = Array.from({ length: dto.episodeCount }, (_, i) => ({
+      seasonId: season.id,
+      number: i + 1,
+      title: `Episodio ${i + 1}`,
+    }));
+
+    await this.prisma.episode.createMany({ data: episodesData });
+
+    return {
+      season,
+      episodesCreated: dto.episodeCount,
+      message: `Temporada ${dto.seasonNumber} creada con ${dto.episodeCount} episodios`,
+    };
   }
 
   async addVideoServer(episodeId: string, dto: AddVideoServerDto) {
