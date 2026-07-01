@@ -252,7 +252,7 @@ export class AuthService {
     }
 
     if (record.user.emailVerified) {
-      await this.prisma.verificationToken.delete({ where: { id: record.id } });
+      await this.prisma.verificationToken.deleteMany({ where: { id: record.id } });
       return { message: 'El email ya estaba verificado' };
     }
 
@@ -261,7 +261,7 @@ export class AuthService {
       data: { emailVerified: true },
     });
 
-    await this.prisma.verificationToken.delete({ where: { id: record.id } });
+    await this.prisma.verificationToken.deleteMany({ where: { id: record.id } });
 
     return { message: 'Email verificado exitosamente' };
   }
