@@ -12,6 +12,7 @@ export default function ResetPasswordPage() {
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired'>('loading')
   const [message, setMessage] = useState('')
+  const [tempPassword, setTempPassword] = useState('')
 
   useEffect(() => {
     if (!token) {
@@ -27,6 +28,7 @@ export default function ResetPasswordPage() {
       .then((res: any) => {
         setStatus('success')
         setMessage(res.message ?? 'Te hemos enviado una contraseña temporal a tu correo.')
+        setTempPassword(res.tempPassword ?? '')
       })
       .catch((err: any) => {
         const msg = err?.message ?? ''
@@ -60,7 +62,13 @@ export default function ResetPasswordPage() {
             </div>
             <h1 className="reset-title">Contraseña restablecida</h1>
             <p className="reset-message">{message}</p>
-            <p className="reset-hint">Revisa tu bandeja de entrada. Luego inicia sesión con la contraseña temporal.</p>
+            {tempPassword && (
+              <div className="reset-temp-password">
+                <span className="reset-temp-label">Contraseña temporal:</span>
+                <span className="reset-temp-value">{tempPassword}</span>
+              </div>
+            )}
+            <p className="reset-hint">También revisa tu bandeja de entrada. Luego inicia sesión con esta contraseña.</p>
             <Link href="/login" className="reset-btn">Ir a iniciar sesión</Link>
           </>
         )}
@@ -160,6 +168,9 @@ export default function ResetPasswordPage() {
         .reset-icon--success { color: #4ade80; }
         .reset-icon--expired { color: #fbbf24; }
         .reset-icon--error { color: var(--accent); }
+        .reset-temp-password { background: var(--bg-overlay); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem 1rem; text-align: center; width: 100%; }
+        .reset-temp-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .reset-temp-value { font-family: monospace; font-size: 1.25rem; font-weight: 700; color: var(--text-primary); letter-spacing: 3px; }
       `}</style>
     </div>
   )

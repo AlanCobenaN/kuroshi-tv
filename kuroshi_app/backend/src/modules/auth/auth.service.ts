@@ -370,10 +370,13 @@ export class AuthService {
     const tempPassword = crypto.randomBytes(4).toString('hex');
     const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-    await this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { email: record!.email },
       data: { passwordHash },
+      select: { id: true, email: true },
     });
+
+    this.logger.log(`Password reset completed for ${updated.email} (${updated.id})`);
 
     const user = await this.prisma.user.findUnique({
       where: { email: record!.email },
@@ -386,7 +389,10 @@ export class AuthService {
         .catch(() => {});
     }
 
-    return { message: 'Te hemos enviado una contraseña temporal a tu correo.' };
+    return {
+      message: 'Te hemos enviado una contraseña temporal a tu correo.',
+      tempPassword,
+    };
   }
 
   async getMe(userId: string) {
