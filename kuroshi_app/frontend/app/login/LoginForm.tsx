@@ -137,8 +137,8 @@ export function LoginForm({ mode }: Props) {
         return
       }
 
-      if (data.requiresTwoFactor) {
-        setTwoFactorUserId(data.userId)
+      if (data.requires_two_factor || data.requiresTwoFactor) {
+        setTwoFactorUserId(data.user_id || data.userId)
         return
       }
 

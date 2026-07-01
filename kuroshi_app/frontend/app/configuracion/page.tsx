@@ -23,12 +23,12 @@ export default async function SettingsPage() {
     const me = await authApi.me(session.accessToken) as any
     if (me) {
       if (typeof me.email_verified === 'boolean') emailVerified = me.email_verified
-      if (typeof me.twoFactorEnabled === 'boolean') twoFactorEnabled = me.twoFactorEnabled
+      if (typeof me.two_factor_enabled === 'boolean') twoFactorEnabled = me.two_factor_enabled
 
       const methods: string[] = []
-      if (me.oauthGoogleId) methods.push('google')
-      if (me.oauthDiscordId) methods.push('discord')
-      if (me.passwordHash) methods.push('email')
+      if (me.oauth_google_id) methods.push('google')
+      if (me.oauth_discord_id) methods.push('discord')
+      if (me.password_hash) methods.push('email')
       linkedMethods = methods
     }
   } catch {}
