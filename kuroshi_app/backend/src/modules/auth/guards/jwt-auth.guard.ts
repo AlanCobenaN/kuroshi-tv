@@ -1,4 +1,4 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -22,6 +22,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (err) {
       if (isPublic) return null;
       throw err;
+    }
+
+    if (!user && !isPublic) {
+      throw new UnauthorizedException();
     }
 
     return user;
