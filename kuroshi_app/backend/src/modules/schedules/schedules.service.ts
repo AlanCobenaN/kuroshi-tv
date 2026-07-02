@@ -35,7 +35,17 @@ export class SchedulesService {
       take: 200,
     });
 
-    return this.groupByDay(schedules);
+    // Filtrar solo animes registrados en nuestra base de datos
+    const malIds = [...new Set(schedules.map((s) => s.malId).filter(Boolean))] as number[];
+    const existingAnimes = await this.prisma.anime.findMany({
+      where: { malId: { in: malIds } },
+      select: { malId: true },
+    });
+    const existingMalIds = new Set(existingAnimes.map((a) => a.malId));
+
+    const filtered = schedules.filter((s) => s.malId && existingMalIds.has(s.malId));
+
+    return this.groupByDay(filtered);
   }
 
   private async syncFromAniList() {
@@ -49,6 +59,7 @@ export class SchedulesService {
             mediaId
             media {
               id
+              idMal
               title { romaji english native }
               coverImage { large }
             }
@@ -69,6 +80,7 @@ export class SchedulesService {
 
       const data = entries.map((e: any) => ({
         anilistId: e.mediaId,
+        malId: e.media?.idMal ?? null,
         episode: e.episode,
         airingAt: new Date((e.airingAt as number) * 1000),
         title: e.media?.title?.romaji ?? e.media?.title?.english ?? null,

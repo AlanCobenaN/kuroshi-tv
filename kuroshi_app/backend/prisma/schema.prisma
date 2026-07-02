@@ -664,6 +664,7 @@ model Wallpaper {
 model AiringSchedule {
   id        String   @id @default(uuid()) @db.Uuid
   anilistId Int      @map("anilist_id")
+  malId     Int?     @map("mal_id")
   episode   Int
   airingAt  DateTime @map("airing_at")
   title     String?  @db.VarChar(200)
