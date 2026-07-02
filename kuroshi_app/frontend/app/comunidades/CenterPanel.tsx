@@ -285,7 +285,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
   const [loading, setLoading] = useState(true)
 
   const refreshCommunity = useCallback(() => {
-    communitiesApi.getBySlug(slug, accessToken)
+    return communitiesApi.getBySlug(slug, accessToken)
       .then((data: any) => {
         setCommunity(data as Community)
         const membership = (data as any).user_membership
