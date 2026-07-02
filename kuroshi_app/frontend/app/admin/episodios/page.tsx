@@ -209,7 +209,8 @@ export default function AdminEpisodesPage() {
     setError('')
     setMessage('')
     try {
-      const nextNum = Math.max(0, ...seasons.map(s => s.number)) + 1
+      const emptySeason = seasons.find(s => (s._count?.episodes ?? 0) === 0)
+      const nextNum = emptySeason ? emptySeason.number : Math.max(0, ...seasons.map(s => s.number)) + 1
       const result: any = await adminApi.createSeasonWithEpisodes({
         animeSlug: selectedAnime,
         seasonNumber: nextNum,
@@ -436,7 +437,7 @@ export default function AdminEpisodesPage() {
             </div>
             <div className="server-modal-body">
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
-                Se creará la temporada #{Math.max(0, ...seasons.map(s => s.number)) + 1} con episodios genéricos.
+                {(() => { const es = seasons.find(s => (s._count?.episodes ?? 0) === 0); const n = es ? es.number : Math.max(0, ...seasons.map(s => s.number)) + 1; return `Se ${es ? 'rellenará' : 'creará'} la temporada #${n} con episodios genéricos.` })()}
               </p>
               <div className="settings-field">
                 <label>Cantidad de episodios</label>
