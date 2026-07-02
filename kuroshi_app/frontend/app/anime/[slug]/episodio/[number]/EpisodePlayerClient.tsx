@@ -121,6 +121,7 @@ export function EpisodePlayerClient({
                 </div>
                 </div>
               </div>
+              </div>
 
               {/* Botón de reportar link caído */}
               <button
