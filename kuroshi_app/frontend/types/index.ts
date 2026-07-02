@@ -266,6 +266,7 @@ export interface Community {
   members_threshold: number
   progress_pct: number // hacia comunidad oficial
   is_active: boolean
+  is_private: boolean
   created_by: string
   creator?: UserPublicProfile
   rules?: string

@@ -10,12 +10,13 @@ interface Props {
   accessToken: string
   communityName: string
   communityDescription?: string
+  isPrivate?: boolean
   onCommunityUpdated: () => void
   onDelete?: () => void
 }
 
 export function OwnerPanel({
-  slug, accessToken, communityName, communityDescription,
+  slug, accessToken, communityName, communityDescription, isPrivate,
   onCommunityUpdated, onDelete,
 }: Props) {
   const [tab, setTab] = useState<'settings' | 'moderators' | 'bans' | 'requests'>('settings')
@@ -30,7 +31,7 @@ export function OwnerPanel({
         <button onClick={() => setTab('requests')} className={`op-tab ${tab === 'requests' ? 'op-tab--active' : ''}`}>Solicitudes</button>
       </div>
 
-      {tab === 'settings' && <SettingsTab slug={slug} accessToken={accessToken} communityName={communityName} communityDescription={communityDescription} onUpdated={onCommunityUpdated} onDelete={onDelete} />}
+      {tab === 'settings' && <SettingsTab slug={slug} accessToken={accessToken} communityName={communityName} communityDescription={communityDescription} isPrivate={isPrivate} onUpdated={onCommunityUpdated} onDelete={onDelete} />}
       {tab === 'moderators' && <ModeratorsTab slug={slug} accessToken={accessToken} />}
       {tab === 'bans' && <BansTab slug={slug} accessToken={accessToken} />}
       {tab === 'requests' && <RequestsTab slug={slug} accessToken={accessToken} />}
@@ -49,11 +50,12 @@ export function OwnerPanel({
 
 /* ─── Settings Tab ─────────────────────────────────────── */
 
-function SettingsTab({ slug, accessToken, communityName, communityDescription, onUpdated, onDelete }: {
-  slug: string; accessToken: string; communityName: string; communityDescription?: string; onUpdated: () => void; onDelete?: () => void
+function SettingsTab({ slug, accessToken, communityName, communityDescription, isPrivate: initialIsPrivate, onUpdated, onDelete }: {
+  slug: string; accessToken: string; communityName: string; communityDescription?: string; isPrivate?: boolean; onUpdated: () => void; onDelete?: () => void
 }) {
   const [name, setName] = useState(communityName)
   const [description, setDescription] = useState(communityDescription ?? '')
+  const [isPrivate, setIsPrivate] = useState(initialIsPrivate ?? false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null)
   const [delConfirm, setDelConfirm] = useState(false)
@@ -144,6 +146,7 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
       const body: Record<string, unknown> = {}
       if (name !== communityName) body.name = name
       if (description !== (communityDescription ?? '')) body.description = description
+      if (isPrivate !== initialIsPrivate) body.isPrivate = isPrivate
       if (avatarUrl) body.avatarUrl = avatarUrl
       if (selectedAnime) {
         body.bannerUrl = selectedAnime.banner_url || selectedAnime.cover_url
@@ -203,6 +206,23 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
           {avatarFile && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{avatarFile.name}</span>}
         </div>
         {avatarError && <span className="op-error">{avatarError}</span>}
+      </div>
+
+      {/* Privacidad */}
+      <div className="op-field op-field--row">
+        <span className="op-label">Comunidad privada</span>
+        <label className="op-toggle-label">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={e => setIsPrivate(e.target.checked)}
+            className="op-toggle-input"
+          />
+          <span className="op-toggle-track">
+            <span className="op-toggle-thumb" />
+          </span>
+          <span className="op-toggle-text">{isPrivate ? 'Privada' : 'Pública'}</span>
+        </label>
       </div>
 
       {/* Anime banner search */}
@@ -316,6 +336,13 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
         .op-search-result-img { width: 28px; height: 40px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
         .op-banner-preview { margin-top: 0.25rem; border-radius: var(--radius-md); overflow: hidden; max-height: 120px; }
         .op-banner-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .op-toggle-label { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none; }
+        .op-toggle-input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .op-toggle-track { position: relative; width: 40px; height: 22px; background: var(--bg-overlay); border: 1px solid var(--border-hover); border-radius: var(--radius-full); transition: background var(--transition-fast); flex-shrink: 0; }
+        .op-toggle-input:checked + .op-toggle-track { background: var(--accent); border-color: var(--accent); }
+        .op-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform var(--transition-fast); }
+        .op-toggle-input:checked + .op-toggle-track .op-toggle-thumb { transform: translateX(18px); }
+        .op-toggle-text { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); }
       `}</style>
     </div>
   )

@@ -310,7 +310,7 @@ export function CommunityChatPanel({ communityId, communitySlug, accessToken, us
           font-family: var(--font-display); font-size: 0.75rem; font-weight: 700;
           display: flex; align-items: center; justify-content: center;
         }
-        .chat-msg-content-col { flex: 1; min-width: 0; max-width: 75%; display: flex; flex-direction: column; gap: 0.25rem; }
+        .chat-msg-content-col { flex: 1; min-width: 0; max-width: 85%; display: flex; flex-direction: column; gap: 0.25rem; }
         .chat-msg-header { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.125rem; }
         .chat-msg-username {
           font-family: var(--font-display); font-size: 0.8125rem; font-weight: 700;
@@ -336,7 +336,7 @@ export function CommunityChatPanel({ communityId, communitySlug, accessToken, us
           flex-wrap: wrap;
         }
         .chat-bubble {
-          max-width: 480px;
+          max-width: 600px;
           padding: 0.5rem 0.875rem;
           background: var(--bg-elevated);
           border-radius: var(--radius-lg);

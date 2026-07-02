@@ -296,10 +296,13 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
   }, [slug, accessToken])
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
     setActiveTab('feed')
-    refreshCommunity()
-    setLoading(false)
+    refreshCommunity().then(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
   }, [refreshCommunity])
 
   const handleJoinToggle = async () => {
@@ -425,6 +428,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
             accessToken={accessToken}
             communityName={community.name}
             communityDescription={community.description}
+            isPrivate={community.is_private}
             onCommunityUpdated={refreshCommunity}
             onDelete={() => onDeleteCommunity(slug)}
           />
@@ -509,7 +513,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
         .cv-tab--active { color: var(--text-primary); border-bottom-color: var(--accent); }
 
         .cv-content { flex: 1; overflow-y: auto; }
-        .cv-chat-wrap { height: calc(100dvh - var(--total-nav) - 280px); padding: 1rem 1.5rem; }
+        .cv-chat-wrap { height: calc(100dvh - var(--total-nav) - 220px); padding: 1rem 1.5rem; }
       `}</style>
     </div>
   )
