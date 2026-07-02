@@ -513,7 +513,7 @@ function CommunityView({ slug, isLoggedIn, userId, username, accessToken, myComm
         .cv-tab--active { color: var(--text-primary); border-bottom-color: var(--accent); }
 
         .cv-content { flex: 1; overflow-y: auto; }
-        .cv-chat-wrap { height: calc(100dvh - var(--total-nav) - 220px); padding: 1rem 1.5rem; }
+        .cv-chat-wrap { height: 100%; padding: 1rem 1.5rem; }
       `}</style>
     </div>
   )

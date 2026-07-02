@@ -293,7 +293,7 @@ export function CommunityClient({ community, isMember: initialIsMember, isLogged
 
         .comm-feed-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start; }
         .comm-feed-sidebar { position: sticky; top: calc(var(--total-nav) + 1rem); }
-        .comm-chat-wrapper { max-width: 800px; min-height: 65dvh; height: 65dvh; margin: 0 auto; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border); background: var(--bg-surface); }
+        .comm-chat-wrapper { max-width: 800px; min-height: 70dvh; height: 70dvh; margin: 0 auto; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border); background: var(--bg-surface); }
         .comm-members-section { max-width: 680px; }
 
         @media (max-width: 900px) {

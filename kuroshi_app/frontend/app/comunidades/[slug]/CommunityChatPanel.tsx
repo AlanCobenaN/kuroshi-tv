@@ -39,8 +39,8 @@ export function CommunityChatPanel({ communityId, communitySlug, accessToken, us
       hasScrolled.current = true
       return
     }
-    if (isNearBottom.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (isNearBottom.current && messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
     }
   }, [messages])
 
@@ -67,6 +67,7 @@ export function CommunityChatPanel({ communityId, communitySlug, accessToken, us
     try {
       await sendMessage(content, replyTo?.id)
     } catch {}
+    inputRef.current?.focus({ preventScroll: true })
   }, [inputValue, replyTo, sendMessage])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
