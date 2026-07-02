@@ -26,6 +26,9 @@ export default function AdminEpisodesPage() {
   const [epSearchQuery, setEpSearchQuery] = useState('')
   const [latestAnimes, setLatestAnimes] = useState<{ slug: string; title: string; cover_url: string; total_episodes: number }[]>([])
   const [syncingEpisodes, setSyncingEpisodes] = useState(false)
+  const [showSeasonModal, setShowSeasonModal] = useState(false)
+  const [seasonEpisodeCount, setSeasonEpisodeCount] = useState(12)
+  const [creatingSeason, setCreatingSeason] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
@@ -200,6 +203,28 @@ export default function AdminEpisodesPage() {
     setSyncingEpisodes(false)
   }
 
+  const handleCreateSeason = async () => {
+    if (!session?.accessToken || !selectedAnime) return
+    setCreatingSeason(true)
+    setError('')
+    setMessage('')
+    try {
+      const nextNum = Math.max(0, ...seasons.map(s => s.number)) + 1
+      const result: any = await adminApi.createSeasonWithEpisodes({
+        animeSlug: selectedAnime,
+        seasonNumber: nextNum,
+        episodeCount: seasonEpisodeCount,
+      }, session.accessToken)
+      setMessage(`✅ ${result.message ?? 'Temporada creada'}`)
+      setShowSeasonModal(false)
+      setSeasonEpisodeCount(12)
+      loadEpisodes(selectedAnime)
+    } catch (err: any) {
+      setError(err?.message ?? 'Error al crear temporada')
+    }
+    setCreatingSeason(false)
+  }
+
   const removeServer = async (serverId: string) => {
     if (!session?.accessToken || !confirm('¿Eliminar este servidor?')) return
     try {
@@ -259,6 +284,9 @@ export default function AdminEpisodesPage() {
         {selectedAnime && (
           <>
           <button onClick={() => { resetForm(); setShowForm(true) }} className="btn-primary">Nuevo episodio</button>
+          <button onClick={() => setShowSeasonModal(true)} className="btn-secondary" style={{ fontSize: '0.75rem' }}>
+            + Agregar temporada
+          </button>
           <button onClick={handleSyncEpisodes} disabled={syncingEpisodes} className="btn-secondary" style={{ fontSize: '0.75rem' }}>
             {syncingEpisodes ? 'Sincronizando...' : 'Sinc. episodios MAL'}
           </button>
@@ -398,6 +426,31 @@ export default function AdminEpisodesPage() {
           </tbody>
         </table>
       </>)}
+
+      {showSeasonModal && (
+        <div className="server-modal-overlay" onClick={() => setShowSeasonModal(false)}>
+          <div className="server-modal" onClick={e => e.stopPropagation()}>
+            <div className="server-modal-header">
+              <h3>Agregar temporada</h3>
+              <button onClick={() => setShowSeasonModal(false)} className="server-modal-close">&times;</button>
+            </div>
+            <div className="server-modal-body">
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
+                Se creará la temporada #{Math.max(0, ...seasons.map(s => s.number)) + 1} con episodios genéricos.
+              </p>
+              <div className="settings-field">
+                <label>Cantidad de episodios</label>
+                <input type="number" min={1} max={200} value={seasonEpisodeCount}
+                  onChange={e => setSeasonEpisodeCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="input" />
+              </div>
+              <button onClick={handleCreateSeason} disabled={creatingSeason} className="btn-primary" style={{ width: '100%' }}>
+                {creatingSeason ? 'Creando...' : `Crear temporada con ${seasonEpisodeCount} episodios`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {serverEpId && (
         <div className="server-modal-overlay" onClick={() => setServerEpId(null)}>

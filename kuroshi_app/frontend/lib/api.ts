@@ -556,6 +556,9 @@ export const adminApi = {
     api.delete(`/admin/servers/${serverId}`, { token }),
 
   // Temporadas
+  createSeasonWithEpisodes: (body: { animeSlug: string; seasonNumber: number; seasonTitle?: string; seasonType?: string; episodeCount: number }, token: string) =>
+    api.post('/admin/seasons', body, { token }),
+
   updateSeason: (seasonId: string, body: { title?: string; type?: string }, token: string) =>
     api.put(`/admin/seasons/${seasonId}`, body, { token }),
 

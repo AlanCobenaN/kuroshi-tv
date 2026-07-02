@@ -330,7 +330,7 @@ export class AdminService {
         .map((ep: any) => ({
           seasonId: season.id,
           number: ep.episode ?? ep.episode_number ?? ep.mal_id,
-          title: ep.title ?? `Episodio ${ep.episode ?? ep.episode_number ?? ep.mal_id}`,
+          title: `Episodio ${ep.episode ?? ep.episode_number ?? ep.mal_id}`,
           synopsis: ep.synopsis ?? null,
           thumbnailUrl: coverUrl,
           airDate: (ep.aired ?? ep.air_date) ? new Date(ep.aired ?? ep.air_date) : null,
@@ -419,7 +419,7 @@ export class AdminService {
         data: {
           seasonId: season.id,
           number: epNum,
-          title: ep.title ?? `Episodio ${epNum}`,
+          title: `Episodio ${epNum}`,
           synopsis: ep.synopsis ?? null,
           thumbnailUrl: coverUrl,
           airDate: (ep.aired ?? ep.air_date) ? new Date(ep.aired ?? ep.air_date) : null,
