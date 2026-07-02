@@ -200,6 +200,8 @@ export interface Episode {
   air_date?: string
   duration_minutes?: number
   views?: number
+  // Temporada del episodio
+  season?: { number: number; type?: string }
   // Config de anuncios
   ad_preroll_minute: number
   ad_preroll_enabled: boolean
@@ -207,6 +209,14 @@ export interface Episode {
   ad_ending_enabled: boolean
   // Servidores disponibles
   video_servers?: VideoServer[]
+  // Anime padre (incluido en getEpisode)
+  anime?: {
+    id: string
+    title_es: string
+    slug: string
+    cover_url?: string
+    banner_url?: string
+  }
 }
 
 export interface VideoServer {

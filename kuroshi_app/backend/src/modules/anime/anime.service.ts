@@ -241,7 +241,7 @@ export class AnimeService {
   async getEpisode(slug: string, episodeNumber: number) {
     const anime = await this.prisma.anime.findUnique({
       where: { slug },
-      select: { id: true, titleEs: true, slug: true },
+      select: { id: true, titleEs: true, slug: true, coverUrl: true, bannerUrl: true },
     });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
@@ -262,7 +262,7 @@ export class AnimeService {
       data: { views: { increment: 1 } },
     });
 
-    return { ...episode, anime: { id: anime.id, titleEs: anime.titleEs, slug: anime.slug } };
+    return { ...episode, anime: { id: anime.id, titleEs: anime.titleEs, slug: anime.slug, coverUrl: anime.coverUrl, bannerUrl: anime.bannerUrl } };
   }
 
   async getEpisodeComments(slug: string, episodeNumber: number, dto: GetEpisodeCommentsDto) {

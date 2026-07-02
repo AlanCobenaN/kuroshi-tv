@@ -71,7 +71,7 @@ export function EpisodePlayerClient({
             <span className="breadcrumb-sep" aria-hidden="true">/</span>
           </>
         )}
-        <span className="breadcrumb-current">Episodio {episode.number}</span>
+        <span className="breadcrumb-current">Episodio {episode.number}{episode.season ? ` · Temporada ${episode.season.number}` : ''}</span>
       </div>
 
       {/* ── Layout principal: reproductor + chat ───────────── */}
@@ -86,16 +86,27 @@ export function EpisodePlayerClient({
           <div className="episode-info">
             <div className="episode-info-header">
               <div className="episode-info-titles">
-                <h1 className="episode-title">
-                  {animeData?.title_es && (
-                    <Link href={`/anime/${animeSlug}`} className="episode-anime-link">
-                      {animeData.title_es}
-                    </Link>
-                  )}
-                  {animeData?.title_es && <span className="episode-sep" aria-hidden="true"> — </span>}
-                  Episodio {episode.number}
-                  {episode.title && <span className="episode-ep-title">: {episode.title}</span>}
-                </h1>
+                <div className="episode-title-row">
+                  <div className="episode-cover-wrapper">
+                    <Image
+                      src={episode.thumbnail_url ?? animeData?.cover_url ?? '/og-default.svg'}
+                      alt=""
+                      width={80}
+                      height={112}
+                      className="episode-cover-img"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="episode-title">
+                      {animeData?.title_es && (
+                        <Link href={`/anime/${animeSlug}`} className="episode-anime-link">
+                          {animeData.title_es}
+                        </Link>
+                      )}
+                      {animeData?.title_es && <span className="episode-sep" aria-hidden="true"> — </span>}
+                      Episodio {episode.number}{episode.season ? `: Temporada ${episode.season.number}` : ''}
+                      {episode.title && <span className="episode-ep-title">: {episode.title}</span>}
+                    </h1>
                 <div className="episode-meta-row">
                   {episode.air_date && (
                     <p className="episode-air-date">
@@ -107,6 +118,7 @@ export function EpisodePlayerClient({
                   {episode.views !== undefined && episode.views > 0 && (
                     <p className="episode-views">{Number(episode.views).toLocaleString('es')} vistas</p>
                   )}
+                </div>
                 </div>
               </div>
 
@@ -345,6 +357,26 @@ export function EpisodePlayerClient({
           gap: 1rem;
         }
         .episode-info-titles { flex: 1; }
+        .episode-title-row {
+          display: flex;
+          gap: 0.75rem;
+          align-items: flex-start;
+        }
+        .episode-cover-wrapper {
+          flex-shrink: 0;
+          width: 60px;
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .episode-cover-img {
+          display: block;
+          width: 100%;
+          height: auto;
+          aspect-ratio: 2 / 3;
+          object-fit: cover;
+          background: var(--bg-elevated);
+        }
         .episode-title {
           font-family: var(--font-display);
           font-size: 1rem;
