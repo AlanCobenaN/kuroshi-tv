@@ -19,9 +19,15 @@ export class SchedulesService {
       orderBy: { syncedAt: 'desc' },
     });
 
+    // Forzar sync si no hay datos, pasaron 6h, o hay registros sin malId (schema anterior)
+    const missingMalId = await this.prisma.airingSchedule.count({
+      where: { malId: null },
+    });
+
     const needsSync =
       !latest ||
-      Date.now() - latest.syncedAt.getTime() > FRESH_HOURS * 3600 * 1000;
+      Date.now() - latest.syncedAt.getTime() > FRESH_HOURS * 3600 * 1000 ||
+      missingMalId > 0;
 
     if (needsSync) {
       await this.syncFromAniList();
@@ -36,14 +42,33 @@ export class SchedulesService {
     });
 
     // Filtrar solo animes registrados en nuestra base de datos
+    // 1) Match por malId exacto
     const malIds = [...new Set(schedules.map((s) => s.malId).filter(Boolean))] as number[];
-    const existingAnimes = await this.prisma.anime.findMany({
+    const animesConMalId = await this.prisma.anime.findMany({
       where: { malId: { in: malIds } },
       select: { malId: true },
     });
-    const existingMalIds = new Set(existingAnimes.map((a) => a.malId));
+    const existingMalIds = new Set(animesConMalId.map((a) => a.malId));
 
-    const filtered = schedules.filter((s) => s.malId && existingMalIds.has(s.malId));
+    // 2) Fallback: animes agregados manualmente (sin malId) → match por título normalizado
+    const animesSinMalId = await this.prisma.anime.findMany({
+      where: { OR: [{ malId: null }, { malId: 0 }] },
+      select: { titleEs: true, titleEn: true, titleJp: true, aliases: true },
+    });
+    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+    const knownTitles = new Set<string>();
+    for (const a of animesSinMalId) {
+      if (a.titleEs) knownTitles.add(normalize(a.titleEs));
+      if (a.titleEn) knownTitles.add(normalize(a.titleEn));
+      if (a.titleJp) knownTitles.add(normalize(a.titleJp));
+      if (a.aliases) for (const alias of a.aliases as string[]) knownTitles.add(normalize(alias));
+    }
+
+    const filtered = schedules.filter((s) => {
+      if (s.malId && existingMalIds.has(s.malId)) return true;
+      if (s.title && knownTitles.has(normalize(s.title))) return true;
+      return false;
+    });
 
     return this.groupByDay(filtered);
   }
