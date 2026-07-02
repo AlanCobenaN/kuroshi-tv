@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { usersApi, uploadsApi, authApi } from '@/lib/api'
+import { compressImage } from '@/lib/compressImage'
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
 import { useTheme } from '@/components/providers/ThemeProvider'
 
@@ -218,7 +219,7 @@ function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onS
     }).catch(() => {})
   }, [accessToken, initialUsername, updateSession])
 
-  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -226,15 +227,16 @@ function ProfileSection({ username: initialUsername, accessToken, avatarUrl, onS
       setError('Formato no soportado. Usa JPG, PNG, GIF o WebP.')
       return
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setError('La imagen no puede superar 3MB.')
-      return
-    }
 
     setError('')
-    const reader = new FileReader()
-    reader.onload = () => setPreviewUrl(reader.result as string)
-    reader.readAsDataURL(file)
+    try {
+      const compressed = await compressImage(file, { maxSizeMB: 1, maxWidth: 512, maxHeight: 512 })
+      const reader = new FileReader()
+      reader.onload = () => setPreviewUrl(reader.result as string)
+      reader.readAsDataURL(compressed)
+    } catch {
+      setError('Error al procesar la imagen.')
+    }
   }
 
   const handleAvatarUpload = () => {
@@ -393,7 +395,7 @@ function AvatarSection({ currentAvatar, previewUrl, uploading, onSelect, onUploa
         )}
       </div>
 
-      <p className="avatar-hint">JPG, PNG, GIF o WebP. Máximo 3MB.</p>
+      <p className="avatar-hint">JPG, PNG, GIF o WebP. Se comprimirá automáticamente si es necesario.</p>
 
       <style>{`
         .avatar-section {

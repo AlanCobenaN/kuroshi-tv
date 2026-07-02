@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { communitiesApi, usersApi, uploadsApi } from '@/lib/api'
+import { compressImage } from '@/lib/compressImage'
 import { CreatePostModal } from '@/app/comunidades/CreatePostModal'
 import { GifSearch } from '@/components/community/GifSearch'
 
@@ -145,9 +146,13 @@ function HomeProfilePostModal({ accessToken, onClose }: { accessToken: string; o
             <button onClick={() => { setImageFile(null); setImagePreview(null) }} className="hpm-img-remove">✕</button>
           </div>
         )}
-        <input ref={fileRef} type="file" accept="image/*" onChange={e => {
+        <input ref={fileRef} type="file" accept="image/*" onChange={async e => {
           const f = e.target.files?.[0]
-          if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)) }
+          if (f) {
+            const compressed = await compressImage(f, { maxSizeMB: 2, maxWidth: 1920, maxHeight: 1920 })
+            setImageFile(compressed)
+            setImagePreview(URL.createObjectURL(compressed))
+          }
         }} className="hpm-file" />
         <div className="hpm-footer">
           <span className="hpm-count">{content.length}/2000</span>

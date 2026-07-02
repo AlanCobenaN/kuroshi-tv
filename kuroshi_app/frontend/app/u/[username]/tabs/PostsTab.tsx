@@ -2,6 +2,7 @@
 // app/u/[username]/tabs/PostsTab.tsx
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { usersApi, uploadsApi, postsApi } from '@/lib/api'
+import { compressImage } from '@/lib/compressImage'
 import { Post } from '@/types'
 import { PostCard } from '@/components/community/PostCard'
 import { GifSearch } from '@/components/community/GifSearch'
@@ -140,9 +141,13 @@ function ProfilePostComposer({ accessToken, onPost }: { accessToken: string; onP
           <button onClick={() => { setImageFile(null); setImagePreview(null) }} className="pp-img-remove">✕</button>
         </div>
       )}
-      <input ref={fileRef} type="file" accept="image/*" onChange={e => {
+      <input ref={fileRef} type="file" accept="image/*" onChange={async e => {
         const f = e.target.files?.[0]
-        if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)) }
+        if (f) {
+          const compressed = await compressImage(f, { maxSizeMB: 2, maxWidth: 1920, maxHeight: 1920 })
+          setImageFile(compressed)
+          setImagePreview(URL.createObjectURL(compressed))
+        }
       }} className="pp-file" />
       <div className="pp-composer-footer">
         <span className="pp-composer-count">{content.length}/2000</span>

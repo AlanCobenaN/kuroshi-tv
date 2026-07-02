@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Community, Post } from '@/types'
 import { communitiesApi, uploadsApi } from '@/lib/api'
+import { compressImage } from '@/lib/compressImage'
 import { RichText } from '@/components/community/RichText'
 import { AdFeed } from '@/components/ads/AdFeed'
 
@@ -221,11 +222,16 @@ function PostComposer({
   const [error, setError]           = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    try {
+      const compressed = await compressImage(file, { maxSizeMB: 2, maxWidth: 1920, maxHeight: 1920 })
+      setImageFile(compressed)
+      setImagePreview(URL.createObjectURL(compressed))
+    } catch {
+      setError('Error al procesar la imagen.')
+    }
   }
 
   const handleSubmit = () => {

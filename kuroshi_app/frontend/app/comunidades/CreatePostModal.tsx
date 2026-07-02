@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { communitiesApi, uploadsApi } from '@/lib/api'
+import { compressImage } from '@/lib/compressImage'
 import { GifSearch } from '@/components/community/GifSearch'
 
 interface Props {
@@ -197,9 +198,13 @@ export function CreatePostModal({ selectedSlug, accessToken, onClose, communitie
           </div>
         )}
 
-        <input ref={fileRef} type="file" accept="image/*" onChange={e => {
+        <input ref={fileRef} type="file" accept="image/*" onChange={async e => {
           const f = e.target.files?.[0]
-          if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)) }
+          if (f) {
+            const compressed = await compressImage(f, { maxSizeMB: 2, maxWidth: 1920, maxHeight: 1920 })
+            setImageFile(compressed)
+            setImagePreview(URL.createObjectURL(compressed))
+          }
         }} className="cpm-file" />
 
         {/* Footer */}

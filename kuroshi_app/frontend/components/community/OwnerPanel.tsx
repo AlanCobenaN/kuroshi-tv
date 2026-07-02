@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { CommunityMemberInfo, JoinRequest } from '@/types'
 import { communitiesApi, uploadsApi, animeApi } from '@/lib/api'
+import { compressImage } from '@/lib/compressImage'
 
 interface Props {
   slug: string
@@ -90,13 +91,17 @@ function SettingsTab({ slug, accessToken, communityName, communityDescription, o
   const [avatarError, setAvatarError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setAvatarError('')
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) { setAvatarError('Solo imágenes'); return }
-    if (file.size > 5 * 1024 * 1024) { setAvatarError('Máximo 5 MB'); return }
-    setAvatarFile(file)
+    try {
+      const compressed = await compressImage(file, { maxSizeMB: 1, maxWidth: 512, maxHeight: 512 })
+      setAvatarFile(compressed)
+    } catch {
+      setAvatarError('Error al procesar la imagen.')
+    }
   }
 
   // Close search results on outside click
