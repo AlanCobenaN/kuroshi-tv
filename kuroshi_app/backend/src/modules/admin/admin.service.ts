@@ -635,17 +635,18 @@ export class AdminService {
       throw new ConflictException(`La temporada ${dto.seasonNumber} ya existe con episodios`);
     }
 
-    let season = existingSeason as any;
-    if (!season) {
-      season = await this.prisma.animeSeason.create({
-        data: {
-          animeId: anime.id,
-          number: dto.seasonNumber,
-          title: dto.seasonTitle,
-          type: (dto.seasonType as any) ?? 'regular',
-        },
-      });
+    if (existingSeason) {
+      await this.prisma.animeSeason.delete({ where: { id: existingSeason.id } });
     }
+
+    const season = await this.prisma.animeSeason.create({
+      data: {
+        animeId: anime.id,
+        number: dto.seasonNumber,
+        title: dto.seasonTitle,
+        type: (dto.seasonType as any) ?? 'regular',
+      },
+    });
 
     const episodesData = Array.from({ length: dto.episodeCount }, (_, i) => ({
       seasonId: season.id,

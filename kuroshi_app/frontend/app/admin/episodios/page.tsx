@@ -28,6 +28,7 @@ export default function AdminEpisodesPage() {
   const [syncingEpisodes, setSyncingEpisodes] = useState(false)
   const [showSeasonModal, setShowSeasonModal] = useState(false)
   const [seasonEpisodeCount, setSeasonEpisodeCount] = useState(12)
+  const [seasonNumberInput, setSeasonNumberInput] = useState(1)
   const [creatingSeason, setCreatingSeason] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -209,16 +210,15 @@ export default function AdminEpisodesPage() {
     setError('')
     setMessage('')
     try {
-      const emptySeason = seasons.find(s => (s._count?.episodes ?? 0) === 0)
-      const nextNum = emptySeason ? emptySeason.number : Math.max(0, ...seasons.map(s => s.number)) + 1
       const result: any = await adminApi.createSeasonWithEpisodes({
         animeSlug: selectedAnime,
-        seasonNumber: nextNum,
+        seasonNumber: seasonNumberInput,
         episodeCount: seasonEpisodeCount,
       }, session.accessToken)
       setMessage(`✅ ${result.message ?? 'Temporada creada'}`)
       setShowSeasonModal(false)
       setSeasonEpisodeCount(12)
+      setSeasonNumberInput(1)
       loadEpisodes(selectedAnime)
     } catch (err: any) {
       setError(err?.message ?? 'Error al crear temporada')
@@ -436,9 +436,12 @@ export default function AdminEpisodesPage() {
               <button onClick={() => setShowSeasonModal(false)} className="server-modal-close">&times;</button>
             </div>
             <div className="server-modal-body">
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
-                {(() => { const es = seasons.find(s => (s._count?.episodes ?? 0) === 0); const n = es ? es.number : Math.max(0, ...seasons.map(s => s.number)) + 1; return `Se ${es ? 'rellenará' : 'creará'} la temporada #${n} con episodios genéricos.` })()}
-              </p>
+              <div className="settings-field">
+                <label>Número de temporada</label>
+                <input type="number" min={1} max={50} value={seasonNumberInput}
+                  onChange={e => setSeasonNumberInput(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="input" />
+              </div>
               <div className="settings-field">
                 <label>Cantidad de episodios</label>
                 <input type="number" min={1} max={200} value={seasonEpisodeCount}
@@ -446,7 +449,7 @@ export default function AdminEpisodesPage() {
                   className="input" />
               </div>
               <button onClick={handleCreateSeason} disabled={creatingSeason} className="btn-primary" style={{ width: '100%' }}>
-                {creatingSeason ? 'Creando...' : `Crear temporada con ${seasonEpisodeCount} episodios`}
+                {creatingSeason ? 'Creando...' : `Crear temporada #${seasonNumberInput} con ${seasonEpisodeCount} episodios`}
               </button>
             </div>
           </div>
