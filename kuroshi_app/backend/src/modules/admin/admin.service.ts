@@ -139,6 +139,7 @@ export class AdminService {
           totalEpisodes: true,
           aliases: true,
           sameAs: true,
+          tags: true,
           genres: { select: { genre: { select: { id: true, name: true } } } },
           _count: { select: { seasons: true } },
         },
@@ -316,6 +317,7 @@ export class AdminService {
         studio: animeData.studios?.[0]?.name,
         coverUrl,
         bannerUrl,
+        tags: ['Anime', 'Sub Español'],
       },
     });
 
@@ -444,13 +446,14 @@ export class AdminService {
       if (existingMal) throw new ConflictException('Este anime ya existe (mismo MAL ID)');
     }
 
-    const { genres, seasonNumber, seasonEpisodes, ...animeData } = dto;
+    const { genres, seasonNumber, seasonEpisodes, tags, ...animeData } = dto;
 
     const anime = await this.prisma.anime.create({
       data: {
         ...animeData,
         slug,
         status: (dto.status as any) ?? 'proximamente',
+        tags: tags ?? [],
       },
     });
 
@@ -481,13 +484,14 @@ export class AdminService {
     const anime = await this.prisma.anime.findUnique({ where: { id: animeId } });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
-    const { genres, ...animeData } = dto;
+    const { genres, tags, ...animeData } = dto;
 
     const updated = await this.prisma.anime.update({
       where: { id: animeId },
       data: {
         ...animeData,
         status: animeData.status as any,
+        ...(tags !== undefined ? { tags } : {}),
       },
     });
 

@@ -35,6 +35,18 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
     return orderAsc ? list : [...list].reverse()
   }, [activeSeason, initialEpisodes, searchQuery, orderAsc])
 
+  // Agrupar episodios por temporada para el acordeón
+  const groupedBySeason = useMemo(() => {
+    const groups: { season: any; episodes: any[] }[] = []
+    for (const season of seasons) {
+      const eps = initialEpisodes.filter(ep => ep.season_id === season.id)
+      if (eps.length > 0) {
+        groups.push({ season, episodes: orderAsc ? eps : [...eps].reverse() })
+      }
+    }
+    return groups
+  }, [seasons, initialEpisodes, orderAsc])
+
   if (seasons.length === 0 && initialEpisodes.length === 0) {
     return (
       <div className="ep-list-empty">
@@ -51,24 +63,34 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
         <span className="ep-list-count">{episodes.length} disponibles</span>
       </div>
 
-      {/* Selector de temporadas */}
+      {/* Acordeón de temporadas */}
       {seasons.length > 1 && (
-        <div className="season-tabs" role="tablist" aria-label="Temporadas">
-          {seasons.map(season => (
-            <button
-              key={season.id}
-              role="tab"
-              aria-selected={activeSeason === season.id}
-              onClick={() => setActiveSeason(season.id)}
-              className={`season-tab ${activeSeason === season.id ? 'season-tab--active' : ''}`}
-            >
-              {season.type === 'ova'
-                ? 'OVAs'
-                : season.type === 'especial'
-                ? 'Especiales'
-                : season.title ?? `Temporada ${season.number}`}
-            </button>
-          ))}
+        <div className="season-accordion">
+          {seasons.map(season => {
+            const isActive = activeSeason === season.id
+            const seasonLabel = season.type === 'ova'
+              ? 'OVAs'
+              : season.type === 'especial'
+              ? 'Especiales'
+              : season.title ?? `Temporada ${season.number}`
+            const epCount = initialEpisodes.filter(ep => ep.season_id === season.id).length
+            return (
+              <div key={season.id} className="season-accordion-item">
+                <button
+                  onClick={() => setActiveSeason(isActive ? 'all' : season.id)}
+                  className={`season-accordion-header ${isActive ? 'season-accordion-header--active' : ''}`}
+                  aria-expanded={isActive}
+                >
+                  <span className="season-accordion-label">{seasonLabel}</span>
+                  <span className="season-accordion-count">{epCount} episodios</span>
+                  <svg className={`season-accordion-arrow ${isActive ? 'season-accordion-arrow--open' : ''}`}
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -208,34 +230,46 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           color: var(--text-muted);
         }
 
-        /* Tabs de temporada */
-        .season-tabs {
+        /* Acordeón de temporadas */
+        .season-accordion {
           display: flex;
-          gap: 0.375rem;
-          overflow-x: auto;
-          scrollbar-width: none;
+          flex-direction: column;
+          gap: 0.25rem;
         }
-        .season-tabs::-webkit-scrollbar { display: none; }
-
-        .season-tab {
-          padding: 0.375rem 1rem;
+        .season-accordion-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.5rem 0.75rem;
           font-family: var(--font-display);
           font-size: 0.8125rem;
-          font-weight: 600;
+          font-weight: 700;
           color: var(--text-secondary);
           background: var(--bg-surface);
           border: 1px solid var(--border);
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-lg);
           cursor: pointer;
-          white-space: nowrap;
           transition: all var(--transition-fast);
+          text-align: left;
         }
-        .season-tab:hover { color: var(--text-primary); border-color: var(--border-hover); }
-        .season-tab--active {
+        .season-accordion-header:hover { color: var(--text-primary); border-color: var(--border-hover); }
+        .season-accordion-header--active {
           color: var(--text-primary);
           background: var(--bg-overlay);
           border-color: var(--border-hover);
         }
+        .season-accordion-label { flex: 1; }
+        .season-accordion-count {
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--text-muted);
+        }
+        .season-accordion-arrow {
+          transition: transform var(--transition-fast);
+          flex-shrink: 0;
+        }
+        .season-accordion-arrow--open { transform: rotate(180deg); }
 
         /* Controles */
         .ep-list-controls {

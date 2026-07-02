@@ -83,6 +83,11 @@ export function AnimeCard({ anime, priority = false, showNewBadge }: Props) {
             <span>{Number(anime.total_views).toLocaleString('es')} vistas</span>
           )}
         </div>
+        {anime.tags && anime.tags.length > 0 && (
+          <div className="anime-card-tags">
+            {anime.tags.map((t, i) => <span key={i} className="tag">{t}</span>)}
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -220,6 +225,25 @@ export function AnimeCard({ anime, priority = false, showNewBadge }: Props) {
           gap: 0.5rem;
           font-size: 0.6875rem;
           color: var(--text-muted);
+        }
+        .anime-card-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.25rem;
+          margin-top: 0.25rem;
+        }
+        .anime-card-tags .tag {
+          font-family: var(--font-display);
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-full);
+          padding: 0.1rem 0.45rem;
+          line-height: 1.4;
         }
       `}</style>
     </Link>

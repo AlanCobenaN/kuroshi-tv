@@ -86,12 +86,36 @@ export default async function EpisodePlayerPage({ params }: Props) {
     ? (Array.isArray(allEpisodesRes.value) ? allEpisodesRes.value : (allEpisodesRes.value as any).data ?? [])
     : []
 
-  const allEpisodes: Episode[] = Array.isArray(allEpisodesRaw)
-    ? allEpisodesRaw.flatMap((item: any) => item.episodes ?? [item])
+  const seasonsData: any[] = Array.isArray(allEpisodesRaw)
+    ? allEpisodesRaw
     : []
 
-  const prevEpisode = allEpisodes.find(ep => ep.number === epNum - 1)
-  const nextEpisode = allEpisodes.find(ep => ep.number === epNum + 1)
+  const allEpisodes: Episode[] = seasonsData.flatMap((item: any) => item.episodes ?? [item])
+
+  // Navegación entre temporadas: si estamos en el último capítulo de una temp,
+  // el siguiente es el primero de la temp siguiente, y viceversa
+  const currentSeasonIdx = seasonsData.findIndex((s: any) =>
+    (s.episodes ?? []).some((ep: any) => ep.number === epNum)
+  )
+  const currentSeason = currentSeasonIdx !== -1 ? seasonsData[currentSeasonIdx] : null
+  const currentSeasonEpisodes: any[] = currentSeason?.episodes ?? []
+  const currentEpIndex = currentSeasonEpisodes.findIndex((ep: any) => ep.number === epNum)
+
+  let prevEpisode = allEpisodes.find(ep => ep.number === epNum - 1)
+  let nextEpisode = allEpisodes.find(ep => ep.number === epNum + 1)
+
+  // Si no hay siguiente en misma temporada, buscar primera de la siguiente
+  if (!nextEpisode && currentSeasonIdx < seasonsData.length - 1) {
+    const nextSeason = seasonsData[currentSeasonIdx + 1]
+    nextEpisode = nextSeason?.episodes?.[0] ?? null
+  }
+
+  // Si no hay anterior en misma temporada, buscar última de la anterior
+  if (!prevEpisode && currentSeasonIdx > 0) {
+    const prevSeason = seasonsData[currentSeasonIdx - 1]
+    const prevEps = prevSeason?.episodes ?? []
+    prevEpisode = prevEps[prevEps.length - 1] ?? null
+  }
 
   // Fetch de animes relacionados (mismo género)
   let relatedAnimes: AnimeSummary[] = []

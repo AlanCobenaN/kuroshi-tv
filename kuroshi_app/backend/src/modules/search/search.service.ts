@@ -38,6 +38,7 @@ export class SearchService {
             malRating: true,
             status: true,
             synopsis: true,
+            tags: true,
             genres: { select: { genre: { select: { name: true } } } },
           },
         }),

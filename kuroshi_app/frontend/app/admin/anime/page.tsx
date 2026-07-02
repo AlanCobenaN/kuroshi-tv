@@ -19,6 +19,7 @@ export default function AdminAnimePage() {
     year: 2024, season: '', studio: '', total_episodes: 0,
     cover_url: '', banner_url: '', genres: '', mal_rating: 0, mal_id: 0,
     aliases: '', same_as: '',
+    tag_tipo: 'Anime', tag_audio: 'Sub Español',
   })
 
   const fetchAnimes = () => {
@@ -36,7 +37,7 @@ export default function AdminAnimePage() {
   const resetForm = () => {
     setShowForm(false)
     setEditing(null)
-    setForm({ title_es: '', title_en: '', title_jp: '', synopsis: '', status: 'proximamente', year: 2024, season: '', studio: '', total_episodes: 0, cover_url: '', banner_url: '', genres: '', mal_rating: 0, mal_id: 0, aliases: '', same_as: '' })
+    setForm({ title_es: '', title_en: '', title_jp: '', synopsis: '', status: 'proximamente', year: 2024, season: '', studio: '', total_episodes: 0, cover_url: '', banner_url: '', genres: '', mal_rating: 0, mal_id: 0, aliases: '', same_as: '', tag_tipo: 'Anime', tag_audio: 'Sub Español' })
   }
 
   const handleSave = async () => {
@@ -61,6 +62,7 @@ export default function AdminAnimePage() {
         genres: form.genres ? form.genres.split(',').map((g: string) => g.trim()).filter(Boolean) : [],
         aliases: form.aliases ? form.aliases.split(',').map((a: string) => a.trim()).filter(Boolean) : [],
         sameAs: form.same_as ? form.same_as.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        tags: [form.tag_tipo, form.tag_audio],
       }
       if (editing) {
         await adminApi.updateAnime(editing.id, body, session.accessToken)
@@ -82,6 +84,7 @@ export default function AdminAnimePage() {
     setMessage('')
     try {
       const data: any = await adminApi.importAnimeFromMAL(parseInt(importMalId), session.accessToken)
+      const iTags: string[] = data.tags ?? []
       setForm({
         title_es: data.title_es ?? '', title_en: data.title_en ?? '', title_jp: data.title_jp ?? '',
         synopsis: data.synopsis ?? '', status: data.status ?? 'proximamente', year: data.year ?? 2024,
@@ -89,6 +92,8 @@ export default function AdminAnimePage() {
         cover_url: data.cover_url ?? '', banner_url: data.banner_url ?? '',
         genres: (data.genres ?? []).join(', '), mal_rating: data.mal_rating ?? 0, mal_id: data.mal_id ?? 0,
         aliases: (data.aliases ?? []).join(', '), same_as: (data.same_as ?? []).join(', '),
+        tag_tipo: iTags[0] ?? 'Anime',
+        tag_audio: iTags[1] ?? 'Sub Español',
       })
       setShowForm(true)
       setMessage('Datos importados desde MAL. Revisá y guardá.')
@@ -112,6 +117,7 @@ export default function AdminAnimePage() {
 
   const editAnime = (a: any) => {
     setEditing(a)
+    const aTags: string[] = a.tags ?? []
     setForm({
       title_es: a.title_es ?? '',
       title_en: a.title_en ?? '',
@@ -129,6 +135,8 @@ export default function AdminAnimePage() {
       mal_id: a.mal_id ?? 0,
       aliases: (a.aliases ?? []).join(', '),
       same_as: (a.same_as ?? []).join(', '),
+      tag_tipo: aTags[0] ?? 'Anime',
+      tag_audio: aTags[1] ?? 'Sub Español',
     })
     setShowForm(true)
   }
@@ -194,6 +202,12 @@ export default function AdminAnimePage() {
             <div className="settings-field"><label>Estudio</label><input type="text" value={form.studio} onChange={e => setForm(f => ({ ...f, studio: e.target.value }))} className="input" /></div>
             <div className="settings-field"><label>Total episodios</label><input type="number" value={form.total_episodes} onChange={e => setForm(f => ({ ...f, total_episodes: parseInt(e.target.value) || 0 }))} className="input" /></div>
             <div className="settings-field"><label>Rating MAL</label><input type="number" step="0.1" value={form.mal_rating} onChange={e => setForm(f => ({ ...f, mal_rating: parseFloat(e.target.value) || 0 }))} className="input" /></div>
+            <div className="settings-field"><label>Tipo</label><select value={form.tag_tipo} onChange={e => setForm(f => ({ ...f, tag_tipo: e.target.value }))} className="input">
+              <option value="Anime">Anime</option><option value="OVA">OVA</option><option value="Película">Película</option>
+            </select></div>
+            <div className="settings-field"><label>Audio</label><select value={form.tag_audio} onChange={e => setForm(f => ({ ...f, tag_audio: e.target.value }))} className="input">
+              <option value="Sub Español">Sub Español</option><option value="Doblaje Latino">Doblaje Latino</option><option value="Sin Audio">Sin Audio</option>
+            </select></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>Sinopsis</label><textarea value={form.synopsis} onChange={e => setForm(f => ({ ...f, synopsis: e.target.value }))} className="input" rows={2} /></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>URL Cover</label><input type="text" value={form.cover_url} onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))} className="input" /></div>
             <div className="settings-field" style={{ gridColumn: '1 / -1' }}><label>URL Banner</label><input type="text" value={form.banner_url} onChange={e => setForm(f => ({ ...f, banner_url: e.target.value }))} className="input" /></div>

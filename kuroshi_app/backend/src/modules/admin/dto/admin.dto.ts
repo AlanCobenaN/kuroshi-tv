@@ -118,6 +118,10 @@ export class CreateAnimeDto {
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   genres?: string[];
+
+  @ApiPropertyOptional({ description: 'Etiquetas especiales (ej: ["Anime","Sub Español"])' })
+  @IsOptional()
+  tags?: string[];
 }
 
 export class UpdateAnimeDto extends CreateAnimeDto {}

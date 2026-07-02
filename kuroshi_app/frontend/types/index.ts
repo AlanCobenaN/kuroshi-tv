@@ -173,6 +173,7 @@ export interface AnimeSummary {
   genres: Genre[]
   total_views?: number
   ratings_count?: number
+  tags?: string[]
 }
 
 export interface Genre {

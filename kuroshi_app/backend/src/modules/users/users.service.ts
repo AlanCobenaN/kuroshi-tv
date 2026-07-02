@@ -51,7 +51,7 @@ export class UsersService {
         favoriteAnime: {
           select: {
             id: true, slug: true, titleEs: true, titleJp: true,
-            coverUrl: true, bannerUrl: true, malRating: true, status: true,
+            coverUrl: true, bannerUrl: true, malRating: true, status: true, tags: true,
           },
         },
         followersCount: true,
@@ -192,7 +192,7 @@ export class UsersService {
         favoriteAnime: {
           select: {
             id: true, slug: true, titleEs: true, titleJp: true,
-            coverUrl: true, bannerUrl: true, malRating: true, status: true,
+            coverUrl: true, bannerUrl: true, malRating: true, status: true, tags: true,
           },
         },
       },
@@ -327,6 +327,7 @@ export class UsersService {
             malRating: true,
             totalEpisodes: true,
             status: true,
+            tags: true,
           },
         },
       },

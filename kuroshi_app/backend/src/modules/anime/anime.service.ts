@@ -57,7 +57,7 @@ export class AnimeService {
         select: {
           id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, status: true,
           malRating: true, coverUrl: true, bannerUrl: true, year: true, season: true, totalViews: true, totalEpisodes: true,
-          aliases: true, sameAs: true,
+          aliases: true, sameAs: true, tags: true,
           genres: { select: { genre: { select: { name: true } } } },
           _count: { select: { ratings: true } },
         },
@@ -79,7 +79,7 @@ export class AnimeService {
       select: {
         id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, malRating: true,
         coverUrl: true, bannerUrl: true, totalViews: true, status: true,
-        aliases: true, sameAs: true,
+        aliases: true, sameAs: true, tags: true,
         genres: { select: { genre: { select: { name: true } } } },
       },
     });
@@ -94,7 +94,7 @@ export class AnimeService {
       select: {
         id: true, slug: true, titleEs: true, titleEn: true, titleJp: true, malRating: true,
         coverUrl: true, bannerUrl: true, status: true,
-        aliases: true, sameAs: true,
+        aliases: true, sameAs: true, tags: true,
         genres: { select: { genre: { select: { name: true } } } },
         seasons: {
           orderBy: { number: 'desc' }, take: 1,
@@ -128,7 +128,7 @@ export class AnimeService {
           select: {
             anime: {
               select: {
-                id: true, slug: true, titleEs: true, coverUrl: true, malRating: true,
+                id: true, slug: true, titleEs: true, coverUrl: true, malRating: true, tags: true,
                 genres: { select: { genre: { select: { id: true, name: true } } } },
               },
             },
@@ -146,6 +146,7 @@ export class AnimeService {
         title_es: ep.season.anime.titleEs, cover_url: ep.season.anime.coverUrl,
         mal_rating: ep.season.anime.malRating,
         genres: ep.season.anime.genres.map((g) => g.genre),
+        tags: ep.season.anime.tags,
       },
     }));
   }
