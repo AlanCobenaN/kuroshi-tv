@@ -341,6 +341,9 @@ export class AdminService {
       await this.prisma.episode.createMany({ data: episodesToCreate });
     }
 
+    // Refrescar calendario
+    await this.prisma.airingSchedule.deleteMany().catch(() => {});
+
     return {
       anime: {
         id: anime.id,
@@ -457,6 +460,9 @@ export class AdminService {
       },
     });
 
+    // Refrescar calendario
+    await this.prisma.airingSchedule.deleteMany().catch(() => {});
+
     // Asociar géneros
     if (genres?.length) {
       await this.syncGenres(anime.id, genres);
@@ -499,6 +505,9 @@ export class AdminService {
       await this.syncGenres(animeId, genres);
     }
 
+    // Refrescar calendario
+    await this.prisma.airingSchedule.deleteMany().catch(() => {});
+
     return updated;
   }
 
@@ -521,6 +530,10 @@ export class AdminService {
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
     await this.prisma.anime.delete({ where: { id: animeId } });
+
+    // Refrescar calendario
+    await this.prisma.airingSchedule.deleteMany().catch(() => {});
+
     return { message: 'Anime eliminado permanentemente' };
   }
 
