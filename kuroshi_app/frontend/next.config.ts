@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), notifications=(), push=(), midi=(), sync-xhr=(), accelerometer=(), gyroscope=(), magnetometer=(), ambient-light-sensor=(), bluetooth=(), usb=(), serial=(), payment=(), autoplay=(self), fullscreen=(self), picture-in-picture=(self)' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), notifications=(), push=(), midi=(), sync-xhr=(), accelerometer=(), gyroscope=(), magnetometer=(), ambient-light-sensor=(), bluetooth=(), usb=(), serial=(), payment=(), autoplay=(self), fullscreen=*, picture-in-picture=*' },
         ],
       },
       // Cache estáticos largos (fonts, images, svg)

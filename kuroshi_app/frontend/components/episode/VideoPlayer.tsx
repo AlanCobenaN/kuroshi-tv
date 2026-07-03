@@ -49,7 +49,6 @@ export function VideoPlayer({ servers }: Props) {
             src={activeServer.embed_url}
             className="player-iframe"
             allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
             title={`Reproductor — ${activeServer.server_name}`}
             loading="lazy"
           />
