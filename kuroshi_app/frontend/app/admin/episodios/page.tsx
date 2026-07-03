@@ -460,7 +460,19 @@ export default function AdminEpisodesPage() {
         <div className="server-modal-overlay" onClick={() => setServerEpId(null)}>
           <div className="server-modal" onClick={e => e.stopPropagation()}>
             <div className="server-modal-header">
-              <h3>Servidores de video</h3>
+              <div>
+                <h3 style={{ margin: 0 }}>Servidores de video</h3>
+                {(() => {
+                  const ep = episodes.find(e => e.id === serverEpId)
+                  if (!ep) return null
+                  const seasonLabel = ep.seasonTitle ?? `Temporada ${ep.seasonNumber}`
+                  return (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Episodio {ep.number}{ep.title ? ` — ${ep.title}` : ''} · {seasonLabel}
+                    </span>
+                  )
+                })()}
+              </div>
               <button onClick={() => setServerEpId(null)} className="server-modal-close">&times;</button>
             </div>
             <div className="server-modal-body">
