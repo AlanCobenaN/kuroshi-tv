@@ -15,14 +15,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kuroshi.lat'
 
 interface Props {
   params: Promise<{ slug: string; number: string }>
+  searchParams: Promise<{ season?: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug, number } = await params
   const epNum = parseInt(number, 10)
+  const { season } = await searchParams
 
   try {
-    const episode = await animeApi.getEpisode(slug, epNum) as Episode & { anime?: Anime }
+    const episode = await animeApi.getEpisode(slug, epNum, season ? parseInt(season, 10) : undefined) as Episode & { anime?: Anime }
     const animeTitle = episode.anime?.title_es ?? slug
     const title = `Ver ${animeTitle} — Episodio ${epNum}${episode.title ? ': ' + episode.title : ''} | Kuroshi.lat`
     const description = episode.synopsis ?? `Ver episodio ${epNum} de ${animeTitle} en Kuroshi.tv`
@@ -63,9 +65,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function EpisodePlayerPage({ params }: Props) {
+export default async function EpisodePlayerPage({ params, searchParams }: Props) {
   const { slug, number } = await params
   const epNum = parseInt(number, 10)
+  const { season: seasonParam } = await searchParams
+  const seasonNumber = seasonParam ? parseInt(seasonParam, 10) : undefined
 
   if (isNaN(epNum)) notFound()
 
@@ -73,7 +77,7 @@ export default async function EpisodePlayerPage({ params }: Props) {
 
   // Fetch paralelo: datos del episodio + lista de episodios para la navegación
   const [episodeRes, allEpisodesRes, animeRes] = await Promise.allSettled([
-    animeApi.getEpisode(slug, epNum, undefined, session?.accessToken),
+    animeApi.getEpisode(slug, epNum, seasonNumber, session?.accessToken),
     animeApi.getEpisodes(slug, { order: 'asc' }),
     animeApi.getBySlug(slug, session?.accessToken),
   ])
@@ -164,6 +168,7 @@ export default async function EpisodePlayerPage({ params }: Props) {
         allEpisodes={allEpisodes}
         prevEpisode={prevEpisode}
         nextEpisode={nextEpisode}
+        currentSeasonNumber={seasonNumber}
         isLoggedIn={!!session}
         userId={session?.user?.id}
         relatedAnimes={relatedAnimes}

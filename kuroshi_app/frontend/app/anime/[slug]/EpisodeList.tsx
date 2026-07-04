@@ -1,5 +1,4 @@
 'use client'
-// app/anime/[slug]/EpisodeList.tsx
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -13,41 +12,41 @@ interface Props {
 }
 
 export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress }: Props) {
-  const [activeSeason, setActiveSeason] = useState<string>(
-    seasons[0]?.id ?? 'all'
-  )
   const [searchQuery, setSearchQuery] = useState('')
   const [orderAsc, setOrderAsc] = useState(true)
 
-  const episodes = useMemo(() => {
-    let list = activeSeason === 'all'
-      ? initialEpisodes
-      : initialEpisodes.filter(ep => ep.season_id === activeSeason)
-
+  // Episodios agrupados por temporada (ya filtrados y ordenados)
+  const grouped = useMemo(() => {
+    let filtered = initialEpisodes
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
-      list = list.filter(ep =>
+      filtered = filtered.filter(ep =>
         ep.number.toString().includes(q) ||
         ep.title?.toLowerCase().includes(q)
       )
     }
 
-    return orderAsc ? list : [...list].reverse()
-  }, [activeSeason, initialEpisodes, searchQuery, orderAsc])
-
-  // Agrupar episodios por temporada para el acordeón
-  const groupedBySeason = useMemo(() => {
-    const groups: { season: any; episodes: any[] }[] = []
+    const groups: { season: Season; episodes: Episode[] }[] = []
     for (const season of seasons) {
-      const eps = initialEpisodes.filter(ep => ep.season_id === season.id)
+      const eps = filtered.filter(ep => (ep as any).season_id === season.id)
       if (eps.length > 0) {
         groups.push({ season, episodes: orderAsc ? eps : [...eps].reverse() })
       }
     }
     return groups
-  }, [seasons, initialEpisodes, orderAsc])
+  }, [seasons, initialEpisodes, searchQuery, orderAsc])
 
-  if (seasons.length === 0 && initialEpisodes.length === 0) {
+  const totalCount = useMemo(
+    () => grouped.reduce((sum, g) => sum + g.episodes.length, 0),
+    [grouped]
+  )
+
+  const seasonLabel = (s: Season) =>
+    s.type === 'ova' ? 'OVAs'
+    : s.type === 'especial' ? 'Especiales'
+    : s.title ?? `Temporada ${s.number}`
+
+  if (totalCount === 0) {
     return (
       <div className="ep-list-empty">
         <p>No hay episodios disponibles aún.</p>
@@ -60,39 +59,8 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
       {/* Encabezado */}
       <div className="ep-list-header">
         <h2 className="ep-list-title">Episodios</h2>
-        <span className="ep-list-count">{episodes.length} disponibles</span>
+        <span className="ep-list-count">{totalCount} disponibles</span>
       </div>
-
-      {/* Acordeón de temporadas */}
-      {seasons.length > 1 && (
-        <div className="season-accordion">
-          {seasons.map(season => {
-            const isActive = activeSeason === season.id
-            const seasonLabel = season.type === 'ova'
-              ? 'OVAs'
-              : season.type === 'especial'
-              ? 'Especiales'
-              : season.title ?? `Temporada ${season.number}`
-            const epCount = initialEpisodes.filter(ep => ep.season_id === season.id).length
-            return (
-              <div key={season.id} className="season-accordion-item">
-                <button
-                  onClick={() => setActiveSeason(isActive ? 'all' : season.id)}
-                  className={`season-accordion-header ${isActive ? 'season-accordion-header--active' : ''}`}
-                  aria-expanded={isActive}
-                >
-                  <span className="season-accordion-label">{seasonLabel}</span>
-                  <span className="season-accordion-count">{epCount} episodios</span>
-                  <svg className={`season-accordion-arrow ${isActive ? 'season-accordion-arrow--open' : ''}`}
-                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-              </div>
-            )
-          })}
-        </div>
-      )}
 
       {/* Controles */}
       <div className="ep-list-controls">
@@ -123,82 +91,86 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
         </button>
       </div>
 
-      {/* Lista de episodios */}
-      {episodes.length === 0 ? (
-        <p className="ep-no-results">No se encontraron episodios con ese criterio.</p>
-      ) : (
-        <ul className="ep-list" role="list">
-          {episodes.map(ep => {
-            const isWatched = userProgress?.episode?.id === ep.id && userProgress.completed
-            const isCurrent = userProgress?.episode?.id === ep.id && !userProgress.completed
-            const href = `/anime/${animeSlug}/episodio/${ep.number}`
+      {/* Temporadas en cascada */}
+      <div className="ep-cascading">
+        {grouped.map(({ season, episodes }) => (
+          <section key={season.id} className="ep-season-section">
+            <h3 className="ep-season-header">
+              <span className="ep-season-label">{seasonLabel(season)}</span>
+              <span className="ep-season-count">{episodes.length} episodios</span>
+            </h3>
 
-            return (
-              <li key={ep.id} className={`ep-item ${isCurrent ? 'ep-item--current' : ''}`}>
-                <Link href={href} className="ep-row" aria-label={`Episodio ${ep.number}${ep.title ? ': ' + ep.title : ''}`}>
-                  {/* Thumbnail */}
-                  <div className="ep-thumb">
-                    {ep.thumbnail_url ? (
-                      <Image
-                        src={ep.thumbnail_url}
-                        alt=""
-                        fill
-                        sizes="72px"
-                        className="ep-thumb-img"
-                      />
-                    ) : (
-                      <div className="ep-thumb-placeholder" aria-hidden="true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text-muted)' }}>
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                      </div>
-                    )}
-                    {isWatched && (
-                      <div className="ep-watched-overlay" aria-label="Visto">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+            <ul className="ep-list" role="list">
+              {episodes.map(ep => {
+                const isWatched = userProgress?.episode?.id === ep.id && userProgress.completed
+                const isCurrent = userProgress?.episode?.id === ep.id && !userProgress.completed
+                const href = `/anime/${animeSlug}/episodio/${ep.number}?season=${(ep as any).season_number ?? 1}`
 
-                  {/* Número + título */}
-                  <div className="ep-row-info">
-                    <span className="ep-row-num">Episodio {ep.number}</span>
-                    {ep.title && <span className="ep-row-title">{ep.title}</span>}
-                    <span className="ep-row-meta">
-                      {ep.air_date && (
-                        <span className="ep-row-date">
-                          {new Date(ep.air_date).toLocaleDateString('es-LA', {
-                            day: 'numeric', month: 'short', year: 'numeric'
-                          })}
+                return (
+                  <li key={ep.id} className={`ep-item ${isCurrent ? 'ep-item--current' : ''}`}>
+                    <Link href={href} className="ep-row" aria-label={`Episodio ${ep.number}${ep.title ? ': ' + ep.title : ''}`}>
+                      <div className="ep-thumb">
+                        {ep.thumbnail_url ? (
+                          <Image
+                            src={ep.thumbnail_url}
+                            alt=""
+                            fill
+                            sizes="72px"
+                            className="ep-thumb-img"
+                          />
+                        ) : (
+                          <div className="ep-thumb-placeholder" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text-muted)' }}>
+                              <polygon points="5 3 19 12 5 21 5 3" />
+                            </svg>
+                          </div>
+                        )}
+                        {isWatched && (
+                          <div className="ep-watched-overlay" aria-label="Visto">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="ep-row-info">
+                        <span className="ep-row-num">Episodio {ep.number}</span>
+                        {ep.title && <span className="ep-row-title">{ep.title}</span>}
+                        <span className="ep-row-meta">
+                          {ep.air_date && (
+                            <span className="ep-row-date">
+                              {new Date(ep.air_date).toLocaleDateString('es-LA', {
+                                day: 'numeric', month: 'short', year: 'numeric'
+                              })}
+                            </span>
+                          )}
+                          {ep.views !== undefined && ep.views > 0 && (
+                            <span className="ep-row-views">{Number(ep.views).toLocaleString('es')} vistas</span>
+                          )}
                         </span>
-                      )}
-                      {ep.views !== undefined && ep.views > 0 && (
-                        <span className="ep-row-views">{Number(ep.views).toLocaleString('es')} vistas</span>
-                      )}
-                    </span>
-                  </div>
+                      </div>
 
-                  {/* Indicador de progreso o play */}
-                  <div className="ep-row-right">
-                    {isCurrent && (
-                      <span className="ep-progress-badge">
-                        {Math.round((userProgress!.last_minute / 1) * 100)}% visto
-                      </span>
-                    )}
-                    <div className={`ep-play-icon ${isCurrent ? 'ep-play-icon--current' : ''}`} aria-hidden="true">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+                      <div className="ep-row-right">
+                        {isCurrent && (
+                          <span className="ep-progress-badge">
+                            {Math.round((userProgress!.last_minute / 1) * 100)}% visto
+                          </span>
+                        )}
+                        <div className={`ep-play-icon ${isCurrent ? 'ep-play-icon--current' : ''}`} aria-hidden="true">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                        </div>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        ))}
+      </div>
 
       <style>{`
         .ep-list-wrapper {
@@ -230,54 +202,12 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           color: var(--text-muted);
         }
 
-        /* Acordeón de temporadas */
-        .season-accordion {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-        .season-accordion-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          width: 100%;
-          padding: 0.5rem 0.75rem;
-          font-family: var(--font-display);
-          font-size: 0.8125rem;
-          font-weight: 700;
-          color: var(--text-secondary);
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          cursor: pointer;
-          transition: all var(--transition-fast);
-          text-align: left;
-        }
-        .season-accordion-header:hover { color: var(--text-primary); border-color: var(--border-hover); }
-        .season-accordion-header--active {
-          color: var(--text-primary);
-          background: var(--bg-overlay);
-          border-color: var(--border-hover);
-        }
-        .season-accordion-label { flex: 1; }
-        .season-accordion-count {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          color: var(--text-muted);
-        }
-        .season-accordion-arrow {
-          transition: transform var(--transition-fast);
-          flex-shrink: 0;
-        }
-        .season-accordion-arrow--open { transform: rotate(180deg); }
-
         /* Controles */
         .ep-list-controls {
           display: flex;
           gap: 0.75rem;
           align-items: center;
         }
-
         .ep-search-wrapper {
           flex: 1;
           position: relative;
@@ -325,16 +255,40 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
         }
         .ep-order-btn:hover { color: var(--text-primary); border-color: var(--border-hover); }
 
-        /* Sin resultados */
-        .ep-no-results {
-          text-align: center;
-          color: var(--text-muted);
-          font-size: 0.875rem;
-          padding: 2rem 0;
-          margin: 0;
+        /* Cascada de temporadas */
+        .ep-cascading {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
         }
 
-        /* Lista */
+        .ep-season-section {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .ep-season-header {
+          display: flex;
+          align-items: baseline;
+          gap: 0.75rem;
+          margin: 0 0 0.5rem;
+          padding: 0.5rem 0.75rem;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          font-family: var(--font-display);
+          font-size: 0.9375rem;
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+        .ep-season-label { flex: 1; }
+        .ep-season-count {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--text-muted);
+        }
+
+        /* Lista de episodios */
         .ep-list {
           list-style: none;
           display: flex;
@@ -343,6 +297,7 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           border-radius: var(--radius-xl);
           overflow: hidden;
           background: var(--bg-surface);
+          margin: 0;
         }
 
         .ep-item { border-bottom: 1px solid var(--border); }
@@ -360,7 +315,6 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
         .ep-row:hover { background: var(--bg-elevated); }
         .ep-row:hover .ep-play-icon { color: var(--accent); }
 
-        /* Thumbnail */
         .ep-thumb {
           position: relative;
           width: 80px;
@@ -387,7 +341,6 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           justify-content: center;
         }
 
-        /* Info */
         .ep-row-info {
           flex: 1;
           min-width: 0;
@@ -422,7 +375,6 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           color: var(--text-muted);
         }
 
-        /* Derecha */
         .ep-row-right {
           display: flex;
           align-items: center;
@@ -452,6 +404,8 @@ export function EpisodeList({ animeSlug, seasons, initialEpisodes, userProgress 
           .ep-list-controls { flex-direction: column; gap: 0.5rem; }
           .ep-search-wrapper { width: 100%; }
           .ep-order-btn { width: 100%; justify-content: center; }
+          .ep-season-header { font-size: 0.8125rem; padding: 0.4rem 0.625rem; }
+          .ep-cascading { gap: 1rem; }
         }
       `}</style>
     </div>

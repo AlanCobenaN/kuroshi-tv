@@ -20,6 +20,7 @@ interface Props {
   allEpisodes: Episode[]
   prevEpisode?: Episode
   nextEpisode?: Episode
+  currentSeasonNumber?: number
   isLoggedIn: boolean
   userId?: string
   relatedAnimes: AnimeSummary[]
@@ -32,6 +33,7 @@ export function EpisodePlayerClient({
   allEpisodes,
   prevEpisode,
   nextEpisode,
+  currentSeasonNumber,
   isLoggedIn,
   userId,
   relatedAnimes,
@@ -177,6 +179,7 @@ export function EpisodePlayerClient({
               prevEpisode={prevEpisode}
               nextEpisode={nextEpisode}
               episodes={allEpisodes}
+              currentSeasonNumber={currentSeasonNumber}
             />
           </div>
 

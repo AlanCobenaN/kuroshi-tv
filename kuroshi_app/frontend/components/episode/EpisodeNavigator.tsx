@@ -1,5 +1,4 @@
 'use client'
-// components/episode/EpisodeNavigator.tsx
 import Link from 'next/link'
 import { Episode } from '@/types'
 
@@ -9,6 +8,7 @@ interface Props {
   prevEpisode?: Episode
   nextEpisode?: Episode
   episodes: Episode[]
+  currentSeasonNumber?: number
 }
 
 export function EpisodeNavigator({
@@ -17,14 +17,16 @@ export function EpisodeNavigator({
   prevEpisode,
   nextEpisode,
   episodes,
+  currentSeasonNumber,
 }: Props) {
+  const qs = currentSeasonNumber ? `?season=${currentSeasonNumber}` : ''
+
   return (
     <div className="ep-nav">
-      {/* Anterior / Siguiente */}
       <div className="ep-nav-arrows">
         {prevEpisode ? (
           <Link
-            href={`/anime/${animeSlug}/episodio/${prevEpisode.number}`}
+            href={`/anime/${animeSlug}/episodio/${prevEpisode.number}${qs}`}
             className="ep-nav-btn ep-nav-btn--prev"
             aria-label={`Episodio anterior: ${prevEpisode.number}`}
           >
@@ -52,7 +54,7 @@ export function EpisodeNavigator({
 
         {nextEpisode ? (
           <Link
-            href={`/anime/${animeSlug}/episodio/${nextEpisode.number}`}
+            href={`/anime/${animeSlug}/episodio/${nextEpisode.number}${qs}`}
             className="ep-nav-btn ep-nav-btn--next"
             aria-label={`Siguiente episodio: ${nextEpisode.number}`}
           >
@@ -71,14 +73,13 @@ export function EpisodeNavigator({
         )}
       </div>
 
-      {/* Strip horizontal de episodios */}
       {episodes.length > 0 && (
         <div className="ep-strip-wrapper">
           <div className="ep-strip" role="list" aria-label="Episodios del anime">
             {episodes.map(ep => (
               <Link
                 key={ep.id}
-                href={`/anime/${animeSlug}/episodio/${ep.number}`}
+                href={`/anime/${animeSlug}/episodio/${ep.number}${qs}`}
                 role="listitem"
                 className={`ep-strip-item ${ep.number === currentEpisodeNumber ? 'ep-strip-item--active' : ''}`}
                 aria-current={ep.number === currentEpisodeNumber ? 'page' : undefined}
@@ -140,7 +141,6 @@ export function EpisodeNavigator({
         }
         .ep-nav-anime-link:hover { opacity: 0.75; }
 
-        /* Strip de episodios */
         .ep-strip-wrapper {
           overflow-x: auto;
           scrollbar-width: none;
