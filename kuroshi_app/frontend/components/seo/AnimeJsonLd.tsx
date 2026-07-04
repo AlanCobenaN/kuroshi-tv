@@ -96,7 +96,7 @@ export function AnimeJsonLd({ anime }: { anime: AnimeWithType }) {
       ratingValue,
       bestRating: 10,
       worstRating: 0,
-      ratingCount: anime.community_rating_count ?? 1,
+      ratingCount: Math.max(1, anime.community_rating_count ?? 1),
     }
   }
 

@@ -12,6 +12,8 @@ interface Item {
 }
 
 export function ItemListJsonLd({ items, itemType = 'TVSeries', url }: { items: Item[]; itemType?: string; url?: string }) {
+  if (items.length === 0) return null
+
   const data: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -33,7 +35,7 @@ export function ItemListJsonLd({ items, itemType = 'TVSeries', url }: { items: I
             ratingValue: item.rating,
             bestRating: 10,
             worstRating: 0,
-            ratingCount: item.ratingCount ?? 1,
+            ratingCount: Math.max(1, item.ratingCount ?? 1),
           },
         } : {}),
       },
