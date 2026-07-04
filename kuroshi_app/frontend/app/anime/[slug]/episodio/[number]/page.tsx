@@ -73,7 +73,7 @@ export default async function EpisodePlayerPage({ params }: Props) {
 
   // Fetch paralelo: datos del episodio + lista de episodios para la navegación
   const [episodeRes, allEpisodesRes, animeRes] = await Promise.allSettled([
-    animeApi.getEpisode(slug, epNum, session?.accessToken),
+    animeApi.getEpisode(slug, epNum, undefined, session?.accessToken),
     animeApi.getEpisodes(slug, { order: 'asc' }),
     animeApi.getBySlug(slug, session?.accessToken),
   ])
