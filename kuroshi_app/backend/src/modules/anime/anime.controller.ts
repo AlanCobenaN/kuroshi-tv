@@ -74,8 +74,9 @@ export class AnimeController {
   getEpisode(
     @Param('slug') slug: string,
     @Param('number', ParseIntPipe) number: number,
+    @Query('season') season?: number,
   ) {
-    return this.animeService.getEpisode(slug, number);
+    return this.animeService.getEpisode(slug, number, season);
   }
 
   @Public()

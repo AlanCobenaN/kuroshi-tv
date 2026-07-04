@@ -166,7 +166,8 @@ export default function AdminEpisodesPage() {
     setServerName('')
     setServerUrl('')
     try {
-      const ep: any = await animeApi.getEpisode(selectedAnime, episodes.find(e => e.id === episodeId)?.number ?? 1, session?.accessToken)
+      const epData = episodes.find(e => e.id === episodeId)
+      const ep: any = await animeApi.getEpisode(selectedAnime, epData?.number ?? 1, epData?.seasonNumber, session?.accessToken)
       setServerList(ep.video_servers ?? [])
     } catch {
       setServerList([])
@@ -181,7 +182,8 @@ export default function AdminEpisodesPage() {
       setMessage('Servidor añadido')
       setServerName('')
       setServerUrl('')
-      const ep: any = await animeApi.getEpisode(selectedAnime, episodes.find(e => e.id === serverEpId)?.number ?? 1, session.accessToken)
+      const epData = episodes.find(e => e.id === serverEpId)
+      const ep: any = await animeApi.getEpisode(selectedAnime, epData?.number ?? 1, epData?.seasonNumber, session.accessToken)
       setServerList(ep.video_servers ?? [])
       loadEpisodes(selectedAnime)
     } catch (err: any) {

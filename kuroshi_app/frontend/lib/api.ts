@@ -161,8 +161,8 @@ export const animeApi = {
     return api.get(`/anime/${slug}/episodes${query}`, { cache: 'no-store' })
   },
 
-  getEpisode: (slug: string, number: number, token?: string) =>
-    api.get(`/anime/${slug}/episode/${number}`, {
+  getEpisode: (slug: string, number: number, season?: number, token?: string) =>
+    api.get(`/anime/${slug}/episode/${number}${season !== undefined ? `?season=${season}` : ''}`, {
       token,
       cache: 'no-store',
     }),

@@ -238,15 +238,20 @@ export class AnimeService {
     });
   }
 
-  async getEpisode(slug: string, episodeNumber: number) {
+  async getEpisode(slug: string, episodeNumber: number, seasonNumber?: number) {
     const anime = await this.prisma.anime.findUnique({
       where: { slug },
       select: { id: true, titleEs: true, slug: true, coverUrl: true, bannerUrl: true },
     });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
+    const where: any = { number: episodeNumber, season: { animeId: anime.id } };
+    if (seasonNumber !== undefined) {
+      where.season.number = seasonNumber;
+    }
+
     const episode = await this.prisma.episode.findFirst({
-      where: { number: episodeNumber, season: { animeId: anime.id } },
+      where,
       include: {
         videoServers: {
           orderBy: { sortOrder: 'asc' },
