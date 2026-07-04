@@ -245,7 +245,8 @@ export class AnimeService {
     });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
-    const where: any = { number: episodeNumber, season: { animeId: anime.id, number: seasonNumber ?? 1 } };
+    const seasonNum = Number.isFinite(seasonNumber) ? seasonNumber : 1;
+    const where: any = { number: episodeNumber, season: { is: { animeId: anime.id, number: seasonNum, type: 'regular' } } };
 
     const episode = await this.prisma.episode.findFirst({
       where,
@@ -397,8 +398,15 @@ export class AnimeService {
     });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
+    const season = await this.prisma.animeSeason.findFirst({
+      where: { animeId: anime.id },
+      orderBy: { number: 'asc' },
+      select: { id: true },
+    });
+    if (!season) throw new NotFoundException('Temporada no encontrada');
+
     const episode = await this.prisma.episode.findFirst({
-      where: { number: episodeNumber, season: { animeId: anime.id } },
+      where: { number: episodeNumber, seasonId: season.id },
       select: { id: true },
     });
     if (!episode) throw new NotFoundException('Episodio no encontrado');
@@ -424,8 +432,15 @@ export class AnimeService {
     });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
+    const season = await this.prisma.animeSeason.findFirst({
+      where: { animeId: anime.id },
+      orderBy: { number: 'asc' },
+      select: { id: true },
+    });
+    if (!season) throw new NotFoundException('Temporada no encontrada');
+
     const episode = await this.prisma.episode.findFirst({
-      where: { number: episodeNumber, season: { animeId: anime.id } },
+      where: { number: episodeNumber, seasonId: season.id },
       select: { id: true, number: true },
     });
     if (!episode) throw new NotFoundException('Episodio no encontrado');
