@@ -245,10 +245,7 @@ export class AnimeService {
     });
     if (!anime) throw new NotFoundException('Anime no encontrado');
 
-    const seasonFilter: any = { animeId: anime.id };
-    if (seasonNumber !== undefined) {
-      seasonFilter.number = seasonNumber;
-    }
+    const seasonFilter: any = { animeId: anime.id, number: seasonNumber ?? 1 };
     const where: any = { number: episodeNumber, season: { is: seasonFilter } };
 
     const episode = await this.prisma.episode.findFirst({
