@@ -47,7 +47,16 @@ export function EpisodePlayerClient({
     if (!isLoggedIn || !episode.id) return
     const token = (window as any).__kuroshi_token__ as string | undefined
     if (!token) return
+
+    // Marca como último episodio visitado (entrar una vez basta)
     usersApi.saveProgress({ episodeId: episode.id, lastMinute: 0, completed: false }, token).catch(() => {})
+
+    // Si el usuario pasa 10 minutos en la página, marca como visto
+    const timer = setTimeout(() => {
+      usersApi.saveProgress({ episodeId: episode.id, lastMinute: 10, completed: true }, token).catch(() => {})
+    }, 10 * 60 * 1000)
+
+    return () => clearTimeout(timer)
   }, [episode.id, isLoggedIn, animeSlug, episode.number])
 
   const animeData = anime ?? episode.anime
