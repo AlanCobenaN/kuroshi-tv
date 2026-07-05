@@ -42,25 +42,33 @@ export class AdminService {
   async getDashboard() {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     const [
       totalUsers,
       newUsersToday,
+      activeUsers7d,
       totalAnimes,
+      visibleAnimes,
       totalEpisodes,
+      totalViewsAgg,
       totalCommunities,
       totalPosts,
+      totalComments,
       pendingReports,
       recentUsers,
       recentReports,
     ] = await Promise.all([
       this.prisma.user.count({ where: { isActive: true } }),
       this.prisma.user.count({ where: { createdAt: { gte: startOfDay } } }),
+      this.prisma.user.count({ where: { lastActiveAt: { gte: sevenDaysAgo } } }),
       this.prisma.anime.count(),
+      this.prisma.anime.count({ where: { isVisible: true } }),
       this.prisma.episode.count(),
+      this.prisma.anime.aggregate({ _sum: { totalViews: true } }),
       this.prisma.community.count({ where: { isActive: true } }),
       this.prisma.post.count({ where: { isDeleted: false } }),
+      this.prisma.episodeComment.count(),
       this.prisma.report.count({ where: { status: 'pendiente' } }),
       this.prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
@@ -88,10 +96,15 @@ export class AdminService {
       },
       totals: {
         users: totalUsers,
+        activeUsers7d,
         animes: totalAnimes,
+        visibleAnimes,
+        hiddenAnimes: totalAnimes - visibleAnimes,
         episodes: totalEpisodes,
         communities: totalCommunities,
         posts: totalPosts,
+        comments: totalComments,
+        totalViews: Number(totalViewsAgg._sum.totalViews ?? 0),
       },
       recentUsers,
       recentReports,
